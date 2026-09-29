@@ -423,14 +423,3 @@ Quản lý các giao dịch thu tiền mặt hoặc chuyển khoản thủ công
      ```
   2. Tự động cập nhật `classes.status = 'FULL'` khi sĩ số thực đạt `max_capacity`.
 
----
-
-## 6. KẾT LUẬN & SẴN SÀNG CHUYỂN TIẾP (TRANSITION TO DB-02)
-
-Tài liệu **`DB-01`** đã hoàn tất trọn vẹn 100% mục tiêu của thẻ Trello:
-1. Xác định đầy đủ **10 thực thể cốt lõi** và các thuộc tính tương ứng.
-2. Thiết lập rõ ràng **mối quan hệ 1-1, 1-N** cùng các quy tắc toàn vẹn dữ liệu.
-3. Xây dựng **Sơ đồ Conceptual ERD** trực quan, chuẩn ngữ nghĩa Crow's Foot.
-4. Lập **Bảng Từ điển dữ liệu (Data Dictionary)** chi tiết từng trường, kiểu dữ liệu, ràng buộc và default value.
-
-Tài liệu này là đầu vào trực tiếp cho nhiệm vụ **`[DB-02] Chuyển Conceptual ERD thành Physical DB, viết script tạo bảng & khóa`** (viết script SQL DDL `schema.sql`, seed dữ liệu mẫu và index).
