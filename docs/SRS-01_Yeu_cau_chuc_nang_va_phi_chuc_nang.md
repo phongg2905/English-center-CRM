@@ -1,10 +1,17 @@
 # ĐẶC TẢ YÊU CẦU PHẦN MỀM: YÊU CẦU CHỨC NĂNG (FR) VÀ PHI CHỨC NĂNG (NFR)
-## Task ID: [SRS-01] | Đồ án môn học: Quản lý Dự án Phần mềm
-**Hệ thống:** CRM Quản lý Tuyển sinh và Đào tạo cho Trung tâm Anh ngữ  
-**Đơn vị thực hiện:** Nhóm 8  
-**Ngày lập:** 29/09/2026  
-**Phiên bản:** v1.0 (Draft for Review)  
-**Tiêu chuẩn tham chiếu:** IEEE 830-1998 (Software Requirements Specifications) & MoSCoW Prioritization  
+## DỰ ÁN: PHẦN MỀM CRM QUẢN LÝ TUYỂN SINH VÀ ĐÀO TẠO TRUNG TÂM ANH NGỮ (ENGLISH CENTER CRM)
+
+---
+
+| **Mã công việc** | **SRS-01** |
+| :--- | :--- |
+| **Tên tài liệu** | Lập bảng danh mục Yêu cầu chức năng (FR) và Phi chức năng (NFR) |
+| **Dự án** | Quản lý dự án phần mềm - Nhóm 8 |
+| **Người thực hiện** | **Long Phạm** (`@longphm11`) - System Analyst (SA) / QA Lead |
+| **Người nghiệm thu** | **phong phạm** (`@phongphm2`) - Project Leader |
+| **Ngày hoàn thành** | 29/09/2026 |
+| **Trạng thái** | **Hoàn thành (Review & Deliverable Ready)** |
+| **Tiêu chuẩn tham chiếu** | IEEE 830-1998 (Software Requirements Specifications) & MoSCoW Prioritization |
 
 ---
 
