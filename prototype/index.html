@@ -12,20 +12,27 @@
 
   <style>
     /* ==========================================================================
-       HỆ THỐNG ĐA BẢNG MÀU (MULTI-PALETTE DESIGN SYSTEM)
-       Nghiên cứu & đúc kết từ 100+ dự án Mã Nguồn Mở hàng đầu thế giới:
+       HỆ THỐNG ĐA BẢNG MÀU & HIỆU ỨNG GRADIENT CAO CẤP (MULTI-PALETTE GRADIENT ENGINE)
+       Nghiên cứu & đúc kết từ 106 dự án Mã Nguồn Mở hàng đầu thế giới:
        - Twenty CRM, Plane.so, Cal.com, Dub.co, Supabase, Formbricks, Medusa
        - Radix UI Colors, Tailwind CSS, IBM Carbon, GitHub Primer, Shopify Polaris
-       - Linear.app, Stripe, Atlassian, Ant Design, Chakra UI, Tremor
+       - Linear.app, Stripe, Atlassian, Ant Design, Chakra UI, Tremor, Mantine
        ========================================================================== */
 
-    /* 1. PALETTE MẶC ĐỊNH: OXFORD ACADEMIC (Cambridge, British Council, Top Universities) */
+    /* 1. PALETTE MẶC ĐỊNH: OXFORD ACADEMIC & ROYAL SAPPHIRE (Cambridge, British Council, Oxford) */
     :root, [data-theme="oxford"] {
       --brand-primary: #1e3a8a;          /* Oxford Navy */
       --brand-primary-hover: #172554;
       --brand-accent: #2563eb;           /* Royal Blue */
       --brand-subtle: #f0f4fd;           /* Soft Blue Surface */
       --brand-border: #dbe4f9;
+
+      /* Multi-stop Gradients */
+      --brand-gradient: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #0284c7 100%);
+      --brand-gradient-hover: linear-gradient(135deg, #172554 0%, #1d4ed8 55%, #0369a1 100%);
+      --brand-gradient-subtle: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(2, 132, 199, 0.04) 100%);
+      --brand-gradient-card: linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #38bdf8 100%);
+      --glow-color: rgba(37, 99, 235, 0.32);
 
       --status-success: #059669;
       --status-success-bg: #f0fdf4;
@@ -55,13 +62,20 @@
       --theme-name: "Oxford Academic";
     }
 
-    /* 2. PALETTE: TWENTY CRM & STRIPE INDIGO (Modern SaaS Gold Standard) */
+    /* 2. PALETTE: TWENTY CRM & AURORA INDIGO-PURPLE (Modern SaaS Gold Standard) */
     [data-theme="twenty-indigo"] {
       --brand-primary: #4f46e5;          /* Modern Indigo */
       --brand-primary-hover: #4338ca;
       --brand-accent: #6366f1;
       --brand-subtle: #eef2ff;
       --brand-border: #c7d2fe;
+
+      /* Aurora Gradient */
+      --brand-gradient: linear-gradient(135deg, #4338ca 0%, #6366f1 50%, #a855f7 100%);
+      --brand-gradient-hover: linear-gradient(135deg, #3730a3 0%, #4f46e5 50%, #9333ea 100%);
+      --brand-gradient-subtle: linear-gradient(135deg, rgba(99, 102, 241, 0.09) 0%, rgba(168, 85, 247, 0.04) 100%);
+      --brand-gradient-card: linear-gradient(90deg, #4f46e5 0%, #6366f1 50%, #ec4899 100%);
+      --glow-color: rgba(99, 102, 241, 0.38);
 
       --status-success: #10b981;
       --status-success-bg: #ecfdf5;
@@ -91,13 +105,20 @@
       --theme-name: "Twenty & Stripe Indigo";
     }
 
-    /* 3. PALETTE: RADIX JADE & COURSERA (Modern EdTech Growth) */
+    /* 3. PALETTE: RADIX JADE & COURSERA EMERALD (Modern EdTech Growth) */
     [data-theme="radix-jade"] {
       --brand-primary: #065f46;          /* Deep Forest Jade */
       --brand-primary-hover: #044e39;
       --brand-accent: #059669;           /* Emerald Accent */
       --brand-subtle: #ecfdf5;
       --brand-border: #a7f3d0;
+
+      /* Emerald Gradient */
+      --brand-gradient: linear-gradient(135deg, #064e3b 0%, #059669 50%, #10b981 100%);
+      --brand-gradient-hover: linear-gradient(135deg, #022c22 0%, #047857 50%, #059669 100%);
+      --brand-gradient-subtle: linear-gradient(135deg, rgba(5, 150, 105, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%);
+      --brand-gradient-card: linear-gradient(90deg, #065f46 0%, #059669 50%, #34d399 100%);
+      --glow-color: rgba(5, 150, 105, 0.35);
 
       --status-success: #059669;
       --status-success-bg: #ecfdf5;
@@ -127,13 +148,20 @@
       --theme-name: "Radix Jade & EdTech";
     }
 
-    /* 4. PALETTE: CAL.COM & SUPABASE WARM STONE (Minimalist Warm Architecture) */
+    /* 4. PALETTE: CAL.COM & SUPABASE CHAMPAGNE STONE (Minimalist Warm Architecture) */
     [data-theme="cal-warm"] {
       --brand-primary: #1c1917;          /* Stone 900 */
       --brand-primary-hover: #292524;
-      --brand-accent: #2563eb;
-      --brand-subtle: #f5f5f4;           /* Stone 100 */
+      --brand-accent: #d97706;           /* Warm Amber Accent */
+      --brand-subtle: #fbf7ee;           /* Champagne Tint */
       --brand-border: #e7e5e4;
+
+      /* Champagne Stone Gradient */
+      --brand-gradient: linear-gradient(135deg, #1c1917 0%, #292524 55%, #d97706 100%);
+      --brand-gradient-hover: linear-gradient(135deg, #0c0a09 0%, #1c1917 55%, #b45309 100%);
+      --brand-gradient-subtle: linear-gradient(135deg, rgba(217, 119, 6, 0.08) 0%, rgba(245, 158, 11, 0.03) 100%);
+      --brand-gradient-card: linear-gradient(90deg, #1c1917 0%, #78716c 50%, #f59e0b 100%);
+      --glow-color: rgba(217, 119, 6, 0.35);
 
       --status-success: #15803d;
       --status-success-bg: #f0fdf4;
@@ -163,13 +191,20 @@
       --theme-name: "Cal.com & Warm Stone";
     }
 
-    /* 5. PALETTE: GITHUB PRIMER & ATLASSIAN BLUE (Enterprise Corporate) */
+    /* 5. PALETTE: GITHUB PRIMER & CYBER BLUE-GREEN (Enterprise Corporate) */
     [data-theme="github-primer"] {
       --brand-primary: #0969da;          /* GitHub Premier Blue */
       --brand-primary-hover: #0757b3;
       --brand-accent: #218bff;
       --brand-subtle: #ddf4ff;
       --brand-border: #54aeff;
+
+      /* Cyber Gradient */
+      --brand-gradient: linear-gradient(135deg, #0969da 0%, #1f883d 50%, #2da44e 100%);
+      --brand-gradient-hover: linear-gradient(135deg, #0550ae 0%, #1a7f37 50%, #2c974b 100%);
+      --brand-gradient-subtle: linear-gradient(135deg, rgba(9, 105, 218, 0.08) 0%, rgba(31, 136, 61, 0.04) 100%);
+      --brand-gradient-card: linear-gradient(90deg, #0969da 0%, #218bff 50%, #2da44e 100%);
+      --glow-color: rgba(9, 105, 218, 0.35);
 
       --status-success: #1a7f37;
       --status-success-bg: #dafbe1;
@@ -199,14 +234,20 @@
       --theme-name: "GitHub Primer Enterprise";
     }
 
-    
-    /* 6. PALETTE: MANTINE VIOLET & RAYCAST (Học viện Sáng tạo & Tập trung Cao độ) */
+    /* 6. PALETTE: MANTINE & RAYCAST COSMIC SUNSET (Creative Deep Focus) */
     [data-theme="mantine-violet"] {
       --brand-primary: #6d28d9;          /* Deep Violet */
       --brand-primary-hover: #5b21b6;
       --brand-accent: #8b5cf6;           /* Vivid Purple */
       --brand-subtle: #f5f3ff;
       --brand-border: #ddd6fe;
+
+      /* Cosmic Sunset Gradient */
+      --brand-gradient: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #ec4899 100%);
+      --brand-gradient-hover: linear-gradient(135deg, #4c1d95 0%, #6d28d9 50%, #db2777 100%);
+      --brand-gradient-subtle: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(236, 72, 153, 0.04) 100%);
+      --brand-gradient-card: linear-gradient(90deg, #6d28d9 0%, #8b5cf6 50%, #f472b6 100%);
+      --glow-color: rgba(124, 58, 237, 0.4);
 
       --status-success: #059669;
       --status-success-bg: #ecfdf5;
@@ -236,13 +277,20 @@
       --theme-name: "Mantine & Raycast Violet";
     }
 
-    /* 7. PALETTE: CAMPFIRE & BASECAMP WARM TERRACOTTA (Thân thiện, Nhân văn & Ấm áp) */
+    /* 7. PALETTE: CAMPFIRE & SOLAR TERRACOTTA (Human Friendly & Warm Flame) */
     [data-theme="campfire-amber"] {
       --brand-primary: #c2410c;          /* Warm Terracotta */
       --brand-primary-hover: #9a3412;
       --brand-accent: #ea580c;           /* Amber Orange */
       --brand-subtle: #fff7ed;
       --brand-border: #fed7aa;
+
+      /* Solar Flame Gradient */
+      --brand-gradient: linear-gradient(135deg, #9a3412 0%, #ea580c 50%, #f43f5e 100%);
+      --brand-gradient-hover: linear-gradient(135deg, #7c2d12 0%, #c2410c 50%, #e11d48 100%);
+      --brand-gradient-subtle: linear-gradient(135deg, rgba(234, 88, 12, 0.08) 0%, rgba(244, 63, 94, 0.04) 100%);
+      --brand-gradient-card: linear-gradient(90deg, #c2410c 0%, #ea580c 50%, #fb7185 100%);
+      --glow-color: rgba(234, 88, 12, 0.38);
 
       --status-success: #15803d;
       --status-success-bg: #f0fdf4;
@@ -272,13 +320,20 @@
       --theme-name: "Campfire & Basecamp Amber";
     }
 
-    /* 8. PALETTE: NORDIC FROST & CANVAS LMS TEAL (Thanh lịch Bắc Âu, Chống Mỏi Mắt) */
+    /* 8. PALETTE: NORDIC FROST & GLACIER CYAN (Bắc Âu Thanh Khiết) */
     [data-theme="nordic-cyan"] {
       --brand-primary: #0f766e;          /* Deep Teal */
       --brand-primary-hover: #115e59;
       --brand-accent: #0d9488;           /* Cyan Teal */
       --brand-subtle: #f0fdfa;
       --brand-border: #99f6e4;
+
+      /* Glacier Gradient */
+      --brand-gradient: linear-gradient(135deg, #115e59 0%, #0d9488 50%, #06b6d4 100%);
+      --brand-gradient-hover: linear-gradient(135deg, #134e4a 0%, #0f766e 50%, #0891b2 100%);
+      --brand-gradient-subtle: linear-gradient(135deg, rgba(13, 148, 136, 0.08) 0%, rgba(6, 182, 212, 0.04) 100%);
+      --brand-gradient-card: linear-gradient(90deg, #0f766e 0%, #0d9488 50%, #22d3ee 100%);
+      --glow-color: rgba(13, 148, 136, 0.38);
 
       --status-success: #059669;
       --status-success-bg: #ecfdf5;
@@ -308,13 +363,20 @@
       --theme-name: "Nordic Frost & Canvas Teal";
     }
 
-    /* 9. PALETTE: OLED MIDNIGHT DARK (Linear & Supabase Dark Mode Ban Đêm) */
+    /* 9. PALETTE: OLED MIDNIGHT CYBERPUNK AURORA (Linear & Supabase Dark Mode) */
     [data-theme="oled-dark"] {
       --brand-primary: #3b82f6;          /* Bright Blue */
       --brand-primary-hover: #60a5fa;
-      --brand-accent: #38bdf8;
-      --brand-subtle: #1e293b;
-      --brand-border: #334155;
+      --brand-accent: #8b5cf6;           /* Electric Violet */
+      --brand-subtle: #1e1b4b;
+      --brand-border: #312e81;
+
+      /* Cyberpunk Aurora Gradient */
+      --brand-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #f43f5e 100%);
+      --brand-gradient-hover: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #e11d48 100%);
+      --brand-gradient-subtle: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.08) 100%);
+      --brand-gradient-card: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #f43f5e 100%);
+      --glow-color: rgba(59, 130, 246, 0.5);
 
       --status-success: #10b981;
       --status-success-bg: #064e3b;
@@ -404,18 +466,23 @@
     }
 
     .brand-mark {
-      width: 34px;
-      height: 34px;
+      width: 36px;
+      height: 36px;
       border-radius: var(--radius-md);
-      background: var(--brand-primary);
-      color: var(--accent-badge-color);
+      background: var(--brand-gradient);
+      color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 700;
+      font-weight: 800;
       font-size: 14px;
       letter-spacing: 0.5px;
-      transition: background 0.25s ease;
+      box-shadow: 0 4px 14px var(--glow-color);
+      transition: all 0.25s ease;
+    }
+    .brand-mark:hover {
+      transform: scale(1.06) rotate(-2deg);
+      box-shadow: 0 6px 18px var(--glow-color);
     }
 
     .brand-text h1 {
@@ -466,9 +533,20 @@
       color: var(--text-heading);
     }
     .menu-item.active {
-      background-color: var(--brand-subtle);
+      background: var(--brand-gradient-subtle);
       color: var(--brand-primary);
       font-weight: 600;
+      position: relative;
+    }
+    .menu-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 6px;
+      bottom: 6px;
+      width: 3.5px;
+      border-radius: 0 3px 3px 0;
+      background: var(--brand-gradient);
     }
     .menu-item svg {
       width: 17px;
@@ -530,7 +608,9 @@
     /* Top Navigation Header */
     .app-header {
       height: var(--header-height);
-      background: var(--bg-surface);
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border-light);
       display: flex;
       align-items: center;
@@ -539,7 +619,10 @@
       position: sticky;
       top: 0;
       z-index: 30;
-      transition: background 0.25s ease, border-color 0.25s ease;
+      transition: all 0.25s ease;
+    }
+    [data-theme="oled-dark"] .app-header {
+      background: rgba(18, 18, 21, 0.88);
     }
 
     .header-left-tools {
@@ -649,21 +732,38 @@
       background: var(--bg-surface);
       border: 1px solid var(--border-light);
       border-radius: var(--radius-md);
-      padding: 14px 16px;
+      padding: 16px 18px;
       box-shadow: var(--shadow-subtle);
-      transition: transform 0.15s ease;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
     }
-    .kpi-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-card); }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--brand-gradient);
+      opacity: 0.9;
+    }
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -4px var(--glow-color), var(--shadow-card);
+    }
     .kpi-label {
       font-size: 11.5px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
     .kpi-value {
-      font-size: 20px;
-      font-weight: 700;
+      font-size: 22px;
+      font-weight: 800;
       color: var(--text-heading);
-      margin: 4px 0 2px;
+      margin: 6px 0 3px;
       letter-spacing: -0.02em;
     }
     .kpi-subtext {
@@ -709,11 +809,19 @@
       outline: none;
     }
     .btn-primary {
-      background: var(--brand-primary);
-      color: var(--accent-badge-color);
+      background: var(--brand-gradient);
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 3px 12px var(--glow-color);
+      font-weight: 600;
     }
     .btn-primary:hover {
-      background: var(--brand-primary-hover);
+      background: var(--brand-gradient-hover);
+      transform: translateY(-1.5px);
+      box-shadow: 0 6px 18px var(--glow-color);
+    }
+    .btn-primary:active {
+      transform: translateY(0);
     }
     .btn-secondary {
       background: var(--bg-surface);
@@ -963,22 +1071,38 @@
     }
     .range-input::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
-      background: var(--brand-primary);
+      background: var(--brand-gradient);
       cursor: pointer;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 8px var(--glow-color);
+      border: 2px solid #ffffff;
+      transition: transform 0.15s ease;
+    }
+    .range-input::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
     }
 
     /* Certificate / Report Card View */
     .academic-cert-card {
-      background: var(--bg-surface);
-      border: 2px solid var(--brand-primary);
+      background: linear-gradient(135deg, var(--bg-surface) 0%, var(--brand-subtle) 100%);
+      border: 1px solid var(--brand-border);
       border-radius: var(--radius-lg);
-      padding: 24px;
+      padding: 26px;
       text-align: center;
       position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px -5px var(--glow-color), var(--shadow-card);
+    }
+    .academic-cert-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--brand-gradient);
     }
     .cert-heading {
       font-size: 11.5px;
@@ -988,23 +1112,26 @@
       color: var(--text-muted);
     }
     .overall-score-display {
-      font-size: 48px;
+      font-size: 52px;
       font-weight: 800;
-      color: var(--brand-primary);
+      background: var(--brand-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
       line-height: 1.1;
-      margin: 10px 0 6px;
+      margin: 12px 0 8px;
       font-family: 'JetBrains Mono', monospace;
+      filter: drop-shadow(0 2px 8px var(--glow-color));
     }
     .cefr-badge {
       display: inline-block;
       font-size: 12px;
-      font-weight: 600;
-      background: var(--brand-subtle);
-      color: var(--brand-primary);
-      padding: 3px 12px;
+      font-weight: 700;
+      background: var(--brand-gradient);
+      color: #ffffff;
+      padding: 4px 14px;
       border-radius: var(--radius-pill);
       margin-bottom: 8px;
-      border: 1px solid var(--brand-border);
+      box-shadow: 0 2px 8px var(--glow-color);
     }
     .formula-explanation {
       font-size: 11.5px;
@@ -1121,9 +1248,9 @@
       border-radius: var(--radius-pill);
       transition: width 0.3s ease;
     }
-    .gauge-green { background: var(--status-success); }
-    .gauge-amber { background: var(--status-warning); }
-    .gauge-red { background: var(--status-danger); }
+    .gauge-green { background: linear-gradient(90deg, #059669 0%, #10b981 100%); box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
+    .gauge-amber { background: linear-gradient(90deg, #d97706 0%, #fbbf24 100%); box-shadow: 0 0 8px rgba(245, 158, 11, 0.4); }
+    .gauge-red { background: linear-gradient(90deg, #e11d48 0%, #f43f5e 100%); box-shadow: 0 0 8px rgba(244, 63, 94, 0.4); }
 
     /* ================= MODAL & SLIDE DRAWER ================= */
     .modal-backdrop {
@@ -1400,17 +1527,17 @@
 
       <div class="header-right-tools">
         <!-- Quick Switcher Swatches -->
-        <div class="palette-quick-picker" title="Đổi nhanh bảng màu nghiên cứu từ 106 repo mã nguồn mở">
+        <div class="palette-quick-picker" title="Đổi nhanh bảng màu gradient nghiên cứu từ 106 repo mã nguồn mở">
           <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin-right: 4px;">Theme:</span>
-          <div class="palette-swatch-dot active" title="Oxford Academic" style="background: #1e3a8a;" onclick="applyGlobalTheme('oxford')"></div>
-          <div class="palette-swatch-dot" title="Twenty CRM Indigo" style="background: #4f46e5;" onclick="applyGlobalTheme('twenty-indigo')"></div>
-          <div class="palette-swatch-dot" title="Radix Jade" style="background: #065f46;" onclick="applyGlobalTheme('radix-jade')"></div>
-          <div class="palette-swatch-dot" title="Cal.com Warm Stone" style="background: #1c1917;" onclick="applyGlobalTheme('cal-warm')"></div>
-          <div class="palette-swatch-dot" title="GitHub Primer" style="background: #0969da;" onclick="applyGlobalTheme('github-primer')"></div>
-          <div class="palette-swatch-dot" title="Mantine Violet" style="background: #6d28d9;" onclick="applyGlobalTheme('mantine-violet')"></div>
-          <div class="palette-swatch-dot" title="Campfire Amber" style="background: #c2410c;" onclick="applyGlobalTheme('campfire-amber')"></div>
-          <div class="palette-swatch-dot" title="Nordic Cyan" style="background: #0f766e;" onclick="applyGlobalTheme('nordic-cyan')"></div>
-          <div class="palette-swatch-dot" title="OLED Midnight Dark" style="background: #09090b; border: 1px solid #71717a;" onclick="applyGlobalTheme('oled-dark')"></div>
+          <div class="palette-swatch-dot active" title="Oxford Academic & Royal Sapphire" style="background: linear-gradient(135deg, #1e3a8a, #0284c7);" onclick="applyGlobalTheme('oxford')"></div>
+          <div class="palette-swatch-dot" title="Twenty CRM & Aurora Indigo" style="background: linear-gradient(135deg, #4338ca, #a855f7);" onclick="applyGlobalTheme('twenty-indigo')"></div>
+          <div class="palette-swatch-dot" title="Radix Jade & Emerald" style="background: linear-gradient(135deg, #064e3b, #10b981);" onclick="applyGlobalTheme('radix-jade')"></div>
+          <div class="palette-swatch-dot" title="Cal.com & Champagne Stone" style="background: linear-gradient(135deg, #1c1917, #d97706);" onclick="applyGlobalTheme('cal-warm')"></div>
+          <div class="palette-swatch-dot" title="GitHub Primer Cyber" style="background: linear-gradient(135deg, #0969da, #2da44e);" onclick="applyGlobalTheme('github-primer')"></div>
+          <div class="palette-swatch-dot" title="Mantine & Cosmic Sunset" style="background: linear-gradient(135deg, #5b21b6, #ec4899);" onclick="applyGlobalTheme('mantine-violet')"></div>
+          <div class="palette-swatch-dot" title="Campfire & Solar Terracotta" style="background: linear-gradient(135deg, #9a3412, #f43f5e);" onclick="applyGlobalTheme('campfire-amber')"></div>
+          <div class="palette-swatch-dot" title="Nordic Frost & Glacier Cyan" style="background: linear-gradient(135deg, #115e59, #06b6d4);" onclick="applyGlobalTheme('nordic-cyan')"></div>
+          <div class="palette-swatch-dot" title="OLED Midnight Aurora" style="background: linear-gradient(135deg, #3b82f6, #f43f5e); border: 1px solid #71717a;" onclick="applyGlobalTheme('oled-dark')"></div>
         </div>
 
         <div class="user-profile">
@@ -1721,139 +1848,157 @@
         </div>
 
         <!-- 9 Palette Showcase Cards -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-bottom: 28px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 14px; margin-bottom: 28px;">
           <!-- 1. Oxford Academic -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #1e3a8a; transition: all 0.2s;" onclick="applyGlobalTheme('oxford')">
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #1e3a8a; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('oxford')">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #1e3a8a;">🎓 1. Oxford Academic & Royal Navy</span>
+              <span style="font-weight: 700; color: #1e3a8a;">🎓 1. Oxford Academic & Royal Sapphire</span>
               <span class="menu-pill" id="pill-oxford">Đang kích hoạt</span>
             </div>
             <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: Cambridge English, British Council, Oxford Portal, Moodle Education.</p>
-            <div style="display: flex; gap: 6px;">
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #1e3a8a;" title="Primary #1e3a8a"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #2563eb;" title="Accent #2563eb"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #059669;" title="Success #059669"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #f8fafc; border: 1px solid #cbd5e1;" title="Surface #f8fafc"></div>
+            <div style="margin-top: 10px;">
+              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #0284c7 100%); box-shadow: 0 2px 8px rgba(37,99,235,0.25); margin-bottom: 5px;"></div>
+              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
+                <span>#1e3a8a Navy</span>
+                <span>#2563eb Royal</span>
+                <span>#0284c7 Sky</span>
+              </div>
             </div>
           </div>
 
           <!-- 2. Twenty & Stripe -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #4f46e5; transition: all 0.2s;" onclick="applyGlobalTheme('twenty-indigo')">
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #4f46e5; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('twenty-indigo')">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #4f46e5;">⚡ 2. Twenty CRM & Stripe Indigo</span>
+              <span style="font-weight: 700; color: #4f46e5;">⚡ 2. Twenty CRM & Aurora Indigo</span>
               <span class="menu-pill" id="pill-twenty-indigo">Click để thử</span>
             </div>
             <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: twentyhq/twenty (CRM mã nguồn mở top 1 GitHub), Dub.co, Formbricks.</p>
-            <div style="display: flex; gap: 6px;">
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #4f46e5;" title="Primary #4f46e5"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #6366f1;" title="Accent #6366f1"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #10b981;" title="Success #10b981"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #f8fafc; border: 1px solid #cbd5e1;" title="Surface #f8fafc"></div>
+            <div style="margin-top: 10px;">
+              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #4338ca 0%, #6366f1 50%, #a855f7 100%); box-shadow: 0 2px 8px rgba(99,102,241,0.25); margin-bottom: 5px;"></div>
+              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
+                <span>#4338ca Deep</span>
+                <span>#6366f1 Indigo</span>
+                <span>#a855f7 Violet</span>
+              </div>
             </div>
           </div>
 
           <!-- 3. Radix Jade -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #065f46; transition: all 0.2s;" onclick="applyGlobalTheme('radix-jade')">
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #065f46; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('radix-jade')">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #065f46;">🌿 3. Radix Jade & EdTech Growth</span>
+              <span style="font-weight: 700; color: #065f46;">🌿 3. Radix Jade & Emerald Forest</span>
               <span class="menu-pill" id="pill-radix-jade">Click để thử</span>
             </div>
             <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: Radix UI Colors P3, Coursera, Duolingo Enterprise, Khan Academy UI.</p>
-            <div style="display: flex; gap: 6px;">
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #065f46;" title="Primary #065f46"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #059669;" title="Accent #059669"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #d97706;" title="Warning #d97706"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #f7f9f8; border: 1px solid #cbd5e1;" title="Surface #f7f9f8"></div>
+            <div style="margin-top: 10px;">
+              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #064e3b 0%, #059669 50%, #10b981 100%); box-shadow: 0 2px 8px rgba(5,150,105,0.25); margin-bottom: 5px;"></div>
+              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
+                <span>#064e3b Jade</span>
+                <span>#059669 Emerald</span>
+                <span>#10b981 Mint</span>
+              </div>
             </div>
           </div>
 
           <!-- 4. Cal.com Warm Stone -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #1c1917; transition: all 0.2s;" onclick="applyGlobalTheme('cal-warm')">
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #1c1917; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('cal-warm')">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #1c1917;">🏛️ 4. Cal.com & Supabase Warm Stone</span>
+              <span style="font-weight: 700; color: #1c1917;">🏛️ 4. Cal.com & Champagne Stone</span>
               <span class="menu-pill" id="pill-cal-warm">Click để thử</span>
             </div>
             <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: calcom/cal.com, supabase/supabase, Tailwind Stone 900.</p>
-            <div style="display: flex; gap: 6px;">
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #1c1917;" title="Primary #1c1917"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #78716c;" title="Accent #78716c"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #15803d;" title="Success #15803d"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #fafaf9; border: 1px solid #cbd5e1;" title="Surface #fafaf9"></div>
+            <div style="margin-top: 10px;">
+              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #1c1917 0%, #292524 50%, #d97706 100%); box-shadow: 0 2px 8px rgba(217,119,6,0.25); margin-bottom: 5px;"></div>
+              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
+                <span>#1c1917 Stone</span>
+                <span>#292524 Slate</span>
+                <span>#d97706 Amber</span>
+              </div>
             </div>
           </div>
 
           <!-- 5. GitHub Primer -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #0969da; transition: all 0.2s;" onclick="applyGlobalTheme('github-primer')">
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #0969da; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('github-primer')">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #0969da;">🐙 5. GitHub Primer Enterprise</span>
+              <span style="font-weight: 700; color: #0969da;">🐙 5. GitHub Primer Cyber Blue</span>
               <span class="menu-pill" id="pill-github-primer">Click để thử</span>
             </div>
             <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: primer/primitives (Hệ thống thiết kế của GitHub), Atlassian Design.</p>
-            <div style="display: flex; gap: 6px;">
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #0969da;" title="Primary #0969da"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #1a7f37;" title="Success #1a7f37"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #cf222e;" title="Danger #cf222e"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #f6f8fa; border: 1px solid #cbd5e1;" title="Surface #f6f8fa"></div>
+            <div style="margin-top: 10px;">
+              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #0969da 0%, #218bff 50%, #2da44e 100%); box-shadow: 0 2px 8px rgba(9,105,218,0.25); margin-bottom: 5px;"></div>
+              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
+                <span>#0969da Primer</span>
+                <span>#218bff Cyan</span>
+                <span>#2da44e Green</span>
+              </div>
             </div>
           </div>
 
           <!-- 6. Mantine & Raycast Violet -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #6d28d9; transition: all 0.2s;" onclick="applyGlobalTheme('mantine-violet')">
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #6d28d9; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('mantine-violet')">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #6d28d9;">🔮 6. Mantine & Raycast Violet</span>
+              <span style="font-weight: 700; color: #6d28d9;">🔮 6. Mantine & Cosmic Sunset</span>
               <span class="menu-pill" id="pill-mantine-violet">Click để thử</span>
             </div>
             <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: mantinedev/mantine, raycast/extensions, Infisical, Novu notifications.</p>
-            <div style="display: flex; gap: 6px;">
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #6d28d9;" title="Primary #6d28d9"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #8b5cf6;" title="Accent #8b5cf6"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #059669;" title="Success #059669"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #faf5ff; border: 1px solid #c4b5fd;" title="Surface #faf5ff"></div>
+            <div style="margin-top: 10px;">
+              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #5b21b6 0%, #7c3aed 50%, #ec4899 100%); box-shadow: 0 2px 8px rgba(124,58,237,0.25); margin-bottom: 5px;"></div>
+              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
+                <span>#5b21b6 Deep</span>
+                <span>#7c3aed Violet</span>
+                <span>#ec4899 Pink</span>
+              </div>
             </div>
           </div>
 
           <!-- 7. Campfire Amber -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #c2410c; transition: all 0.2s;" onclick="applyGlobalTheme('campfire-amber')">
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #c2410c; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('campfire-amber')">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #c2410c;">🍁 7. Campfire & Basecamp Amber</span>
+              <span style="font-weight: 700; color: #c2410c;">🍁 7. Campfire & Solar Terracotta</span>
               <span class="menu-pill" id="pill-campfire-amber">Click để thử</span>
             </div>
             <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: 37signals Basecamp, Campfire, Chakra UI Warm Amber, Odoo.</p>
-            <div style="display: flex; gap: 6px;">
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #c2410c;" title="Primary #c2410c"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #ea580c;" title="Accent #ea580c"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #15803d;" title="Success #15803d"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #fefcfb; border: 1px solid #fed7aa;" title="Surface #fefcfb"></div>
+            <div style="margin-top: 10px;">
+              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #9a3412 0%, #ea580c 50%, #f43f5e 100%); box-shadow: 0 2px 8px rgba(234,88,12,0.25); margin-bottom: 5px;"></div>
+              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
+                <span>#9a3412 Sienna</span>
+                <span>#ea580c Amber</span>
+                <span>#f43f5e Rose</span>
+              </div>
             </div>
           </div>
 
           <!-- 8. Nordic Teal -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #0f766e; transition: all 0.2s;" onclick="applyGlobalTheme('nordic-cyan')">
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #0f766e; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('nordic-cyan')">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #0f766e;">❄️ 8. Nordic Frost & Canvas Teal</span>
+              <span style="font-weight: 700; color: #0f766e;">❄️ 8. Nordic Frost & Glacier Cyan</span>
               <span class="menu-pill" id="pill-nordic-cyan">Click để thử</span>
             </div>
             <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: Nord theme, Instructure Canvas LMS, Vikunja, Elastic EUI.</p>
-            <div style="display: flex; gap: 6px;">
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #0f766e;" title="Primary #0f766e"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #0d9488;" title="Accent #0d9488"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #059669;" title="Success #059669"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #f0fdfa; border: 1px solid #99f6e4;" title="Surface #f0fdfa"></div>
+            <div style="margin-top: 10px;">
+              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #115e59 0%, #0d9488 50%, #06b6d4 100%); box-shadow: 0 2px 8px rgba(13,148,136,0.25); margin-bottom: 5px;"></div>
+              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
+                <span>#115e59 Pine</span>
+                <span>#0d9488 Teal</span>
+                <span>#06b6d4 Cyan</span>
+              </div>
             </div>
           </div>
 
           <!-- 9. OLED Dark -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #3b82f6; background: #121215; color: #f4f4f5; transition: all 0.2s;" onclick="applyGlobalTheme('oled-dark')">
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #3b82f6; background: #121215; color: #f4f4f5; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('oled-dark')">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #60a5fa;">🌙 9. OLED Midnight Dark Mode</span>
+              <span style="font-weight: 700; color: #60a5fa;">🌙 9. OLED Midnight Cyber Aurora</span>
               <span class="menu-pill" id="pill-oled-dark" style="background: #27272a; color: #a1a1aa;">Click để thử</span>
             </div>
             <p style="font-size: 12px; color: #a1a1aa; margin-bottom: 8px;">Cảm hứng: Linear Dark, shadcn/ui zinc-dark, Supabase Studio, Dracula theme.</p>
-            <div style="display: flex; gap: 6px;">
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #3b82f6;" title="Primary #3b82f6"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #38bdf8;" title="Accent #38bdf8"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #10b981;" title="Success #10b981"></div>
-              <div style="width: 28px; height: 18px; border-radius: 3px; background: #09090b; border: 1px solid #27272a;" title="Background #09090b"></div>
+            <div style="margin-top: 10px;">
+              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #f43f5e 100%); box-shadow: 0 2px 8px rgba(59,130,246,0.3); margin-bottom: 5px;"></div>
+              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #71717a;">
+                <span>#3b82f6 Neon</span>
+                <span>#8b5cf6 Violet</span>
+                <span>#f43f5e Coral</span>
+              </div>
             </div>
           </div>
         </div>

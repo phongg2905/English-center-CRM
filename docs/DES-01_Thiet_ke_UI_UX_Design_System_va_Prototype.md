@@ -33,17 +33,17 @@ Phiên bản **v3.5** được nhóm thiết kế thủ công tinh xảo, tiến
 
 Mỗi bảng màu được chuẩn hóa theo chuẩn WCAG AAA về tỷ lệ tương phản văn bản/nền, kế thừa trực tiếp từ các kho mã nguồn mở:
 
-| STT | Tên Bảng Màu | Key Theme | Mã Màu Chính (Primary / Accent / Surface) | Cảm Hứng & Nguồn Mở Kế Thừa | Đặc Trưng Cảm Xúc |
+| STT | Tên Bảng Màu | Key Theme | Dải Phối Màu Gradient (Multi-Stop Gradient Flow) | Cảm Hứng & Nguồn Mở Kế Thừa | Đặc Trưng Cảm Xúc |
 |:---:|:---|:---|:---|:---|:---|
-| **1** | **Oxford Academic & Royal Navy** *(Mặc định)* | `oxford` | `#1e3a8a` / `#2563eb` / `#f8fafc` | Cambridge English, British Council, Oxford Portal, Moodle Education | Học thuật uy tín, chuẩn mực, đáng tin cậy |
-| **2** | **Twenty CRM & Stripe Indigo** | `twenty-indigo` | `#4f46e5` / `#6366f1` / `#f8fafc` | `twentyhq/twenty`, Linear, Stripe, Dub.co, Formbricks | SaaS công nghệ cao, hiện đại, sắc sảo |
-| **3** | **Radix Jade & EdTech Growth** | `radix-jade` | `#065f46` / `#059669` / `#f7f9f8` | `radix-ui/colors` (Jade P3), Coursera, Duolingo, Khan Academy | Trưởng thành, phát triển tri thức, tươi mát |
-| **4** | **Cal.com & Supabase Warm Stone** | `cal-warm` | `#1c1917` / `#78716c` / `#fafaf9` | `calcom/cal.com`, `supabase/supabase`, Tailwind Stone 900 | Kiến trúc đá ấm, tối giản thanh tao, sang trọng |
-| **5** | **GitHub Primer Enterprise** | `github-primer` | `#0969da` / `#218bff` / `#f6f8fa` | `primer/primitives` (GitHub), Jira Atlassian, Gitlab | Chuẩn doanh nghiệp quy mô lớn, bền bỉ |
-| **6** | **Mantine & Raycast Violet** | `mantine-violet` | `#6d28d9` / `#8b5cf6` / `#faf5ff` | `mantinedev/mantine`, Raycast, Infisical, Novu | Học viện sáng tạo, tư duy chiều sâu |
-| **7** | **Campfire & Basecamp Amber** | `campfire-amber` | `#c2410c` / `#ea580c` / `#fefcfb` | 37signals Basecamp, Campfire, Chakra UI Warm Amber | Gần gũi, ấm áp, thân thiện với phụ huynh |
-| **8** | **Nordic Frost & Canvas Teal** | `nordic-cyan` | `#0f766e` / `#0d9488` / `#f0fdfa` | `nordtheme/nord`, Instructure Canvas LMS, Vikunja | Dịu mắt, thanh thoát, giảm căng thẳng làm việc |
-| **9** | **OLED Midnight Dark Mode** | `oled-dark` | `#3b82f6` / `#38bdf8` / `#09090b` | Linear Dark, `shadcn/ui` zinc-dark, Supabase Studio Dark | Chế độ ban đêm tối ưu cho quản trị viên trực ca |
+| **1** | **Oxford Academic & Royal Sapphire** *(Mặc định)* | `oxford` | `linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #0284c7 100%)` | Cambridge English, British Council, Oxford Portal, Moodle | Uy tín học thuật, chiều sâu trí thức, tin cậy tuyệt đối |
+| **2** | **Twenty CRM & Aurora Indigo** | `twenty-indigo` | `linear-gradient(135deg, #4338ca 0%, #6366f1 50%, #a855f7 100%)` | `twentyhq/twenty`, Linear, Stripe, Dub.co, Formbricks | SaaS công nghệ cao, hiện đại, sắc sảo và cuốn hút |
+| **3** | **Radix Jade & Emerald Forest** | `radix-jade` | `linear-gradient(135deg, #064e3b 0%, #059669 50%, #10b981 100%)` | `radix-ui/colors` (Jade P3), Coursera, Duolingo, Khan Academy | Trưởng thành, năng lượng phát triển tri thức tươi mát |
+| **4** | **Cal.com & Champagne Stone** | `cal-warm` | `linear-gradient(135deg, #1c1917 0%, #292524 55%, #d97706 100%)` | `calcom/cal.com`, `supabase/supabase`, Tailwind Stone 900 | Kiến trúc đá ấm, ánh vàng champagne tối giản xa xỉ |
+| **5** | **GitHub Primer Cyber Blue** | `github-primer` | `linear-gradient(135deg, #0969da 0%, #218bff 50%, #2da44e 100%)` | `primer/primitives` (GitHub), Jira Atlassian, Gitlab | Chuẩn mực doanh nghiệp quốc tế, năng động, bền bỉ |
+| **6** | **Mantine & Cosmic Sunset** | `mantine-violet` | `linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #ec4899 100%)` | `mantinedev/mantine`, Raycast, Infisical, Novu | Học viện sáng tạo, hoàng hôn vũ trụ, tư duy đổi mới |
+| **7** | **Campfire & Solar Terracotta** | `campfire-amber` | `linear-gradient(135deg, #9a3412 0%, #ea580c 50%, #f43f5e 100%)` | 37signals Basecamp, Campfire, Chakra UI Warm Amber | Gần gũi, ấm áp ngọn lửa trại, thân thiện với phụ huynh |
+| **8** | **Nordic Frost & Glacier Cyan** | `nordic-cyan` | `linear-gradient(135deg, #115e59 0%, #0d9488 50%, #06b6d4 100%)` | `nordtheme/nord`, Instructure Canvas LMS, Vikunja | Sông băng Bắc Âu thanh khiết, chống mỏi mắt hiệu quả |
+| **9** | **OLED Midnight Cyber Aurora** | `oled-dark` | `linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #f43f5e 100%)` | Linear Dark, `shadcn/ui` zinc-dark, Supabase Dark Mode | Giao diện ban đêm neon rực rỡ, chuẩn chuyên gia IT |
 
 ---
 
