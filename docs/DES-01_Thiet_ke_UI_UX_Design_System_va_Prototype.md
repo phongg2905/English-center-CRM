@@ -29,21 +29,26 @@ Phiên bản **v3.5** được nhóm thiết kế thủ công tinh xảo, tiến
 
 ---
 
-## 2. HỆ THỐNG 9 BẢNG MÀU TUYỂN CHỌN (9 CURATED COLOR PALETTES)
+## 2. HỆ THỐNG THIẾT KẾ CHÍNH THỨC: MANTINE & COSMIC SUNSET GRADIENT (CHỐT ĐỘC QUYỀN)
 
-Mỗi bảng màu được chuẩn hóa theo chuẩn WCAG AAA về tỷ lệ tương phản văn bản/nền, kế thừa trực tiếp từ các kho mã nguồn mở:
+Sau khi khảo sát và đánh giá 106 kho mã nguồn mở cùng 9 bộ màu thử nghiệm, nhóm dự án đã **quyết định chốt độc quyền phong cách Mantine & Cosmic Sunset** và loại bỏ toàn bộ các màu còn lại để tạo nên bản sắc nhận diện thương hiệu nhất quán, cao cấp và khác biệt hoàn toàn:
 
-| STT | Tên Bảng Màu | Key Theme | Dải Phối Màu Gradient (Multi-Stop Gradient Flow) | Cảm Hứng & Nguồn Mở Kế Thừa | Đặc Trưng Cảm Xúc |
-|:---:|:---|:---|:---|:---|:---|
-| **1** | **Oxford Academic & Royal Sapphire** *(Mặc định)* | `oxford` | `linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #0284c7 100%)` | Cambridge English, British Council, Oxford Portal, Moodle | Uy tín học thuật, chiều sâu trí thức, tin cậy tuyệt đối |
-| **2** | **Twenty CRM & Aurora Indigo** | `twenty-indigo` | `linear-gradient(135deg, #4338ca 0%, #6366f1 50%, #a855f7 100%)` | `twentyhq/twenty`, Linear, Stripe, Dub.co, Formbricks | SaaS công nghệ cao, hiện đại, sắc sảo và cuốn hút |
-| **3** | **Radix Jade & Emerald Forest** | `radix-jade` | `linear-gradient(135deg, #064e3b 0%, #059669 50%, #10b981 100%)` | `radix-ui/colors` (Jade P3), Coursera, Duolingo, Khan Academy | Trưởng thành, năng lượng phát triển tri thức tươi mát |
-| **4** | **Cal.com & Champagne Stone** | `cal-warm` | `linear-gradient(135deg, #1c1917 0%, #292524 55%, #d97706 100%)` | `calcom/cal.com`, `supabase/supabase`, Tailwind Stone 900 | Kiến trúc đá ấm, ánh vàng champagne tối giản xa xỉ |
-| **5** | **GitHub Primer Cyber Blue** | `github-primer` | `linear-gradient(135deg, #0969da 0%, #218bff 50%, #2da44e 100%)` | `primer/primitives` (GitHub), Jira Atlassian, Gitlab | Chuẩn mực doanh nghiệp quốc tế, năng động, bền bỉ |
-| **6** | **Mantine & Cosmic Sunset** | `mantine-violet` | `linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #ec4899 100%)` | `mantinedev/mantine`, Raycast, Infisical, Novu | Học viện sáng tạo, hoàng hôn vũ trụ, tư duy đổi mới |
-| **7** | **Campfire & Solar Terracotta** | `campfire-amber` | `linear-gradient(135deg, #9a3412 0%, #ea580c 50%, #f43f5e 100%)` | 37signals Basecamp, Campfire, Chakra UI Warm Amber | Gần gũi, ấm áp ngọn lửa trại, thân thiện với phụ huynh |
-| **8** | **Nordic Frost & Glacier Cyan** | `nordic-cyan` | `linear-gradient(135deg, #115e59 0%, #0d9488 50%, #06b6d4 100%)` | `nordtheme/nord`, Instructure Canvas LMS, Vikunja | Sông băng Bắc Âu thanh khiết, chống mỏi mắt hiệu quả |
-| **9** | **OLED Midnight Cyber Aurora** | `oled-dark` | `linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #f43f5e 100%)` | Linear Dark, `shadcn/ui` zinc-dark, Supabase Dark Mode | Giao diện ban đêm neon rực rỡ, chuẩn chuyên gia IT |
+### 2.1. Bảng màu phối hợp cốt lõi (Core Color Harmony)
+* **🔮 Deep Violet (`#5b21b6`):** Màu tím sâu thẳm tượng trưng cho chiều sâu học thuật, uy tín giáo dục và sự tập trung trí tuệ cao độ (kế thừa từ `mantinedev/mantine`).
+* **👑 Royal Purple (`#7c3aed`):** Màu tím hoàng gia rực rỡ dùng làm điểm nhấn tương tác, thẻ chuyển đổi trạng thái và icon điều hành (kế thừa từ `raycast/extensions`).
+* **🌅 Neon Sunset Pink (`#ec4899`):** Sắc hồng hoàng hôn rực sáng tạo điểm kết thúc đầy năng lượng, sự trẻ trung và bứt phá của học viên (kế thừa từ `infisical` và `novu`).
+
+### 2.2. Dải chuyển màu Gradient chuẩn (Official Brand Gradient Flow)
+* **`--brand-gradient`:** `linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #ec4899 100%)`
+* **`--brand-gradient-hover`:** `linear-gradient(135deg, #4c1d95 0%, #6d28d9 50%, #db2777 100%)`
+* **`--brand-gradient-subtle`:** `linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(236, 72, 153, 0.04) 100%)`
+* **`--glow-color`:** `rgba(124, 58, 237, 0.38)` (Đổ bóng phát quang tím cho nút bấm và thẻ card)
+
+### 2.3. Màu nền, viền và kiểu chữ tương phản cao
+* **Nền trang (`--bg-page`):** `#faf5ff` (Sắc tím lavender cực nhạt, êm dịu, loại bỏ cảm giác trắng bệch khô khan).
+* **Nền thẻ / Panel (`--bg-surface`):** `#ffffff` với viền mỏng `#e9d5ff` tạo khối vi mô tinh xảo.
+* **Tiêu đề chính (`--text-heading`):** `#2e1065` (Tím đen siêu tương phản chuẩn WCAG AAA).
+* **Văn bản nội dung (`--text-body`):** `#4c1d95` (Dịu mắt, phân biệt rõ ràng với chú thích).
 
 ---
 

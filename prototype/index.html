@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" data-theme="oxford">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,243 +12,29 @@
 
   <style>
     /* ==========================================================================
-       HỆ THỐNG ĐA BẢNG MÀU & HIỆU ỨNG GRADIENT CAO CẤP (MULTI-PALETTE GRADIENT ENGINE)
-       Nghiên cứu & đúc kết từ 106 dự án Mã Nguồn Mở hàng đầu thế giới:
-       - Twenty CRM, Plane.so, Cal.com, Dub.co, Supabase, Formbricks, Medusa
-       - Radix UI Colors, Tailwind CSS, IBM Carbon, GitHub Primer, Shopify Polaris
-       - Linear.app, Stripe, Atlassian, Ant Design, Chakra UI, Tremor, Mantine
+       HỆ THỐNG THIẾT KẾ CHÍNH THỨC (OFFICIAL DESIGN SYSTEM SPECIFICATION)
+       Chủ đề độc quyền: 🔮 MANTINE & COSMIC SUNSET GRADIENT
+       Cảm hứng tinh hoa từ: mantinedev/mantine, raycast/extensions, Infisical, Novu
+       Phối màu cốt lõi: #5b21b6 (Deep Violet), #7c3aed (Royal Purple), #ec4899 (Neon Sunset)
        ========================================================================== */
 
-    /* 1. PALETTE MẶC ĐỊNH: OXFORD ACADEMIC & ROYAL SAPPHIRE (Cambridge, British Council, Oxford) */
-    :root, [data-theme="oxford"] {
-      --brand-primary: #1e3a8a;          /* Oxford Navy */
-      --brand-primary-hover: #172554;
-      --brand-accent: #2563eb;           /* Royal Blue */
-      --brand-subtle: #f0f4fd;           /* Soft Blue Surface */
-      --brand-border: #dbe4f9;
-
-      /* Multi-stop Gradients */
-      --brand-gradient: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #0284c7 100%);
-      --brand-gradient-hover: linear-gradient(135deg, #172554 0%, #1d4ed8 55%, #0369a1 100%);
-      --brand-gradient-subtle: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(2, 132, 199, 0.04) 100%);
-      --brand-gradient-card: linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #38bdf8 100%);
-      --glow-color: rgba(37, 99, 235, 0.32);
-
-      --status-success: #059669;
-      --status-success-bg: #f0fdf4;
-      --status-success-border: #bbf7d0;
-
-      --status-warning: #b45309;
-      --status-warning-bg: #fffbeb;
-      --status-warning-border: #fef08a;
-
-      --status-danger: #b91c1c;
-      --status-danger-bg: #fef2f2;
-      --status-danger-border: #fecaca;
-
-      --bg-page: #f8fafc;
-      --bg-surface: #ffffff;
-      --bg-surface-hover: #f1f5f9;
-      --border-light: #e2e8f0;
-      --border-darker: #cbd5e1;
-
-      --text-heading: #0f172a;
-      --text-body: #334155;
-      --text-muted: #64748b;
-      --text-hint: #94a3b8;
-
-      --accent-badge-bg: #1e3a8a;
-      --accent-badge-color: #ffffff;
-      --theme-name: "Oxford Academic";
-    }
-
-    /* 2. PALETTE: TWENTY CRM & AURORA INDIGO-PURPLE (Modern SaaS Gold Standard) */
-    [data-theme="twenty-indigo"] {
-      --brand-primary: #4f46e5;          /* Modern Indigo */
-      --brand-primary-hover: #4338ca;
-      --brand-accent: #6366f1;
-      --brand-subtle: #eef2ff;
-      --brand-border: #c7d2fe;
-
-      /* Aurora Gradient */
-      --brand-gradient: linear-gradient(135deg, #4338ca 0%, #6366f1 50%, #a855f7 100%);
-      --brand-gradient-hover: linear-gradient(135deg, #3730a3 0%, #4f46e5 50%, #9333ea 100%);
-      --brand-gradient-subtle: linear-gradient(135deg, rgba(99, 102, 241, 0.09) 0%, rgba(168, 85, 247, 0.04) 100%);
-      --brand-gradient-card: linear-gradient(90deg, #4f46e5 0%, #6366f1 50%, #ec4899 100%);
-      --glow-color: rgba(99, 102, 241, 0.38);
-
-      --status-success: #10b981;
-      --status-success-bg: #ecfdf5;
-      --status-success-border: #a7f3d0;
-
-      --status-warning: #f59e0b;
-      --status-warning-bg: #fffbeb;
-      --status-warning-border: #fde68a;
-
-      --status-danger: #f43f5e;
-      --status-danger-bg: #fff1f2;
-      --status-danger-border: #fecdd3;
-
-      --bg-page: #f8fafc;
-      --bg-surface: #ffffff;
-      --bg-surface-hover: #f1f5f9;
-      --border-light: #e2e8f0;
-      --border-darker: #cbd5e1;
-
-      --text-heading: #0f172a;
-      --text-body: #334155;
-      --text-muted: #64748b;
-      --text-hint: #94a3b8;
-
-      --accent-badge-bg: #4f46e5;
-      --accent-badge-color: #ffffff;
-      --theme-name: "Twenty & Stripe Indigo";
-    }
-
-    /* 3. PALETTE: RADIX JADE & COURSERA EMERALD (Modern EdTech Growth) */
-    [data-theme="radix-jade"] {
-      --brand-primary: #065f46;          /* Deep Forest Jade */
-      --brand-primary-hover: #044e39;
-      --brand-accent: #059669;           /* Emerald Accent */
-      --brand-subtle: #ecfdf5;
-      --brand-border: #a7f3d0;
-
-      /* Emerald Gradient */
-      --brand-gradient: linear-gradient(135deg, #064e3b 0%, #059669 50%, #10b981 100%);
-      --brand-gradient-hover: linear-gradient(135deg, #022c22 0%, #047857 50%, #059669 100%);
-      --brand-gradient-subtle: linear-gradient(135deg, rgba(5, 150, 105, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%);
-      --brand-gradient-card: linear-gradient(90deg, #065f46 0%, #059669 50%, #34d399 100%);
-      --glow-color: rgba(5, 150, 105, 0.35);
-
-      --status-success: #059669;
-      --status-success-bg: #ecfdf5;
-      --status-success-border: #6ee7b7;
-
-      --status-warning: #d97706;
-      --status-warning-bg: #fffbeb;
-      --status-warning-border: #fde68a;
-
-      --status-danger: #e11d48;
-      --status-danger-bg: #fff1f2;
-      --status-danger-border: #fda4af;
-
-      --bg-page: #f7f9f8;
-      --bg-surface: #ffffff;
-      --bg-surface-hover: #f0fdf4;
-      --border-light: #e6eae8;
-      --border-darker: #cbd5d1;
-
-      --text-heading: #062f27;
-      --text-body: #1e3a34;
-      --text-muted: #4b635d;
-      --text-hint: #889e98;
-
-      --accent-badge-bg: #065f46;
-      --accent-badge-color: #ffffff;
-      --theme-name: "Radix Jade & EdTech";
-    }
-
-    /* 4. PALETTE: CAL.COM & SUPABASE CHAMPAGNE STONE (Minimalist Warm Architecture) */
-    [data-theme="cal-warm"] {
-      --brand-primary: #1c1917;          /* Stone 900 */
-      --brand-primary-hover: #292524;
-      --brand-accent: #d97706;           /* Warm Amber Accent */
-      --brand-subtle: #fbf7ee;           /* Champagne Tint */
-      --brand-border: #e7e5e4;
-
-      /* Champagne Stone Gradient */
-      --brand-gradient: linear-gradient(135deg, #1c1917 0%, #292524 55%, #d97706 100%);
-      --brand-gradient-hover: linear-gradient(135deg, #0c0a09 0%, #1c1917 55%, #b45309 100%);
-      --brand-gradient-subtle: linear-gradient(135deg, rgba(217, 119, 6, 0.08) 0%, rgba(245, 158, 11, 0.03) 100%);
-      --brand-gradient-card: linear-gradient(90deg, #1c1917 0%, #78716c 50%, #f59e0b 100%);
-      --glow-color: rgba(217, 119, 6, 0.35);
-
-      --status-success: #15803d;
-      --status-success-bg: #f0fdf4;
-      --status-success-border: #bbf7d0;
-
-      --status-warning: #b45309;
-      --status-warning-bg: #fffbeb;
-      --status-warning-border: #fef08a;
-
-      --status-danger: #b91c1c;
-      --status-danger-bg: #fef2f2;
-      --status-danger-border: #fecaca;
-
-      --bg-page: #fafaf9;               /* Warm Stone Page */
-      --bg-surface: #ffffff;
-      --bg-surface-hover: #f5f5f4;
-      --border-light: #e7e5e4;
-      --border-darker: #d6d3d1;
-
-      --text-heading: #1c1917;
-      --text-body: #44403c;
-      --text-muted: #78716c;
-      --text-hint: #a8a29e;
-
-      --accent-badge-bg: #1c1917;
-      --accent-badge-color: #ffffff;
-      --theme-name: "Cal.com & Warm Stone";
-    }
-
-    /* 5. PALETTE: GITHUB PRIMER & CYBER BLUE-GREEN (Enterprise Corporate) */
-    [data-theme="github-primer"] {
-      --brand-primary: #0969da;          /* GitHub Premier Blue */
-      --brand-primary-hover: #0757b3;
-      --brand-accent: #218bff;
-      --brand-subtle: #ddf4ff;
-      --brand-border: #54aeff;
-
-      /* Cyber Gradient */
-      --brand-gradient: linear-gradient(135deg, #0969da 0%, #1f883d 50%, #2da44e 100%);
-      --brand-gradient-hover: linear-gradient(135deg, #0550ae 0%, #1a7f37 50%, #2c974b 100%);
-      --brand-gradient-subtle: linear-gradient(135deg, rgba(9, 105, 218, 0.08) 0%, rgba(31, 136, 61, 0.04) 100%);
-      --brand-gradient-card: linear-gradient(90deg, #0969da 0%, #218bff 50%, #2da44e 100%);
-      --glow-color: rgba(9, 105, 218, 0.35);
-
-      --status-success: #1a7f37;
-      --status-success-bg: #dafbe1;
-      --status-success-border: #4ac26b;
-
-      --status-warning: #9a6700;
-      --status-warning-bg: #fff8c5;
-      --status-warning-border: #d4a72c;
-
-      --status-danger: #cf222e;
-      --status-danger-bg: #ffebe9;
-      --status-danger-border: #ff8182;
-
-      --bg-page: #f6f8fa;
-      --bg-surface: #ffffff;
-      --bg-surface-hover: #f3f4f6;
-      --border-light: #d0d7de;
-      --border-darker: #afb8c1;
-
-      --text-heading: #1f2328;
-      --text-body: #24292f;
-      --text-muted: #656d76;
-      --text-hint: #8c959f;
-
-      --accent-badge-bg: #0969da;
-      --accent-badge-color: #ffffff;
-      --theme-name: "GitHub Primer Enterprise";
-    }
-
-    /* 6. PALETTE: MANTINE & RAYCAST COSMIC SUNSET (Creative Deep Focus) */
-    [data-theme="mantine-violet"] {
+    :root {
+      /* Brand Color Harmony */
       --brand-primary: #6d28d9;          /* Deep Violet */
       --brand-primary-hover: #5b21b6;
-      --brand-accent: #8b5cf6;           /* Vivid Purple */
-      --brand-subtle: #f5f3ff;
+      --brand-accent: #7c3aed;           /* Royal Purple */
+      --brand-accent-glow: #ec4899;      /* Neon Sunset Pink */
+      --brand-subtle: #f5f3ff;           /* Lavender Surface */
       --brand-border: #ddd6fe;
 
-      /* Cosmic Sunset Gradient */
+      /* Cosmic Sunset Gradient Tokens */
       --brand-gradient: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #ec4899 100%);
       --brand-gradient-hover: linear-gradient(135deg, #4c1d95 0%, #6d28d9 50%, #db2777 100%);
       --brand-gradient-subtle: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(236, 72, 153, 0.04) 100%);
-      --brand-gradient-card: linear-gradient(90deg, #6d28d9 0%, #8b5cf6 50%, #f472b6 100%);
-      --glow-color: rgba(124, 58, 237, 0.4);
+      --brand-gradient-card: linear-gradient(90deg, #5b21b6 0%, #7c3aed 50%, #ec4899 100%);
+      --glow-color: rgba(124, 58, 237, 0.38);
 
+      /* Semantic Status Badges (Pastel Harmonized with Purple) */
       --status-success: #059669;
       --status-success-bg: #ecfdf5;
       --status-success-border: #a7f3d0;
@@ -261,149 +47,22 @@
       --status-danger-bg: #fff1f2;
       --status-danger-border: #fecdd3;
 
-      --bg-page: #faf5ff;
+      /* Page & Surface Tokens */
+      --bg-page: #faf5ff;                /* Soft lavender ambient background */
       --bg-surface: #ffffff;
       --bg-surface-hover: #f3e8ff;
       --border-light: #e9d5ff;
       --border-darker: #c4b5fd;
 
-      --text-heading: #2e1065;
-      --text-body: #4c1d95;
+      /* Typography Contrast */
+      --text-heading: #2e1065;           /* Deep dark violet for crisp readability */
+      --text-body: #4c1d95;              /* Body violet */
       --text-muted: #6d28d9;
       --text-hint: #8b5cf6;
 
       --accent-badge-bg: #6d28d9;
       --accent-badge-color: #ffffff;
-      --theme-name: "Mantine & Raycast Violet";
-    }
-
-    /* 7. PALETTE: CAMPFIRE & SOLAR TERRACOTTA (Human Friendly & Warm Flame) */
-    [data-theme="campfire-amber"] {
-      --brand-primary: #c2410c;          /* Warm Terracotta */
-      --brand-primary-hover: #9a3412;
-      --brand-accent: #ea580c;           /* Amber Orange */
-      --brand-subtle: #fff7ed;
-      --brand-border: #fed7aa;
-
-      /* Solar Flame Gradient */
-      --brand-gradient: linear-gradient(135deg, #9a3412 0%, #ea580c 50%, #f43f5e 100%);
-      --brand-gradient-hover: linear-gradient(135deg, #7c2d12 0%, #c2410c 50%, #e11d48 100%);
-      --brand-gradient-subtle: linear-gradient(135deg, rgba(234, 88, 12, 0.08) 0%, rgba(244, 63, 94, 0.04) 100%);
-      --brand-gradient-card: linear-gradient(90deg, #c2410c 0%, #ea580c 50%, #fb7185 100%);
-      --glow-color: rgba(234, 88, 12, 0.38);
-
-      --status-success: #15803d;
-      --status-success-bg: #f0fdf4;
-      --status-success-border: #bbf7d0;
-
-      --status-warning: #b45309;
-      --status-warning-bg: #fffbeb;
-      --status-warning-border: #fef08a;
-
-      --status-danger: #be123c;
-      --status-danger-bg: #fff1f2;
-      --status-danger-border: #fecdd3;
-
-      --bg-page: #fefcfb;
-      --bg-surface: #ffffff;
-      --bg-surface-hover: #ffedd5;
-      --border-light: #fed7aa;
-      --border-darker: #fdba74;
-
-      --text-heading: #431407;
-      --text-body: #7c2d12;
-      --text-muted: #9a3412;
-      --text-hint: #c2410c;
-
-      --accent-badge-bg: #c2410c;
-      --accent-badge-color: #ffffff;
-      --theme-name: "Campfire & Basecamp Amber";
-    }
-
-    /* 8. PALETTE: NORDIC FROST & GLACIER CYAN (Bắc Âu Thanh Khiết) */
-    [data-theme="nordic-cyan"] {
-      --brand-primary: #0f766e;          /* Deep Teal */
-      --brand-primary-hover: #115e59;
-      --brand-accent: #0d9488;           /* Cyan Teal */
-      --brand-subtle: #f0fdfa;
-      --brand-border: #99f6e4;
-
-      /* Glacier Gradient */
-      --brand-gradient: linear-gradient(135deg, #115e59 0%, #0d9488 50%, #06b6d4 100%);
-      --brand-gradient-hover: linear-gradient(135deg, #134e4a 0%, #0f766e 50%, #0891b2 100%);
-      --brand-gradient-subtle: linear-gradient(135deg, rgba(13, 148, 136, 0.08) 0%, rgba(6, 182, 212, 0.04) 100%);
-      --brand-gradient-card: linear-gradient(90deg, #0f766e 0%, #0d9488 50%, #22d3ee 100%);
-      --glow-color: rgba(13, 148, 136, 0.38);
-
-      --status-success: #059669;
-      --status-success-bg: #ecfdf5;
-      --status-success-border: #a7f3d0;
-
-      --status-warning: #d97706;
-      --status-warning-bg: #fffbeb;
-      --status-warning-border: #fde68a;
-
-      --status-danger: #e11d48;
-      --status-danger-bg: #fff1f2;
-      --status-danger-border: #fda4af;
-
-      --bg-page: #f0fdfa;
-      --bg-surface: #ffffff;
-      --bg-surface-hover: #ccfbf1;
-      --border-light: #99f6e4;
-      --border-darker: #5eead4;
-
-      --text-heading: #134e4a;
-      --text-body: #115e59;
-      --text-muted: #0f766e;
-      --text-hint: #14b8a6;
-
-      --accent-badge-bg: #0f766e;
-      --accent-badge-color: #ffffff;
-      --theme-name: "Nordic Frost & Canvas Teal";
-    }
-
-    /* 9. PALETTE: OLED MIDNIGHT CYBERPUNK AURORA (Linear & Supabase Dark Mode) */
-    [data-theme="oled-dark"] {
-      --brand-primary: #3b82f6;          /* Bright Blue */
-      --brand-primary-hover: #60a5fa;
-      --brand-accent: #8b5cf6;           /* Electric Violet */
-      --brand-subtle: #1e1b4b;
-      --brand-border: #312e81;
-
-      /* Cyberpunk Aurora Gradient */
-      --brand-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #f43f5e 100%);
-      --brand-gradient-hover: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #e11d48 100%);
-      --brand-gradient-subtle: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.08) 100%);
-      --brand-gradient-card: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #f43f5e 100%);
-      --glow-color: rgba(59, 130, 246, 0.5);
-
-      --status-success: #10b981;
-      --status-success-bg: #064e3b;
-      --status-success-border: #047857;
-
-      --status-warning: #f59e0b;
-      --status-warning-bg: #78350f;
-      --status-warning-border: #b45309;
-
-      --status-danger: #f43f5e;
-      --status-danger-bg: #881337;
-      --status-danger-border: #be123c;
-
-      --bg-page: #09090b;               /* Deep OLED Black */
-      --bg-surface: #121215;            /* Dark Slate Surface */
-      --bg-surface-hover: #1c1c22;
-      --border-light: #27272a;
-      --border-darker: #3f3f46;
-
-      --text-heading: #f4f4f5;
-      --text-body: #d4d4d8;
-      --text-muted: #a1a1aa;
-      --text-hint: #71717a;
-
-      --accent-badge-bg: #3b82f6;
-      --accent-badge-color: #ffffff;
-      --theme-name: "OLED Midnight Dark";
+      --theme-name: "Mantine & Cosmic Sunset";
     }
 
     /* Common Variables */
@@ -568,33 +227,7 @@
       color: var(--brand-primary);
     }
 
-    /* Theme Switcher Widget in Sidebar */
-    .sidebar-theme-widget {
-      padding: 14px 16px;
-      border-top: 1px solid var(--border-light);
-      background: var(--bg-page);
-    }
-    .widget-label {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .theme-select-box {
-      width: 100%;
-      padding: 6px 10px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-light);
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--text-heading);
-      background: var(--bg-surface);
-      cursor: pointer;
-      outline: none;
-    }
+    
 
     /* ================= MAIN CONTAINER ================= */
     .app-main {
@@ -1492,25 +1125,11 @@
 
       <a class="menu-item" onclick="navToTab('tab-design-system', this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
-        <span>100+ Bảng màu Mã nguồn mở</span>
+        <span>Nghiên cứu 106 Mã nguồn mở</span>
       </a>
     </div>
 
-    <!-- Theme Switcher Widget -->
-    <div class="sidebar-theme-widget">
-      <div class="widget-label">
-        <span>BẢNG MÀU CHỦ ĐẠO</span>
-        <span id="themeBadgeName" style="color: var(--brand-primary); font-weight: 700;">Oxford</span>
-      </div>
-      <select class="theme-select-box" id="themeSelectInput" onchange="applyGlobalTheme(this.value)">
-        <option value="oxford">🎓 1. Oxford Academic & Slate</option>
-        <option value="twenty-indigo">⚡ 2. Twenty CRM & Stripe Indigo</option>
-        <option value="radix-jade">🌿 3. Radix Jade & EdTech Growth</option>
-        <option value="cal-warm">☕ 4. Cal.com & Supabase Warm Stone</option>
-        <option value="github-primer">🐙 5. GitHub Primer Enterprise</option>
-      </select>
-    </div>
-  </aside>
+    </aside>
 
   <!-- ================= MAIN CONTENT ================= -->
   <main class="app-main">
@@ -1526,21 +1145,14 @@
       </div>
 
       <div class="header-right-tools">
-        <!-- Quick Switcher Swatches -->
-        <div class="palette-quick-picker" title="Đổi nhanh bảng màu gradient nghiên cứu từ 106 repo mã nguồn mở">
-          <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin-right: 4px;">Theme:</span>
-          <div class="palette-swatch-dot active" title="Oxford Academic & Royal Sapphire" style="background: linear-gradient(135deg, #1e3a8a, #0284c7);" onclick="applyGlobalTheme('oxford')"></div>
-          <div class="palette-swatch-dot" title="Twenty CRM & Aurora Indigo" style="background: linear-gradient(135deg, #4338ca, #a855f7);" onclick="applyGlobalTheme('twenty-indigo')"></div>
-          <div class="palette-swatch-dot" title="Radix Jade & Emerald" style="background: linear-gradient(135deg, #064e3b, #10b981);" onclick="applyGlobalTheme('radix-jade')"></div>
-          <div class="palette-swatch-dot" title="Cal.com & Champagne Stone" style="background: linear-gradient(135deg, #1c1917, #d97706);" onclick="applyGlobalTheme('cal-warm')"></div>
-          <div class="palette-swatch-dot" title="GitHub Primer Cyber" style="background: linear-gradient(135deg, #0969da, #2da44e);" onclick="applyGlobalTheme('github-primer')"></div>
-          <div class="palette-swatch-dot" title="Mantine & Cosmic Sunset" style="background: linear-gradient(135deg, #5b21b6, #ec4899);" onclick="applyGlobalTheme('mantine-violet')"></div>
-          <div class="palette-swatch-dot" title="Campfire & Solar Terracotta" style="background: linear-gradient(135deg, #9a3412, #f43f5e);" onclick="applyGlobalTheme('campfire-amber')"></div>
-          <div class="palette-swatch-dot" title="Nordic Frost & Glacier Cyan" style="background: linear-gradient(135deg, #115e59, #06b6d4);" onclick="applyGlobalTheme('nordic-cyan')"></div>
-          <div class="palette-swatch-dot" title="OLED Midnight Aurora" style="background: linear-gradient(135deg, #3b82f6, #f43f5e); border: 1px solid #71717a;" onclick="applyGlobalTheme('oled-dark')"></div>
+        <!-- Official Locked Theme Badge -->
+        <div style="display: flex; align-items: center; gap: 8px; background: var(--brand-subtle); border: 1px solid var(--brand-border); padding: 5px 12px; border-radius: var(--radius-pill); box-shadow: var(--shadow-subtle);">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--brand-gradient); display: inline-block; box-shadow: 0 0 6px var(--glow-color);"></span>
+          <span style="font-size: 12px; font-weight: 700; color: var(--brand-primary); letter-spacing: -0.01em;">🔮 Mantine & Cosmic Sunset</span>
         </div>
+      </div>
 
-        <div class="user-profile">
+      <div class="user-profile"><div class="user-profile">
           <div class="user-details">
             <div class="user-name">phong phạm</div>
             <div class="user-role">Tư vấn viên Tuyển sinh</div>
@@ -1838,167 +1450,53 @@
       <section id="tab-design-system" class="tab-view">
         <div class="view-title-bar">
           <div class="view-heading">
-            <h2>Hệ Thống 9 Bảng Màu Tuyển Lựa Từ 106 Kho Mã Nguồn Mở Hàng Đầu Thế Giới</h2>
-            <p>Nghiên cứu & chắt lọc tinh hoa UI/UX từ 106 dự án Open-Source đỉnh cao (Twenty CRM, Plane, Radix Colors, Tailwind, Primer, Cal.com, Supabase, Moodle, Canvas LMS...). Bấm để kích hoạt tức thì.</p>
+            <h2>Hệ Thống Thiết Kế Chính Thức: Mantine & Cosmic Sunset</h2>
+            <p>Bản thiết kế độc quyền chốt theo chuẩn thẩm mỹ công nghệ cao: Deep Violet, Royal Purple & Neon Sunset Pink. Kế thừa tinh hoa từ 106 dự án mã nguồn mở.</p>
           </div>
           <div style="display: flex; gap: 8px;">
-            <button class="btn btn-outline" onclick="applyGlobalTheme('oxford')">🔄 Đặt về Mặc định (Oxford)</button>
-            <button class="btn btn-primary" onclick="showToast('Đang xem danh mục 106 dự án mã nguồn mở!')">📋 106 Repos Đã Khảo Sát</button>
+            <button class="btn btn-primary" onclick="showToast('Đang áp dụng chuẩn thiết kế Mantine & Cosmic Sunset!')">🔮 Design System Độc Quyền</button>
           </div>
         </div>
 
-        <!-- 9 Palette Showcase Cards -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 14px; margin-bottom: 28px;">
-          <!-- 1. Oxford Academic -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #1e3a8a; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('oxford')">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #1e3a8a;">🎓 1. Oxford Academic & Royal Sapphire</span>
-              <span class="menu-pill" id="pill-oxford">Đang kích hoạt</span>
+        <!-- Official Design System Showcase Banner -->
+        <div class="white-panel" style="margin-bottom: 24px; border: 1px solid var(--brand-border); position: relative; overflow: hidden; box-shadow: 0 10px 30px -5px var(--glow-color);">
+          <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--brand-gradient);"></div>
+          
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <span style="font-size: 18px;">🔮</span>
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--text-heading); letter-spacing: -0.02em;">Mantine & Cosmic Sunset Gradient System</h3>
+                <span class="menu-pill" style="background: var(--brand-gradient); color: #ffffff; font-weight: 700;">CHÍNH THỨC</span>
+              </div>
+              <p style="font-size: 13px; color: var(--text-body); max-width: 720px; line-height: 1.5;">
+                Được thiết kế dựa trên quy chuẩn của <strong>mantinedev/mantine</strong> (hơn 26k stars), <strong>raycast/extensions</strong>, <strong>infisical</strong> và <strong>novu</strong>. Kết hợp chuyển động quang phổ từ ánh tím học thuật huyền bí đến sắc hồng neon hiện đại.
+              </p>
             </div>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: Cambridge English, British Council, Oxford Portal, Moodle Education.</p>
-            <div style="margin-top: 10px;">
-              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #0284c7 100%); box-shadow: 0 2px 8px rgba(37,99,235,0.25); margin-bottom: 5px;"></div>
-              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
-                <span>#1e3a8a Navy</span>
-                <span>#2563eb Royal</span>
-                <span>#0284c7 Sky</span>
+            
+            <div style="display: flex; gap: 8px;">
+              <div style="text-align: center; padding: 8px 14px; background: var(--bg-surface-hover); border-radius: var(--radius-md); border: 1px solid var(--border-light);">
+                <div style="font-size: 11px; font-weight: 600; color: var(--text-muted);">DEEP VIOLET</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #5b21b6;">#5b21b6</div>
+              </div>
+              <div style="text-align: center; padding: 8px 14px; background: var(--bg-surface-hover); border-radius: var(--radius-md); border: 1px solid var(--border-light);">
+                <div style="font-size: 11px; font-weight: 600; color: var(--text-muted);">ROYAL PURPLE</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #7c3aed;">#7c3aed</div>
+              </div>
+              <div style="text-align: center; padding: 8px 14px; background: var(--bg-surface-hover); border-radius: var(--radius-md); border: 1px solid var(--border-light);">
+                <div style="font-size: 11px; font-weight: 600; color: var(--text-muted);">NEON SUNSET</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #ec4899;">#ec4899</div>
               </div>
             </div>
           </div>
 
-          <!-- 2. Twenty & Stripe -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #4f46e5; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('twenty-indigo')">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #4f46e5;">⚡ 2. Twenty CRM & Aurora Indigo</span>
-              <span class="menu-pill" id="pill-twenty-indigo">Click để thử</span>
-            </div>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: twentyhq/twenty (CRM mã nguồn mở top 1 GitHub), Dub.co, Formbricks.</p>
-            <div style="margin-top: 10px;">
-              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #4338ca 0%, #6366f1 50%, #a855f7 100%); box-shadow: 0 2px 8px rgba(99,102,241,0.25); margin-bottom: 5px;"></div>
-              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
-                <span>#4338ca Deep</span>
-                <span>#6366f1 Indigo</span>
-                <span>#a855f7 Violet</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 3. Radix Jade -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #065f46; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('radix-jade')">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #065f46;">🌿 3. Radix Jade & Emerald Forest</span>
-              <span class="menu-pill" id="pill-radix-jade">Click để thử</span>
-            </div>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: Radix UI Colors P3, Coursera, Duolingo Enterprise, Khan Academy UI.</p>
-            <div style="margin-top: 10px;">
-              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #064e3b 0%, #059669 50%, #10b981 100%); box-shadow: 0 2px 8px rgba(5,150,105,0.25); margin-bottom: 5px;"></div>
-              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
-                <span>#064e3b Jade</span>
-                <span>#059669 Emerald</span>
-                <span>#10b981 Mint</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 4. Cal.com Warm Stone -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #1c1917; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('cal-warm')">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #1c1917;">🏛️ 4. Cal.com & Champagne Stone</span>
-              <span class="menu-pill" id="pill-cal-warm">Click để thử</span>
-            </div>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: calcom/cal.com, supabase/supabase, Tailwind Stone 900.</p>
-            <div style="margin-top: 10px;">
-              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #1c1917 0%, #292524 50%, #d97706 100%); box-shadow: 0 2px 8px rgba(217,119,6,0.25); margin-bottom: 5px;"></div>
-              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
-                <span>#1c1917 Stone</span>
-                <span>#292524 Slate</span>
-                <span>#d97706 Amber</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 5. GitHub Primer -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #0969da; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('github-primer')">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #0969da;">🐙 5. GitHub Primer Cyber Blue</span>
-              <span class="menu-pill" id="pill-github-primer">Click để thử</span>
-            </div>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: primer/primitives (Hệ thống thiết kế của GitHub), Atlassian Design.</p>
-            <div style="margin-top: 10px;">
-              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #0969da 0%, #218bff 50%, #2da44e 100%); box-shadow: 0 2px 8px rgba(9,105,218,0.25); margin-bottom: 5px;"></div>
-              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
-                <span>#0969da Primer</span>
-                <span>#218bff Cyan</span>
-                <span>#2da44e Green</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 6. Mantine & Raycast Violet -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #6d28d9; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('mantine-violet')">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #6d28d9;">🔮 6. Mantine & Cosmic Sunset</span>
-              <span class="menu-pill" id="pill-mantine-violet">Click để thử</span>
-            </div>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: mantinedev/mantine, raycast/extensions, Infisical, Novu notifications.</p>
-            <div style="margin-top: 10px;">
-              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #5b21b6 0%, #7c3aed 50%, #ec4899 100%); box-shadow: 0 2px 8px rgba(124,58,237,0.25); margin-bottom: 5px;"></div>
-              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
-                <span>#5b21b6 Deep</span>
-                <span>#7c3aed Violet</span>
-                <span>#ec4899 Pink</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 7. Campfire Amber -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #c2410c; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('campfire-amber')">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #c2410c;">🍁 7. Campfire & Solar Terracotta</span>
-              <span class="menu-pill" id="pill-campfire-amber">Click để thử</span>
-            </div>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: 37signals Basecamp, Campfire, Chakra UI Warm Amber, Odoo.</p>
-            <div style="margin-top: 10px;">
-              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #9a3412 0%, #ea580c 50%, #f43f5e 100%); box-shadow: 0 2px 8px rgba(234,88,12,0.25); margin-bottom: 5px;"></div>
-              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
-                <span>#9a3412 Sienna</span>
-                <span>#ea580c Amber</span>
-                <span>#f43f5e Rose</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 8. Nordic Teal -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #0f766e; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('nordic-cyan')">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #0f766e;">❄️ 8. Nordic Frost & Glacier Cyan</span>
-              <span class="menu-pill" id="pill-nordic-cyan">Click để thử</span>
-            </div>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: Nord theme, Instructure Canvas LMS, Vikunja, Elastic EUI.</p>
-            <div style="margin-top: 10px;">
-              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #115e59 0%, #0d9488 50%, #06b6d4 100%); box-shadow: 0 2px 8px rgba(13,148,136,0.25); margin-bottom: 5px;"></div>
-              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-hint);">
-                <span>#115e59 Pine</span>
-                <span>#0d9488 Teal</span>
-                <span>#06b6d4 Cyan</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 9. OLED Dark -->
-          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #3b82f6; background: #121215; color: #f4f4f5; transition: all 0.2s; position: relative; overflow: hidden;" onclick="applyGlobalTheme('oled-dark')">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #60a5fa;">🌙 9. OLED Midnight Cyber Aurora</span>
-              <span class="menu-pill" id="pill-oled-dark" style="background: #27272a; color: #a1a1aa;">Click để thử</span>
-            </div>
-            <p style="font-size: 12px; color: #a1a1aa; margin-bottom: 8px;">Cảm hứng: Linear Dark, shadcn/ui zinc-dark, Supabase Studio, Dracula theme.</p>
-            <div style="margin-top: 10px;">
-              <div style="height: 22px; border-radius: 6px; background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #f43f5e 100%); box-shadow: 0 2px 8px rgba(59,130,246,0.3); margin-bottom: 5px;"></div>
-              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #71717a;">
-                <span>#3b82f6 Neon</span>
-                <span>#8b5cf6 Violet</span>
-                <span>#f43f5e Coral</span>
-              </div>
+          <!-- Continuous Gradient Strip Preview -->
+          <div style="margin-top: 14px;">
+            <div style="height: 28px; border-radius: 8px; background: linear-gradient(90deg, #5b21b6 0%, #7c3aed 50%, #ec4899 100%); box-shadow: 0 4px 16px var(--glow-color); margin-bottom: 6px;"></div>
+            <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-hint);">
+              <span>0% Deep Violet (#5b21b6)</span>
+              <span>50% Royal Purple (#7c3aed)</span>
+              <span>100% Neon Pink (#ec4899)</span>
             </div>
           </div>
         </div>
@@ -2009,9 +1507,9 @@
             <div>
               <h3 style="font-size: 15px; font-weight: 700; color: var(--text-heading); display: flex; align-items: center; gap: 8px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-                Danh Mục Chi Tiết 106 Kho Mã Nguồn Mở Đã Khảo Sát & Kế Thừa Thiết Kế
+                Kho Dữ Liệu 106 Mã Nguồn Mở Đã Khảo Sát
               </h3>
-              <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 2px;">Khám phá toàn bộ 106 repository với mã màu đại diện, số sao GitHub và giải pháp UI/UX đã ứng dụng vào EduFlow CRM.</p>
+              <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 2px;">Toàn bộ 106 kho mã nguồn mở được phân loại theo nghiệp vụ CRM, Kanban, Design System, LMS, SaaS và Data Viz.</p>
             </div>
             
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -2022,7 +1520,7 @@
           <!-- Search and Filter Bar -->
           <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px;">
             <div class="search-box" style="width: 100%; height: 38px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" color="#94a3b8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" color="#8b5cf6"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input type="text" id="repoSearchInput" placeholder="Tìm kiếm trong 106 repo mã nguồn mở (tên repo, từ khóa nghiệp vụ, mã màu #hex, công nghệ...)" oninput="filterReposList()" style="width: 100%; border: none; outline: none; background: transparent; font-size: 13.5px;">
             </div>
 
@@ -2186,60 +1684,8 @@
   <!-- ================= JAVASCRIPT LOGIC ================= -->
   <script>
     // Theme Management Engine
-    function applyGlobalTheme(themeKey) {
-      document.documentElement.setAttribute('data-theme', themeKey);
-      const sel = document.getElementById('themeSelectInput');
-      if (sel) sel.value = themeKey;
-
-      const labels = {
-        'oxford': 'Oxford',
-        'twenty-indigo': 'Twenty',
-        'radix-jade': 'Radix Jade',
-        'cal-warm': 'Cal Stone',
-        'github-primer': 'GitHub',
-        'mantine-violet': 'Mantine',
-        'campfire-amber': 'Campfire',
-        'nordic-cyan': 'Nordic Cyan',
-        'oled-dark': 'OLED Dark'
-      };
-      const badge = document.getElementById('themeBadgeName');
-      if (badge) badge.innerText = labels[themeKey] || themeKey;
-
-      // Update swatch indicator dots in header
-      const keys = ['oxford', 'twenty-indigo', 'radix-jade', 'cal-warm', 'github-primer', 'mantine-violet', 'campfire-amber', 'nordic-cyan', 'oled-dark'];
-      document.querySelectorAll('.palette-swatch-dot').forEach((dot, idx) => {
-        dot.classList.remove('active');
-        if (keys[idx] === themeKey) dot.classList.add('active');
-      });
-
-      // Update showcase pills
-      keys.forEach(k => {
-        const pill = document.getElementById('pill-' + k);
-        if (pill) {
-          if (k === themeKey) {
-            pill.innerText = 'Đang kích hoạt';
-            pill.style.background = 'var(--brand-primary)';
-            pill.style.color = 'var(--accent-badge-color)';
-          } else {
-            pill.innerText = 'Click để thử';
-            pill.style.background = 'var(--bg-surface-hover)';
-            pill.style.color = 'var(--text-muted)';
-          }
-        }
-      });
-
-      const fullNames = {
-        'oxford': 'Oxford Academic & Royal Navy (Chuẩn viện nghiên cứu & trường đại học Anh Quốc)',
-        'twenty-indigo': 'Twenty CRM & Stripe Indigo (Chuẩn SaaS thế hệ mới)',
-        'radix-jade': 'Radix Jade & EdTech Growth (Màu ngọc lục bảo phát triển bền vững)',
-        'cal-warm': 'Cal.com & Supabase Warm Stone (Kiến trúc đá ấm tối giản thanh tao)',
-        'github-primer': 'GitHub Primer Enterprise (Giao diện doanh nghiệp tiêu chuẩn)',
-        'mantine-violet': 'Mantine & Raycast Violet (Tím sáng tạo, chiều sâu học thuật)',
-        'campfire-amber': 'Campfire & Basecamp Amber (Màu đất nung ấm áp, gần gũi phụ huynh)',
-        'nordic-cyan': 'Nordic Frost & Canvas Teal (Tông xanh ngọc Bắc Âu dịu mắt)',
-        'oled-dark': 'OLED Midnight Dark Mode (Giao diện ban đêm chuẩn chuyên gia)'
-      };
-      showToast(`Đã chuyển giao diện sang: ${fullNames[themeKey] || themeKey}`);
+        function applyGlobalTheme(themeKey) {
+      showToast('Đang áp dụng giao diện chính thức: Mantine & Cosmic Sunset (#5b21b6, #7c3aed, #ec4899)');
     }
 
     // =========================================================================
@@ -2433,9 +1879,9 @@
 
           <div style="display: flex; justify-content: space-between; align-items: center; pt-1; border-top: 1px dashed var(--border-light); padding-top: 8px;">
             <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-hint); font-weight: 500;">${repo.hex}</span>
-            <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 8px;" onclick="applyGlobalTheme('${repo.theme}')">
-              🎨 Thử Palette
-            </button>
+            <a href="https://github.com/${repo.name}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-secondary" style="font-size: 11px; padding: 3px 9px; text-decoration: none;">
+              ⭐ GitHub ↗
+            </a>
           </div>
         `;
         grid.appendChild(card);
