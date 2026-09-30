@@ -1,0 +1,2680 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="oxford">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduFlow CRM — Quản trị Tuyển sinh & Đào tạo Anh Ngữ</title>
+  
+  <!-- Font chuẩn công nghệ cao: Inter (Được Apple, Stripe, Linear, Vercel tin dùng) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       HỆ THỐNG ĐA BẢNG MÀU (MULTI-PALETTE DESIGN SYSTEM)
+       Nghiên cứu & đúc kết từ 100+ dự án Mã Nguồn Mở hàng đầu thế giới:
+       - Twenty CRM, Plane.so, Cal.com, Dub.co, Supabase, Formbricks, Medusa
+       - Radix UI Colors, Tailwind CSS, IBM Carbon, GitHub Primer, Shopify Polaris
+       - Linear.app, Stripe, Atlassian, Ant Design, Chakra UI, Tremor
+       ========================================================================== */
+
+    /* 1. PALETTE MẶC ĐỊNH: OXFORD ACADEMIC (Cambridge, British Council, Top Universities) */
+    :root, [data-theme="oxford"] {
+      --brand-primary: #1e3a8a;          /* Oxford Navy */
+      --brand-primary-hover: #172554;
+      --brand-accent: #2563eb;           /* Royal Blue */
+      --brand-subtle: #f0f4fd;           /* Soft Blue Surface */
+      --brand-border: #dbe4f9;
+
+      --status-success: #059669;
+      --status-success-bg: #f0fdf4;
+      --status-success-border: #bbf7d0;
+
+      --status-warning: #b45309;
+      --status-warning-bg: #fffbeb;
+      --status-warning-border: #fef08a;
+
+      --status-danger: #b91c1c;
+      --status-danger-bg: #fef2f2;
+      --status-danger-border: #fecaca;
+
+      --bg-page: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-surface-hover: #f1f5f9;
+      --border-light: #e2e8f0;
+      --border-darker: #cbd5e1;
+
+      --text-heading: #0f172a;
+      --text-body: #334155;
+      --text-muted: #64748b;
+      --text-hint: #94a3b8;
+
+      --accent-badge-bg: #1e3a8a;
+      --accent-badge-color: #ffffff;
+      --theme-name: "Oxford Academic";
+    }
+
+    /* 2. PALETTE: TWENTY CRM & STRIPE INDIGO (Modern SaaS Gold Standard) */
+    [data-theme="twenty-indigo"] {
+      --brand-primary: #4f46e5;          /* Modern Indigo */
+      --brand-primary-hover: #4338ca;
+      --brand-accent: #6366f1;
+      --brand-subtle: #eef2ff;
+      --brand-border: #c7d2fe;
+
+      --status-success: #10b981;
+      --status-success-bg: #ecfdf5;
+      --status-success-border: #a7f3d0;
+
+      --status-warning: #f59e0b;
+      --status-warning-bg: #fffbeb;
+      --status-warning-border: #fde68a;
+
+      --status-danger: #f43f5e;
+      --status-danger-bg: #fff1f2;
+      --status-danger-border: #fecdd3;
+
+      --bg-page: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-surface-hover: #f1f5f9;
+      --border-light: #e2e8f0;
+      --border-darker: #cbd5e1;
+
+      --text-heading: #0f172a;
+      --text-body: #334155;
+      --text-muted: #64748b;
+      --text-hint: #94a3b8;
+
+      --accent-badge-bg: #4f46e5;
+      --accent-badge-color: #ffffff;
+      --theme-name: "Twenty & Stripe Indigo";
+    }
+
+    /* 3. PALETTE: RADIX JADE & COURSERA (Modern EdTech Growth) */
+    [data-theme="radix-jade"] {
+      --brand-primary: #065f46;          /* Deep Forest Jade */
+      --brand-primary-hover: #044e39;
+      --brand-accent: #059669;           /* Emerald Accent */
+      --brand-subtle: #ecfdf5;
+      --brand-border: #a7f3d0;
+
+      --status-success: #059669;
+      --status-success-bg: #ecfdf5;
+      --status-success-border: #6ee7b7;
+
+      --status-warning: #d97706;
+      --status-warning-bg: #fffbeb;
+      --status-warning-border: #fde68a;
+
+      --status-danger: #e11d48;
+      --status-danger-bg: #fff1f2;
+      --status-danger-border: #fda4af;
+
+      --bg-page: #f7f9f8;
+      --bg-surface: #ffffff;
+      --bg-surface-hover: #f0fdf4;
+      --border-light: #e6eae8;
+      --border-darker: #cbd5d1;
+
+      --text-heading: #062f27;
+      --text-body: #1e3a34;
+      --text-muted: #4b635d;
+      --text-hint: #889e98;
+
+      --accent-badge-bg: #065f46;
+      --accent-badge-color: #ffffff;
+      --theme-name: "Radix Jade & EdTech";
+    }
+
+    /* 4. PALETTE: CAL.COM & SUPABASE WARM STONE (Minimalist Warm Architecture) */
+    [data-theme="cal-warm"] {
+      --brand-primary: #1c1917;          /* Stone 900 */
+      --brand-primary-hover: #292524;
+      --brand-accent: #2563eb;
+      --brand-subtle: #f5f5f4;           /* Stone 100 */
+      --brand-border: #e7e5e4;
+
+      --status-success: #15803d;
+      --status-success-bg: #f0fdf4;
+      --status-success-border: #bbf7d0;
+
+      --status-warning: #b45309;
+      --status-warning-bg: #fffbeb;
+      --status-warning-border: #fef08a;
+
+      --status-danger: #b91c1c;
+      --status-danger-bg: #fef2f2;
+      --status-danger-border: #fecaca;
+
+      --bg-page: #fafaf9;               /* Warm Stone Page */
+      --bg-surface: #ffffff;
+      --bg-surface-hover: #f5f5f4;
+      --border-light: #e7e5e4;
+      --border-darker: #d6d3d1;
+
+      --text-heading: #1c1917;
+      --text-body: #44403c;
+      --text-muted: #78716c;
+      --text-hint: #a8a29e;
+
+      --accent-badge-bg: #1c1917;
+      --accent-badge-color: #ffffff;
+      --theme-name: "Cal.com & Warm Stone";
+    }
+
+    /* 5. PALETTE: GITHUB PRIMER & ATLASSIAN BLUE (Enterprise Corporate) */
+    [data-theme="github-primer"] {
+      --brand-primary: #0969da;          /* GitHub Premier Blue */
+      --brand-primary-hover: #0757b3;
+      --brand-accent: #218bff;
+      --brand-subtle: #ddf4ff;
+      --brand-border: #54aeff;
+
+      --status-success: #1a7f37;
+      --status-success-bg: #dafbe1;
+      --status-success-border: #4ac26b;
+
+      --status-warning: #9a6700;
+      --status-warning-bg: #fff8c5;
+      --status-warning-border: #d4a72c;
+
+      --status-danger: #cf222e;
+      --status-danger-bg: #ffebe9;
+      --status-danger-border: #ff8182;
+
+      --bg-page: #f6f8fa;
+      --bg-surface: #ffffff;
+      --bg-surface-hover: #f3f4f6;
+      --border-light: #d0d7de;
+      --border-darker: #afb8c1;
+
+      --text-heading: #1f2328;
+      --text-body: #24292f;
+      --text-muted: #656d76;
+      --text-hint: #8c959f;
+
+      --accent-badge-bg: #0969da;
+      --accent-badge-color: #ffffff;
+      --theme-name: "GitHub Primer Enterprise";
+    }
+
+    
+    /* 6. PALETTE: MANTINE VIOLET & RAYCAST (Học viện Sáng tạo & Tập trung Cao độ) */
+    [data-theme="mantine-violet"] {
+      --brand-primary: #6d28d9;          /* Deep Violet */
+      --brand-primary-hover: #5b21b6;
+      --brand-accent: #8b5cf6;           /* Vivid Purple */
+      --brand-subtle: #f5f3ff;
+      --brand-border: #ddd6fe;
+
+      --status-success: #059669;
+      --status-success-bg: #ecfdf5;
+      --status-success-border: #a7f3d0;
+
+      --status-warning: #d97706;
+      --status-warning-bg: #fffbeb;
+      --status-warning-border: #fde68a;
+
+      --status-danger: #e11d48;
+      --status-danger-bg: #fff1f2;
+      --status-danger-border: #fecdd3;
+
+      --bg-page: #faf5ff;
+      --bg-surface: #ffffff;
+      --bg-surface-hover: #f3e8ff;
+      --border-light: #e9d5ff;
+      --border-darker: #c4b5fd;
+
+      --text-heading: #2e1065;
+      --text-body: #4c1d95;
+      --text-muted: #6d28d9;
+      --text-hint: #8b5cf6;
+
+      --accent-badge-bg: #6d28d9;
+      --accent-badge-color: #ffffff;
+      --theme-name: "Mantine & Raycast Violet";
+    }
+
+    /* 7. PALETTE: CAMPFIRE & BASECAMP WARM TERRACOTTA (Thân thiện, Nhân văn & Ấm áp) */
+    [data-theme="campfire-amber"] {
+      --brand-primary: #c2410c;          /* Warm Terracotta */
+      --brand-primary-hover: #9a3412;
+      --brand-accent: #ea580c;           /* Amber Orange */
+      --brand-subtle: #fff7ed;
+      --brand-border: #fed7aa;
+
+      --status-success: #15803d;
+      --status-success-bg: #f0fdf4;
+      --status-success-border: #bbf7d0;
+
+      --status-warning: #b45309;
+      --status-warning-bg: #fffbeb;
+      --status-warning-border: #fef08a;
+
+      --status-danger: #be123c;
+      --status-danger-bg: #fff1f2;
+      --status-danger-border: #fecdd3;
+
+      --bg-page: #fefcfb;
+      --bg-surface: #ffffff;
+      --bg-surface-hover: #ffedd5;
+      --border-light: #fed7aa;
+      --border-darker: #fdba74;
+
+      --text-heading: #431407;
+      --text-body: #7c2d12;
+      --text-muted: #9a3412;
+      --text-hint: #c2410c;
+
+      --accent-badge-bg: #c2410c;
+      --accent-badge-color: #ffffff;
+      --theme-name: "Campfire & Basecamp Amber";
+    }
+
+    /* 8. PALETTE: NORDIC FROST & CANVAS LMS TEAL (Thanh lịch Bắc Âu, Chống Mỏi Mắt) */
+    [data-theme="nordic-cyan"] {
+      --brand-primary: #0f766e;          /* Deep Teal */
+      --brand-primary-hover: #115e59;
+      --brand-accent: #0d9488;           /* Cyan Teal */
+      --brand-subtle: #f0fdfa;
+      --brand-border: #99f6e4;
+
+      --status-success: #059669;
+      --status-success-bg: #ecfdf5;
+      --status-success-border: #a7f3d0;
+
+      --status-warning: #d97706;
+      --status-warning-bg: #fffbeb;
+      --status-warning-border: #fde68a;
+
+      --status-danger: #e11d48;
+      --status-danger-bg: #fff1f2;
+      --status-danger-border: #fda4af;
+
+      --bg-page: #f0fdfa;
+      --bg-surface: #ffffff;
+      --bg-surface-hover: #ccfbf1;
+      --border-light: #99f6e4;
+      --border-darker: #5eead4;
+
+      --text-heading: #134e4a;
+      --text-body: #115e59;
+      --text-muted: #0f766e;
+      --text-hint: #14b8a6;
+
+      --accent-badge-bg: #0f766e;
+      --accent-badge-color: #ffffff;
+      --theme-name: "Nordic Frost & Canvas Teal";
+    }
+
+    /* 9. PALETTE: OLED MIDNIGHT DARK (Linear & Supabase Dark Mode Ban Đêm) */
+    [data-theme="oled-dark"] {
+      --brand-primary: #3b82f6;          /* Bright Blue */
+      --brand-primary-hover: #60a5fa;
+      --brand-accent: #38bdf8;
+      --brand-subtle: #1e293b;
+      --brand-border: #334155;
+
+      --status-success: #10b981;
+      --status-success-bg: #064e3b;
+      --status-success-border: #047857;
+
+      --status-warning: #f59e0b;
+      --status-warning-bg: #78350f;
+      --status-warning-border: #b45309;
+
+      --status-danger: #f43f5e;
+      --status-danger-bg: #881337;
+      --status-danger-border: #be123c;
+
+      --bg-page: #09090b;               /* Deep OLED Black */
+      --bg-surface: #121215;            /* Dark Slate Surface */
+      --bg-surface-hover: #1c1c22;
+      --border-light: #27272a;
+      --border-darker: #3f3f46;
+
+      --text-heading: #f4f4f5;
+      --text-body: #d4d4d8;
+      --text-muted: #a1a1aa;
+      --text-hint: #71717a;
+
+      --accent-badge-bg: #3b82f6;
+      --accent-badge-color: #ffffff;
+      --theme-name: "OLED Midnight Dark";
+    }
+
+    /* Common Variables */
+    :root {
+      --shadow-subtle: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+      --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+      --shadow-hover: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+      --shadow-modal: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+
+      --sidebar-width: 260px;
+      --header-height: 64px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --radius-pill: 9999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      letter-spacing: -0.011em;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-body);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-size: 14px;
+      line-height: 1.5;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* ================= SIDEBAR CỔNG ĐIỀU HÀNH ================= */
+    .app-sidebar {
+      width: var(--sidebar-width);
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border-light);
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .sidebar-brand {
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-md);
+      background: var(--brand-primary);
+      color: var(--accent-badge-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      transition: background 0.25s ease;
+    }
+
+    .brand-text h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-heading);
+      letter-spacing: -0.02em;
+    }
+    .brand-text span {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .sidebar-menu {
+      flex: 1;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      overflow-y: auto;
+    }
+
+    .menu-heading {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-hint);
+      padding: 14px 10px 6px;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .menu-item:hover {
+      background-color: var(--bg-surface-hover);
+      color: var(--text-heading);
+    }
+    .menu-item.active {
+      background-color: var(--brand-subtle);
+      color: var(--brand-primary);
+      font-weight: 600;
+    }
+    .menu-item svg {
+      width: 17px;
+      height: 17px;
+      stroke-width: 1.75;
+      flex-shrink: 0;
+    }
+    .menu-pill {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      background: var(--bg-surface-hover);
+      color: var(--text-muted);
+    }
+    .menu-item.active .menu-pill {
+      background: var(--brand-border);
+      color: var(--brand-primary);
+    }
+
+    /* Theme Switcher Widget in Sidebar */
+    .sidebar-theme-widget {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border-light);
+      background: var(--bg-page);
+    }
+    .widget-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .theme-select-box {
+      width: 100%;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-light);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-heading);
+      background: var(--bg-surface);
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* ================= MAIN CONTAINER ================= */
+    .app-main {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* Top Navigation Header */
+    .app-header {
+      height: var(--header-height);
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .header-left-tools {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: var(--bg-page);
+      border: 1px solid var(--border-light);
+      padding: 7px 14px;
+      border-radius: var(--radius-pill);
+      width: 320px;
+      transition: all 0.15s ease;
+    }
+    .search-box:focus-within {
+      background: var(--bg-surface);
+      border-color: var(--brand-primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .search-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 13px;
+      color: var(--text-heading);
+      width: 100%;
+    }
+    .search-shortcut {
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--text-hint);
+    }
+
+    .header-right-tools {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Quick Palette Switcher Pills */
+    .palette-quick-picker {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-page);
+      border: 1px solid var(--border-light);
+      padding: 4px 8px;
+      border-radius: var(--radius-pill);
+    }
+    .palette-swatch-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.15s ease;
+    }
+    .palette-swatch-dot:hover { transform: scale(1.2); }
+    .palette-swatch-dot.active { border-color: var(--text-heading); }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: 6px;
+    }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-pill);
+      background: var(--brand-subtle);
+      border: 1px solid var(--brand-border);
+      color: var(--brand-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .user-details { text-align: right; line-height: 1.3; }
+    .user-name { font-size: 13px; font-weight: 600; color: var(--text-heading); }
+    .user-role { font-size: 11px; color: var(--text-muted); }
+
+    /* Page Content */
+    .app-content {
+      padding: 24px 28px;
+      flex: 1;
+    }
+
+    /* Executive KPI Summary */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .kpi-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-subtle);
+      transition: transform 0.15s ease;
+    }
+    .kpi-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-card); }
+    .kpi-label {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .kpi-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-heading);
+      margin: 4px 0 2px;
+      letter-spacing: -0.02em;
+    }
+    .kpi-subtext {
+      font-size: 11.5px;
+      color: var(--status-success);
+      font-weight: 500;
+    }
+
+    /* View Switcher */
+    .tab-view { display: none; }
+    .tab-view.active { display: block; }
+
+    .view-title-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .view-heading h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-heading);
+      letter-spacing: -0.02em;
+    }
+    .view-heading p {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      outline: none;
+    }
+    .btn-primary {
+      background: var(--brand-primary);
+      color: var(--accent-badge-color);
+    }
+    .btn-primary:hover {
+      background: var(--brand-primary-hover);
+    }
+    .btn-secondary {
+      background: var(--bg-surface);
+      border-color: var(--border-light);
+      color: var(--text-body);
+    }
+    .btn-secondary:hover {
+      background: var(--bg-surface-hover);
+      border-color: var(--border-darker);
+    }
+    .btn-success {
+      background: var(--status-success);
+      color: #fff;
+    }
+    .btn-success:hover { opacity: 0.9; }
+
+    /* ================= UC-01: KANBAN BOARD TINH TẾ ================= */
+    .kanban-filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 8px 14px;
+    }
+    .filter-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pill-btn {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-light);
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .pill-btn.active {
+      background: var(--brand-subtle);
+      border-color: var(--brand-border);
+      color: var(--brand-primary);
+      font-weight: 600;
+    }
+
+    .kanban-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(250px, 1fr));
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 16px;
+      align-items: start;
+    }
+
+    .kanban-col {
+      background: var(--bg-page);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 520px;
+    }
+    .kanban-col.drag-over {
+      background: var(--brand-subtle);
+      border-color: var(--brand-accent);
+    }
+
+    .kanban-col-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 6px 8px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .col-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .col-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+    .dot-1 { background: var(--brand-accent); }
+    .dot-2 { background: var(--status-warning); }
+    .dot-3 { background: #8b5cf6; }
+    .dot-4 { background: var(--status-success); }
+    .dot-5 { background: var(--status-danger); }
+
+    .col-name {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-heading);
+    }
+    .col-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: var(--radius-pill);
+      background: var(--bg-surface-hover);
+      color: var(--text-muted);
+    }
+
+    .card-deck {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 450px;
+    }
+
+    .lead-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      box-shadow: var(--shadow-card);
+      cursor: grab;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .lead-card:hover {
+      box-shadow: var(--shadow-hover);
+      border-color: var(--border-darker);
+      transform: translateY(-1px);
+    }
+    .lead-card.dragging {
+      opacity: 0.4;
+      transform: scale(0.97);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .badge-tag {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: var(--radius-sm);
+    }
+    .tag-priority-high {
+      background: var(--status-danger-bg);
+      color: var(--status-danger);
+      border: 1px solid var(--status-danger-border);
+    }
+    .tag-priority-med {
+      background: var(--status-warning-bg);
+      color: var(--status-warning);
+      border: 1px solid var(--status-warning-border);
+    }
+    .tag-priority-low {
+      background: var(--bg-surface-hover);
+      color: var(--text-muted);
+      border: 1px solid var(--border-light);
+    }
+    .card-source-txt {
+      font-size: 11px;
+      color: var(--text-hint);
+    }
+
+    .card-client-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-heading);
+    }
+    .card-client-phone {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .card-course-pill {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--brand-primary);
+      background: var(--brand-subtle);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      width: fit-content;
+    }
+
+    .card-bottom-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 6px;
+      border-top: 1px solid var(--border-light);
+      font-size: 11px;
+      color: var(--text-hint);
+    }
+
+    /* ================= UC-02: PLACEMENT TEST (ACADEMIC SCORECARD) ================= */
+    .test-suite-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 18px;
+    }
+    .white-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .slider-row-item {
+      padding: 10px 12px;
+      background: var(--bg-page);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      margin-bottom: 10px;
+    }
+    .slider-info-head {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+    .score-badge {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--brand-primary);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .range-input {
+      width: 100%;
+      height: 4px;
+      background: var(--border-darker);
+      border-radius: 999px;
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+    .range-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--brand-primary);
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    /* Certificate / Report Card View */
+    .academic-cert-card {
+      background: var(--bg-surface);
+      border: 2px solid var(--brand-primary);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      text-align: center;
+      position: relative;
+    }
+    .cert-heading {
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+    .overall-score-display {
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--brand-primary);
+      line-height: 1.1;
+      margin: 10px 0 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .cefr-badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--brand-subtle);
+      color: var(--brand-primary);
+      padding: 3px 12px;
+      border-radius: var(--radius-pill);
+      margin-bottom: 8px;
+      border: 1px solid var(--brand-border);
+    }
+    .formula-explanation {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .course-suggestion-card {
+      margin-top: 14px;
+      background: var(--status-success-bg);
+      border: 1px solid var(--status-success-border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      text-align: left;
+    }
+    .suggestion-header {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--status-success);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .suggestion-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #064e3b;
+      margin-bottom: 4px;
+    }
+    .suggestion-body {
+      font-size: 12px;
+      color: #047857;
+      line-height: 1.4;
+    }
+
+    /* ================= UC-03: CLASS CAPACITY MATRIX ================= */
+    .class-matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 14px;
+    }
+    .class-sheet-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .class-sheet-card.locked {
+      background: var(--bg-page);
+      border-color: var(--border-darker);
+    }
+
+    .class-head-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .class-code-tag {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-heading);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .class-state-chip {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+    }
+    .chip-open { background: var(--status-success-bg); color: var(--status-success); border: 1px solid var(--status-success-border); }
+    .chip-full { background: var(--status-danger-bg); color: var(--status-danger); border: 1px solid var(--status-danger-border); }
+
+    .class-name-large {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--brand-primary);
+    }
+
+    .class-meta-ul {
+      list-style: none;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .capacity-gauge-box {
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-light);
+    }
+    .capacity-numbers {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .gauge-track {
+      height: 6px;
+      background: var(--bg-page);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+    }
+    .gauge-fill {
+      height: 100%;
+      border-radius: var(--radius-pill);
+      transition: width 0.3s ease;
+    }
+    .gauge-green { background: var(--status-success); }
+    .gauge-amber { background: var(--status-warning); }
+    .gauge-red { background: var(--status-danger); }
+
+    /* ================= MODAL & SLIDE DRAWER ================= */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(2px);
+      z-index: 99;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-backdrop.show { display: flex; }
+
+    .modal-window {
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 480px;
+      box-shadow: var(--shadow-modal);
+      overflow: hidden;
+      animation: modalFadeUp 0.15s ease-out;
+    }
+    @keyframes modalFadeUp {
+      from { transform: translateY(8px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-title-bar {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-title-bar h3 { font-size: 14.5px; font-weight: 700; color: var(--text-heading); }
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      color: var(--text-hint);
+    }
+    .modal-content-pad {
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal-actions-bar {
+      padding: 12px 20px;
+      background: var(--bg-page);
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .form-row label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-heading);
+    }
+    .form-row input, .form-row select, .form-row textarea {
+      padding: 7px 11px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-light);
+      font-size: 13px;
+      outline: none;
+      background: var(--bg-surface);
+      color: var(--text-heading);
+    }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+      border-color: var(--brand-primary);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+    }
+
+    /* Slide-over Drawer */
+    .drawer-panel {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      right: -440px;
+      width: 440px;
+      background: var(--bg-surface);
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.08);
+      z-index: 80;
+      transition: right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+    .drawer-panel.open { right: 0; }
+
+    .drawer-top {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .drawer-scroll {
+      padding: 20px;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .timeline-chain {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      margin-left: 6px;
+      padding-left: 16px;
+      border-left: 1px solid var(--border-light);
+    }
+    .timeline-node { position: relative; }
+    .timeline-node::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 4px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--brand-primary);
+    }
+    .timeline-time-txt { font-size: 11px; color: var(--text-hint); font-weight: 500; }
+    .timeline-desc-txt { font-size: 12.5px; color: var(--text-body); margin-top: 2px; }
+
+    /* Open Source Research Grid in Tab 5 */
+    .research-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .research-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      box-shadow: var(--shadow-subtle);
+    }
+    .research-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-heading);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .research-source-count {
+      font-size: 11px;
+      color: var(--brand-primary);
+      background: var(--brand-subtle);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .research-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 999;
+    }
+    .toast-msg {
+      background: #0f172a;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-modal);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: toastIn 0.2s ease-out;
+    }
+    @keyframes toastIn {
+      from { transform: translateY(10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="app-sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark">EC</div>
+      <div class="brand-text">
+        <h1>EduFlow CRM</h1>
+        <span>Quản Trị Đào Tạo & Tuyển Sinh</span>
+      </div>
+    </div>
+
+    <div class="sidebar-menu">
+      <div class="menu-heading">Phân hệ nghiệp vụ</div>
+      
+      <a class="menu-item active" onclick="navToTab('tab-kanban', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+        <span>UC-01: Quản lý Lead</span>
+        <span class="menu-pill" id="badgeLeadsCount">8</span>
+      </a>
+
+      <a class="menu-item" onclick="navToTab('tab-test', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>UC-02: Placement Test</span>
+      </a>
+
+      <a class="menu-item" onclick="navToTab('tab-classes', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span>UC-03: Lớp học & Xếp lớp</span>
+      </a>
+
+      <div class="menu-heading">Báo cáo & Phân quyền</div>
+
+      <a class="menu-item" onclick="navToTab('tab-dashboard', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Báo cáo Tuyển sinh</span>
+      </a>
+
+      <a class="menu-item" onclick="navToTab('tab-design-system', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+        <span>100+ Bảng màu Mã nguồn mở</span>
+      </a>
+    </div>
+
+    <!-- Theme Switcher Widget -->
+    <div class="sidebar-theme-widget">
+      <div class="widget-label">
+        <span>BẢNG MÀU CHỦ ĐẠO</span>
+        <span id="themeBadgeName" style="color: var(--brand-primary); font-weight: 700;">Oxford</span>
+      </div>
+      <select class="theme-select-box" id="themeSelectInput" onchange="applyGlobalTheme(this.value)">
+        <option value="oxford">🎓 1. Oxford Academic & Slate</option>
+        <option value="twenty-indigo">⚡ 2. Twenty CRM & Stripe Indigo</option>
+        <option value="radix-jade">🌿 3. Radix Jade & EdTech Growth</option>
+        <option value="cal-warm">☕ 4. Cal.com & Supabase Warm Stone</option>
+        <option value="github-primer">🐙 5. GitHub Primer Enterprise</option>
+      </select>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN CONTENT ================= -->
+  <main class="app-main">
+    
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left-tools">
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" color="#94a3b8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Tìm kiếm nhanh (Ctrl + K)..." onkeyup="searchLeads(this.value)">
+          <span class="search-shortcut">⌘K</span>
+        </div>
+      </div>
+
+      <div class="header-right-tools">
+        <!-- Quick Switcher Swatches -->
+        <div class="palette-quick-picker" title="Đổi nhanh bảng màu nghiên cứu từ 106 repo mã nguồn mở">
+          <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin-right: 4px;">Theme:</span>
+          <div class="palette-swatch-dot active" title="Oxford Academic" style="background: #1e3a8a;" onclick="applyGlobalTheme('oxford')"></div>
+          <div class="palette-swatch-dot" title="Twenty CRM Indigo" style="background: #4f46e5;" onclick="applyGlobalTheme('twenty-indigo')"></div>
+          <div class="palette-swatch-dot" title="Radix Jade" style="background: #065f46;" onclick="applyGlobalTheme('radix-jade')"></div>
+          <div class="palette-swatch-dot" title="Cal.com Warm Stone" style="background: #1c1917;" onclick="applyGlobalTheme('cal-warm')"></div>
+          <div class="palette-swatch-dot" title="GitHub Primer" style="background: #0969da;" onclick="applyGlobalTheme('github-primer')"></div>
+          <div class="palette-swatch-dot" title="Mantine Violet" style="background: #6d28d9;" onclick="applyGlobalTheme('mantine-violet')"></div>
+          <div class="palette-swatch-dot" title="Campfire Amber" style="background: #c2410c;" onclick="applyGlobalTheme('campfire-amber')"></div>
+          <div class="palette-swatch-dot" title="Nordic Cyan" style="background: #0f766e;" onclick="applyGlobalTheme('nordic-cyan')"></div>
+          <div class="palette-swatch-dot" title="OLED Midnight Dark" style="background: #09090b; border: 1px solid #71717a;" onclick="applyGlobalTheme('oled-dark')"></div>
+        </div>
+
+        <div class="user-profile">
+          <div class="user-details">
+            <div class="user-name">phong phạm</div>
+            <div class="user-role">Tư vấn viên Tuyển sinh</div>
+          </div>
+          <div class="avatar">PP</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Workspace -->
+    <div class="app-content">
+
+      <!-- Executive KPI Cards -->
+      <section class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Tổng khách hàng tiềm năng</div>
+          <div class="kpi-value" id="kpiLeadsCount">8</div>
+          <div class="kpi-subtext">Tỷ lệ chuyển đổi: 25.0%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Lịch kiểm tra trình độ</div>
+          <div class="kpi-value">2</div>
+          <div class="kpi-subtext" style="color: var(--brand-accent);">Tuần này: 2 ca thi</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Sĩ số lấp đầy các lớp</div>
+          <div class="kpi-value">83.3%</div>
+          <div class="kpi-subtext" style="color: var(--status-success);">49 / 63 chỗ ngồi</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Doanh số tuyển sinh tháng</div>
+          <div class="kpi-value">145.5M</div>
+          <div class="kpi-subtext">Đạt 112% mục tiêu</div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 1: KANBAN LEAD ================= -->
+      <section id="tab-kanban" class="tab-view active">
+        <div class="view-title-bar">
+          <div class="view-heading">
+            <h2>Phễu Quản Lý Khách Hàng Tiềm Năng (Lead Pipeline)</h2>
+            <p>Kéo thả các thẻ để cập nhật trạng thái vòng đời từ lúc nhận dữ liệu đến khi chốt đăng ký.</p>
+          </div>
+          <button class="btn btn-primary" onclick="openModalDialog('dlgCreateLead')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Thêm Khách Hàng
+          </button>
+        </div>
+
+        <div class="kanban-filter-bar">
+          <div class="filter-pills">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 500; margin-right: 4px;">Ưu tiên:</span>
+            <button class="pill-btn active" onclick="filterByPriority('all', this)">Tất cả</button>
+            <button class="pill-btn" onclick="filterByPriority('high', this)">Ưu tiên cao</button>
+            <button class="pill-btn" onclick="filterByPriority('med', this)">Trung bình</button>
+            <button class="pill-btn" onclick="filterByPriority('low', this)">Tiêu chuẩn</button>
+          </div>
+          <span style="font-size: 12px; color: var(--text-muted);">Nhấp chuột vào thẻ để xem lịch sử tư vấn</span>
+        </div>
+
+        <div class="kanban-grid">
+          <!-- Col: Mới -->
+          <div class="kanban-col" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropCol(event, 'new')">
+            <div class="kanban-col-head">
+              <div class="col-title-wrap">
+                <span class="col-dot dot-1"></span>
+                <span class="col-name">Mới tiếp nhận</span>
+              </div>
+              <span class="col-badge" id="c-new">2</span>
+            </div>
+            <div class="card-deck" id="deck-new"></div>
+          </div>
+
+          <!-- Col: Đang liên hệ -->
+          <div class="kanban-col" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropCol(event, 'contacting')">
+            <div class="kanban-col-head">
+              <div class="col-title-wrap">
+                <span class="col-dot dot-2"></span>
+                <span class="col-name">Đang liên hệ</span>
+              </div>
+              <span class="col-badge" id="c-contacting">2</span>
+            </div>
+            <div class="card-deck" id="deck-contacting"></div>
+          </div>
+
+          <!-- Col: Đã hẹn test -->
+          <div class="kanban-col" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropCol(event, 'test_scheduled')">
+            <div class="kanban-col-head">
+              <div class="col-title-wrap">
+                <span class="col-dot dot-3"></span>
+                <span class="col-name">Đã hẹn test</span>
+              </div>
+              <span class="col-badge" id="c-test_scheduled">2</span>
+            </div>
+            <div class="card-deck" id="deck-test_scheduled"></div>
+          </div>
+
+          <!-- Col: Đã chốt -->
+          <div class="kanban-col" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropCol(event, 'won')">
+            <div class="kanban-col-head">
+              <div class="col-title-wrap">
+                <span class="col-dot dot-4"></span>
+                <span class="col-name">Đã chốt học</span>
+              </div>
+              <span class="col-badge" id="c-won">1</span>
+            </div>
+            <div class="card-deck" id="deck-won"></div>
+          </div>
+
+          <!-- Col: Hủy -->
+          <div class="kanban-col" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropCol(event, 'lost')">
+            <div class="kanban-col-head">
+              <div class="col-title-wrap">
+                <span class="col-dot dot-5"></span>
+                <span class="col-name">Hủy (Lost)</span>
+              </div>
+              <span class="col-badge" id="c-lost">1</span>
+            </div>
+            <div class="card-deck" id="deck-lost"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: PLACEMENT TEST ================= -->
+      <section id="tab-test" class="tab-view">
+        <div class="view-title-bar">
+          <div class="view-heading">
+            <h2>Đánh Giá Năng Lực & Bảng Điểm Placement Test</h2>
+            <p>Nhập điểm 4 kỹ năng chuẩn Cambridge, tự động làm tròn Overall Band và đối soát khóa học phù hợp.</p>
+          </div>
+        </div>
+
+        <div class="test-suite-grid">
+          <div class="white-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <span style="font-size: 14px; font-weight: 700; color: var(--text-heading);">Bảng Chấm Điểm 4 Kỹ Năng (IELTS Scale)</span>
+              <span class="badge-tag tag-priority-high">Thí sinh: Trần Văn Hưng</span>
+            </div>
+
+            <div class="slider-row-item">
+              <div class="slider-info-head">
+                <span>Listening (Nghe hiểu)</span>
+                <span class="score-badge" id="valL">5.0</span>
+              </div>
+              <input type="range" class="range-input" min="3.0" max="9.0" step="0.5" value="5.0" id="rngL" oninput="onScoreSliderChange('L', this.value)">
+            </div>
+
+            <div class="slider-row-item">
+              <div class="slider-info-head">
+                <span>Reading (Đọc hiểu)</span>
+                <span class="score-badge" id="valR">5.5</span>
+              </div>
+              <input type="range" class="range-input" min="3.0" max="9.0" step="0.5" value="5.5" id="rngR" oninput="onScoreSliderChange('R', this.value)">
+            </div>
+
+            <div class="slider-row-item">
+              <div class="slider-info-head">
+                <span>Writing (Kỹ năng Viết)</span>
+                <span class="score-badge" id="valW">4.5</span>
+              </div>
+              <input type="range" class="range-input" min="3.0" max="9.0" step="0.5" value="4.5" id="rngW" oninput="onScoreSliderChange('W', this.value)">
+            </div>
+
+            <div class="slider-row-item">
+              <div class="slider-info-head">
+                <span>Speaking (Kỹ năng Nói)</span>
+                <span class="score-badge" id="valS">5.0</span>
+              </div>
+              <input type="range" class="range-input" min="3.0" max="9.0" step="0.5" value="5.0" id="rngS" oninput="onScoreSliderChange('S', this.value)">
+            </div>
+
+            <div class="form-row" style="margin-top: 14px;">
+              <label>Ghi chú nhận xét của Giáo viên:</label>
+              <textarea rows="3" style="font-size: 12.5px;">Phát âm rõ ràng, giao tiếp tự tin. Ngữ pháp câu ghép trong Writing còn hạn chế, cần rèn luyện cấu trúc Task 2.</textarea>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 14px;" onclick="saveCandidateScore()">
+              Lưu Kết Quả & Chuyển Sang Tư Vấn
+            </button>
+          </div>
+
+          <div>
+            <div class="academic-cert-card">
+              <div class="cert-heading">KẾT QUẢ ĐÁNH GIÁ NĂNG LỰC ĐẦU VÀO</div>
+              <div class="overall-score-display" id="dispOverall">5.0</div>
+              <div class="cefr-badge" id="dispCefr">Trình độ tương đương: CEFR B1+</div>
+              <div class="formula-explanation" id="dispFormula">
+                Trung bình cộng: (5.0 + 5.5 + 4.5 + 5.0) / 4 = 5.000<br>
+                Quy tắc Cambridge: Phần lẻ &lt; 0.25 → Giữ nguyên 5.0
+              </div>
+            </div>
+
+            <div class="course-suggestion-card">
+              <div class="suggestion-header">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                Khóa học đề xuất tự động (UC-SYS-03)
+              </div>
+              <div class="suggestion-title" id="dispCourseTitle">IELTS Bứt Phá (Target 5.5 - 6.5)</div>
+              <div class="suggestion-body" id="dispCourseDesc">
+                Thí sinh đạt Band 5.0 đáp ứng đúng điều kiện đầu vào của lớp IELTS-K42 khai giảng tuần tới. Lộ trình tập trung bứt phá điểm Viết và Nói.
+              </div>
+              <button class="btn btn-success" style="margin-top: 10px; font-size: 12px; padding: 5px 12px;" onclick="goToEnrollmentDirectly()">
+                Chọn Xếp Lớp Này
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: CLASSES ================= -->
+      <section id="tab-classes" class="tab-view">
+        <div class="view-title-bar">
+          <div class="view-heading">
+            <h2>Quản Trị Lớp Học & Giám Sát Sĩ Số Thời Gian Thực</h2>
+            <p>Hệ thống tự động khóa tuyển sinh khi lớp đạt sĩ số tối đa (15/15 chỗ) để phòng ngừa Overbooking.</p>
+          </div>
+          <button class="btn btn-success" onclick="openModalDialog('dlgEnroll')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            Xếp Lớp & Thu Học Phí
+          </button>
+        </div>
+
+        <div class="class-matrix-grid" id="classMatrixContainer">
+          <!-- Injected via JavaScript -->
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: DASHBOARD ================= -->
+      <section id="tab-dashboard" class="tab-view">
+        <div class="view-title-bar">
+          <div class="view-heading">
+            <h2>Báo Cáo Hiệu Suất Tuyển Sinh</h2>
+            <p>Phân tích phễu chuyển đổi qua từng công đoạn và xếp hạng kết quả làm việc của nhân sự.</p>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
+          <div class="white-panel">
+            <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 14px;">Tỷ Lệ Chuyển Đổi Phễu Tuyển Sinh</h3>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                  <span>1. Khách hàng tiềm năng tiếp nhận</span>
+                  <span style="font-weight: 600;">100% (120 lead)</span>
+                </div>
+                <div class="gauge-track"><div class="gauge-fill gauge-green" style="width: 100%;"></div></div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                  <span>2. Đã gọi điện tư vấn nhu cầu</span>
+                  <span style="font-weight: 600;">73.3% (88 lead)</span>
+                </div>
+                <div class="gauge-track"><div class="gauge-fill gauge-green" style="width: 73.3%;"></div></div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                  <span>3. Đã tham gia Placement Test</span>
+                  <span style="font-weight: 600;">45.0% (54 học viên)</span>
+                </div>
+                <div class="gauge-track"><div class="gauge-fill gauge-amber" style="width: 45%;"></div></div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                  <span>4. Chốt ghi danh & Nộp học phí chính thức</span>
+                  <span style="font-weight: 600;">26.7% (32 học viên)</span>
+                </div>
+                <div class="gauge-track"><div class="gauge-fill gauge-green" style="width: 26.7%;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="white-panel">
+            <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 14px;">Xếp Hạng Tư Vấn Viên</h3>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--bg-page); border-radius: var(--radius-sm);">
+                <div>
+                  <div style="font-size: 13px; font-weight: 600;">phong phạm</div>
+                  <div style="font-size: 11px; color: var(--text-muted);">18 học viên chốt</div>
+                </div>
+                <span class="badge-tag tag-priority-high" style="align-self: center;">Top 1</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--bg-page); border-radius: var(--radius-sm);">
+                <div>
+                  <div style="font-size: 13px; font-weight: 600;">Linh Mai</div>
+                  <div style="font-size: 11px; color: var(--text-muted);">14 học viên chốt</div>
+                </div>
+                <span class="badge-tag tag-priority-med" style="align-self: center;">Top 2</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 5: OPEN SOURCE RESEARCH (100+ REPOS) ================= -->
+      <section id="tab-design-system" class="tab-view">
+        <div class="view-title-bar">
+          <div class="view-heading">
+            <h2>Hệ Thống 9 Bảng Màu Tuyển Lựa Từ 106 Kho Mã Nguồn Mở Hàng Đầu Thế Giới</h2>
+            <p>Nghiên cứu & chắt lọc tinh hoa UI/UX từ 106 dự án Open-Source đỉnh cao (Twenty CRM, Plane, Radix Colors, Tailwind, Primer, Cal.com, Supabase, Moodle, Canvas LMS...). Bấm để kích hoạt tức thì.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-outline" onclick="applyGlobalTheme('oxford')">🔄 Đặt về Mặc định (Oxford)</button>
+            <button class="btn btn-primary" onclick="showToast('Đang xem danh mục 106 dự án mã nguồn mở!')">📋 106 Repos Đã Khảo Sát</button>
+          </div>
+        </div>
+
+        <!-- 9 Palette Showcase Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-bottom: 28px;">
+          <!-- 1. Oxford Academic -->
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #1e3a8a; transition: all 0.2s;" onclick="applyGlobalTheme('oxford')">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; color: #1e3a8a;">🎓 1. Oxford Academic & Royal Navy</span>
+              <span class="menu-pill" id="pill-oxford">Đang kích hoạt</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: Cambridge English, British Council, Oxford Portal, Moodle Education.</p>
+            <div style="display: flex; gap: 6px;">
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #1e3a8a;" title="Primary #1e3a8a"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #2563eb;" title="Accent #2563eb"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #059669;" title="Success #059669"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #f8fafc; border: 1px solid #cbd5e1;" title="Surface #f8fafc"></div>
+            </div>
+          </div>
+
+          <!-- 2. Twenty & Stripe -->
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #4f46e5; transition: all 0.2s;" onclick="applyGlobalTheme('twenty-indigo')">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; color: #4f46e5;">⚡ 2. Twenty CRM & Stripe Indigo</span>
+              <span class="menu-pill" id="pill-twenty-indigo">Click để thử</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: twentyhq/twenty (CRM mã nguồn mở top 1 GitHub), Dub.co, Formbricks.</p>
+            <div style="display: flex; gap: 6px;">
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #4f46e5;" title="Primary #4f46e5"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #6366f1;" title="Accent #6366f1"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #10b981;" title="Success #10b981"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #f8fafc; border: 1px solid #cbd5e1;" title="Surface #f8fafc"></div>
+            </div>
+          </div>
+
+          <!-- 3. Radix Jade -->
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #065f46; transition: all 0.2s;" onclick="applyGlobalTheme('radix-jade')">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; color: #065f46;">🌿 3. Radix Jade & EdTech Growth</span>
+              <span class="menu-pill" id="pill-radix-jade">Click để thử</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: Radix UI Colors P3, Coursera, Duolingo Enterprise, Khan Academy UI.</p>
+            <div style="display: flex; gap: 6px;">
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #065f46;" title="Primary #065f46"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #059669;" title="Accent #059669"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #d97706;" title="Warning #d97706"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #f7f9f8; border: 1px solid #cbd5e1;" title="Surface #f7f9f8"></div>
+            </div>
+          </div>
+
+          <!-- 4. Cal.com Warm Stone -->
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #1c1917; transition: all 0.2s;" onclick="applyGlobalTheme('cal-warm')">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; color: #1c1917;">🏛️ 4. Cal.com & Supabase Warm Stone</span>
+              <span class="menu-pill" id="pill-cal-warm">Click để thử</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: calcom/cal.com, supabase/supabase, Tailwind Stone 900.</p>
+            <div style="display: flex; gap: 6px;">
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #1c1917;" title="Primary #1c1917"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #78716c;" title="Accent #78716c"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #15803d;" title="Success #15803d"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #fafaf9; border: 1px solid #cbd5e1;" title="Surface #fafaf9"></div>
+            </div>
+          </div>
+
+          <!-- 5. GitHub Primer -->
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #0969da; transition: all 0.2s;" onclick="applyGlobalTheme('github-primer')">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; color: #0969da;">🐙 5. GitHub Primer Enterprise</span>
+              <span class="menu-pill" id="pill-github-primer">Click để thử</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: primer/primitives (Hệ thống thiết kế của GitHub), Atlassian Design.</p>
+            <div style="display: flex; gap: 6px;">
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #0969da;" title="Primary #0969da"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #1a7f37;" title="Success #1a7f37"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #cf222e;" title="Danger #cf222e"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #f6f8fa; border: 1px solid #cbd5e1;" title="Surface #f6f8fa"></div>
+            </div>
+          </div>
+
+          <!-- 6. Mantine & Raycast Violet -->
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #6d28d9; transition: all 0.2s;" onclick="applyGlobalTheme('mantine-violet')">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; color: #6d28d9;">🔮 6. Mantine & Raycast Violet</span>
+              <span class="menu-pill" id="pill-mantine-violet">Click để thử</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: mantinedev/mantine, raycast/extensions, Infisical, Novu notifications.</p>
+            <div style="display: flex; gap: 6px;">
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #6d28d9;" title="Primary #6d28d9"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #8b5cf6;" title="Accent #8b5cf6"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #059669;" title="Success #059669"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #faf5ff; border: 1px solid #c4b5fd;" title="Surface #faf5ff"></div>
+            </div>
+          </div>
+
+          <!-- 7. Campfire Amber -->
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #c2410c; transition: all 0.2s;" onclick="applyGlobalTheme('campfire-amber')">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; color: #c2410c;">🍁 7. Campfire & Basecamp Amber</span>
+              <span class="menu-pill" id="pill-campfire-amber">Click để thử</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: 37signals Basecamp, Campfire, Chakra UI Warm Amber, Odoo.</p>
+            <div style="display: flex; gap: 6px;">
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #c2410c;" title="Primary #c2410c"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #ea580c;" title="Accent #ea580c"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #15803d;" title="Success #15803d"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #fefcfb; border: 1px solid #fed7aa;" title="Surface #fefcfb"></div>
+            </div>
+          </div>
+
+          <!-- 8. Nordic Teal -->
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #0f766e; transition: all 0.2s;" onclick="applyGlobalTheme('nordic-cyan')">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; color: #0f766e;">❄️ 8. Nordic Frost & Canvas Teal</span>
+              <span class="menu-pill" id="pill-nordic-cyan">Click để thử</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Cảm hứng: Nord theme, Instructure Canvas LMS, Vikunja, Elastic EUI.</p>
+            <div style="display: flex; gap: 6px;">
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #0f766e;" title="Primary #0f766e"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #0d9488;" title="Accent #0d9488"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #059669;" title="Success #059669"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #f0fdfa; border: 1px solid #99f6e4;" title="Surface #f0fdfa"></div>
+            </div>
+          </div>
+
+          <!-- 9. OLED Dark -->
+          <div class="white-panel" style="cursor: pointer; border-left: 4px solid #3b82f6; background: #121215; color: #f4f4f5; transition: all 0.2s;" onclick="applyGlobalTheme('oled-dark')">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; color: #60a5fa;">🌙 9. OLED Midnight Dark Mode</span>
+              <span class="menu-pill" id="pill-oled-dark" style="background: #27272a; color: #a1a1aa;">Click để thử</span>
+            </div>
+            <p style="font-size: 12px; color: #a1a1aa; margin-bottom: 8px;">Cảm hứng: Linear Dark, shadcn/ui zinc-dark, Supabase Studio, Dracula theme.</p>
+            <div style="display: flex; gap: 6px;">
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #3b82f6;" title="Primary #3b82f6"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #38bdf8;" title="Accent #38bdf8"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #10b981;" title="Success #10b981"></div>
+              <div style="width: 28px; height: 18px; border-radius: 3px; background: #09090b; border: 1px solid #27272a;" title="Background #09090b"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 106 Open Source Repositories Interactive Explorer -->
+        <div class="white-panel" style="margin-bottom: 24px;">
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 16px; border-bottom: 1px solid var(--border-light); padding-bottom: 14px;">
+            <div>
+              <h3 style="font-size: 15px; font-weight: 700; color: var(--text-heading); display: flex; align-items: center; gap: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                Danh Mục Chi Tiết 106 Kho Mã Nguồn Mở Đã Khảo Sát & Kế Thừa Thiết Kế
+              </h3>
+              <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 2px;">Khám phá toàn bộ 106 repository với mã màu đại diện, số sao GitHub và giải pháp UI/UX đã ứng dụng vào EduFlow CRM.</p>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span id="repoCountBadge" class="menu-pill" style="font-size: 12px; padding: 4px 10px; background: var(--brand-subtle); color: var(--brand-primary); font-weight: 700;">Đang hiện: 106 / 106 Repos</span>
+            </div>
+          </div>
+
+          <!-- Search and Filter Bar -->
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px;">
+            <div class="search-box" style="width: 100%; height: 38px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" color="#94a3b8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="repoSearchInput" placeholder="Tìm kiếm trong 106 repo mã nguồn mở (tên repo, từ khóa nghiệp vụ, mã màu #hex, công nghệ...)" oninput="filterReposList()" style="width: 100%; border: none; outline: none; background: transparent; font-size: 13.5px;">
+            </div>
+
+            <!-- Category Filter Buttons -->
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;" id="repoCategoryPills">
+              <button class="btn btn-sm btn-primary filter-pill active" onclick="setCategoryFilter('all', this)">Tất cả (106)</button>
+              <button class="btn btn-sm btn-outline filter-pill" onclick="setCategoryFilter('crm', this)">CRM & Khách hàng (18)</button>
+              <button class="btn btn-sm btn-outline filter-pill" onclick="setCategoryFilter('pm', this)">Quản lý dự án & Kanban (18)</button>
+              <button class="btn btn-sm btn-outline filter-pill" onclick="setCategoryFilter('ds', this)">Design Systems (24)</button>
+              <button class="btn btn-sm btn-outline filter-pill" onclick="setCategoryFilter('lms', this)">EdTech & Học thuật (18)</button>
+              <button class="btn btn-sm btn-outline filter-pill" onclick="setCategoryFilter('saas', this)">Modern SaaS & Infra (16)</button>
+              <button class="btn btn-sm btn-outline filter-pill" onclick="setCategoryFilter('data', this)">Data Viz & Bảng biểu (12)</button>
+            </div>
+          </div>
+
+          <!-- Dynamic Repository Cards Grid -->
+          <div id="repoCardsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; max-height: 720px; overflow-y: auto; padding-right: 4px;">
+            <!-- Rendered dynamically by JavaScript -->
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ================= MODAL: TẠO LEAD ================= -->
+  <div class="modal-backdrop" id="dlgCreateLead">
+    <div class="modal-window">
+      <div class="modal-title-bar">
+        <h3>Tiếp Nhận Khách Hàng Tiềm Năng</h3>
+        <button class="btn-close" onclick="closeModalDialog('dlgCreateLead')">&times;</button>
+      </div>
+      <div class="modal-content-pad">
+        <div class="form-row">
+          <label>Họ và tên khách hàng (*):</label>
+          <input type="text" id="mName" placeholder="vd: Nguyễn Thu Hằng">
+        </div>
+        <div class="form-row">
+          <label>Số điện thoại (*):</label>
+          <input type="text" id="mPhone" placeholder="vd: 0912345678">
+          <span style="font-size: 11px; color: var(--text-hint);">Hệ thống tự động kiểm tra trùng lặp qua CSDL.</span>
+        </div>
+        <div class="form-row">
+          <label>Kênh tiếp cận:</label>
+          <select id="mSource">
+            <option value="Facebook Ads">Facebook Ads</option>
+            <option value="Website Form">Website Form</option>
+            <option value="Hotline">Gọi Hotline</option>
+            <option value="Khách vãng lai">Khách vãng lai</option>
+            <option value="Giới thiệu">Học viên cũ giới thiệu</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Nhu cầu đào tạo:</label>
+          <select id="mCourse">
+            <option value="Luyện thi IELTS">Luyện thi IELTS</option>
+            <option value="Tiếng Anh Giao tiếp">Tiếng Anh Giao tiếp</option>
+            <option value="Luyện thi TOEIC">Luyện thi TOEIC</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Mức độ ưu tiên tư vấn:</label>
+          <select id="mPriority">
+            <option value="high">Ưu tiên cao (Cần học ngay)</option>
+            <option value="med" selected>Trung bình (Tìm hiểu lộ trình)</option>
+            <option value="low">Tiêu chuẩn</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions-bar">
+        <button class="btn btn-secondary" onclick="closeModalDialog('dlgCreateLead')">Hủy bỏ</button>
+        <button class="btn btn-primary" onclick="submitCreateLeadAction()">Lưu Hồ Sơ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: XẾP LỚP & THU HỌC PHÍ ================= -->
+  <div class="modal-backdrop" id="dlgEnroll">
+    <div class="modal-window">
+      <div class="modal-title-bar">
+        <h3>Xếp Lớp & Ghi Nhận Học Phí</h3>
+        <button class="btn-close" onclick="closeModalDialog('dlgEnroll')">&times;</button>
+      </div>
+      <div class="modal-content-pad">
+        <div class="form-row">
+          <label>Học viên cần xếp lớp (*):</label>
+          <select id="selStudentEnroll">
+            <option value="Trần Văn Hưng">Trần Văn Hưng (Đã đạt Band 5.0 - SĐT: 0905 111 222)</option>
+            <option value="Lê Hoàng Nam">Lê Hoàng Nam (Đã đạt Band 6.5 - SĐT: 0912 345 678)</option>
+            <option value="Vũ Thị Ngọc">Vũ Thị Ngọc (Đã đạt Band 5.5 - SĐT: 0944 333 444)</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Lớp học đăng ký (*):</label>
+          <select id="selTargetClass"></select>
+        </div>
+        <div class="form-row">
+          <label>Số tiền học phí thực thu (VNĐ):</label>
+          <input type="text" id="inpFee" value="8,500,000">
+        </div>
+        <div class="form-row">
+          <label>Mã tham chiếu ngân hàng:</label>
+          <input type="text" id="inpRefCode" value="VCB-2026-889922">
+        </div>
+      </div>
+      <div class="modal-actions-bar">
+        <button class="btn btn-secondary" onclick="closeModalDialog('dlgEnroll')">Hủy</button>
+        <button class="btn btn-success" onclick="executeClassEnrollment()">Xác Nhận Ghi Danh (Khóa sĩ số)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SLIDE-OVER DRAWER ================= -->
+  <aside class="drawer-panel" id="leadDrawer">
+    <div class="drawer-top">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="badge-tag tag-priority-high" id="drwPriority">Ưu tiên cao</span>
+        <span style="font-size: 11px; color: var(--text-hint); font-weight: 600;" id="drwId">LD-01</span>
+      </div>
+      <button class="btn-close" onclick="closeDrawer()">&times;</button>
+    </div>
+    <div class="drawer-scroll">
+      <div>
+        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-heading);" id="drwFullName">Đặng Minh Châu</h3>
+        <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 2px;" id="drwPhoneNumber">0988 123 456</p>
+      </div>
+
+      <div style="background: var(--bg-page); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 12px;">
+        <div style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Khóa học quan tâm</div>
+        <div style="font-size: 13px; font-weight: 600; color: var(--brand-primary); margin-top: 2px;" id="drwCourseName">Luyện thi IELTS</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Kênh tiếp nhận: <span id="drwSourceName">Facebook Ads</span></div>
+      </div>
+
+      <div>
+        <div style="font-size: 12.5px; font-weight: 600; margin-bottom: 10px; color: var(--text-heading);">Nhật ký tương tác chăm sóc (Timeline)</div>
+        <div class="timeline-chain" id="drwTimelineList">
+          <div class="timeline-node">
+            <div class="timeline-time-txt">Hôm nay - 10:15 SA (phong phạm)</div>
+            <div class="timeline-desc-txt">Gọi điện tư vấn: Khách hàng cần chứng chỉ IELTS 6.5 để hoàn thiện hồ sơ du học. Hẹn thi test đầu vào thứ 6.</div>
+          </div>
+          <div class="timeline-node">
+            <div class="timeline-time-txt">Hôm qua - 15:30 CH (Hệ thống)</div>
+            <div class="timeline-desc-txt">Tiếp nhận thông tin tự động từ Form Facebook Ads. Phân bổ cho Tư vấn viên phong phạm.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-top: auto;">
+        <label>Thêm ghi chú cuộc gọi mới:</label>
+        <textarea rows="2" id="inpNoteContent" placeholder="Nhập tóm tắt nội dung trao đổi..."></textarea>
+        <button class="btn btn-secondary" style="margin-top: 6px; justify-content: center;" onclick="saveNewCallNote()">
+          + Lưu Nhật Ký
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <script>
+    // Theme Management Engine
+    function applyGlobalTheme(themeKey) {
+      document.documentElement.setAttribute('data-theme', themeKey);
+      const sel = document.getElementById('themeSelectInput');
+      if (sel) sel.value = themeKey;
+
+      const labels = {
+        'oxford': 'Oxford',
+        'twenty-indigo': 'Twenty',
+        'radix-jade': 'Radix Jade',
+        'cal-warm': 'Cal Stone',
+        'github-primer': 'GitHub',
+        'mantine-violet': 'Mantine',
+        'campfire-amber': 'Campfire',
+        'nordic-cyan': 'Nordic Cyan',
+        'oled-dark': 'OLED Dark'
+      };
+      const badge = document.getElementById('themeBadgeName');
+      if (badge) badge.innerText = labels[themeKey] || themeKey;
+
+      // Update swatch indicator dots in header
+      const keys = ['oxford', 'twenty-indigo', 'radix-jade', 'cal-warm', 'github-primer', 'mantine-violet', 'campfire-amber', 'nordic-cyan', 'oled-dark'];
+      document.querySelectorAll('.palette-swatch-dot').forEach((dot, idx) => {
+        dot.classList.remove('active');
+        if (keys[idx] === themeKey) dot.classList.add('active');
+      });
+
+      // Update showcase pills
+      keys.forEach(k => {
+        const pill = document.getElementById('pill-' + k);
+        if (pill) {
+          if (k === themeKey) {
+            pill.innerText = 'Đang kích hoạt';
+            pill.style.background = 'var(--brand-primary)';
+            pill.style.color = 'var(--accent-badge-color)';
+          } else {
+            pill.innerText = 'Click để thử';
+            pill.style.background = 'var(--bg-surface-hover)';
+            pill.style.color = 'var(--text-muted)';
+          }
+        }
+      });
+
+      const fullNames = {
+        'oxford': 'Oxford Academic & Royal Navy (Chuẩn viện nghiên cứu & trường đại học Anh Quốc)',
+        'twenty-indigo': 'Twenty CRM & Stripe Indigo (Chuẩn SaaS thế hệ mới)',
+        'radix-jade': 'Radix Jade & EdTech Growth (Màu ngọc lục bảo phát triển bền vững)',
+        'cal-warm': 'Cal.com & Supabase Warm Stone (Kiến trúc đá ấm tối giản thanh tao)',
+        'github-primer': 'GitHub Primer Enterprise (Giao diện doanh nghiệp tiêu chuẩn)',
+        'mantine-violet': 'Mantine & Raycast Violet (Tím sáng tạo, chiều sâu học thuật)',
+        'campfire-amber': 'Campfire & Basecamp Amber (Màu đất nung ấm áp, gần gũi phụ huynh)',
+        'nordic-cyan': 'Nordic Frost & Canvas Teal (Tông xanh ngọc Bắc Âu dịu mắt)',
+        'oled-dark': 'OLED Midnight Dark Mode (Giao diện ban đêm chuẩn chuyên gia)'
+      };
+      showToast(`Đã chuyển giao diện sang: ${fullNames[themeKey] || themeKey}`);
+    }
+
+    // =========================================================================
+    // DỮ LIỆU KHẢO SÁT 106 KHO MÃ NGUỒN MỞ HÀNG ĐẦU THẾ GIỚI
+    // =========================================================================
+    const OPEN_SOURCE_REPOS = [
+      // 1. CRM & Khách hàng (18)
+      { id: 1, name: "twentyhq/twenty", cat: "crm", stars: "24.5k", hex: "#4f46e5", theme: "twenty-indigo", tag: "CRM", desc: "CRM mã nguồn mở thế hệ mới thay thế Salesforce, kiến trúc TypeScript/NestJS, giao diện mượt bậc nhất.", applied: "Bố cục chia cột thông tin học viên, bảng dữ liệu Lead và bộ màu Indigo chuẩn SaaS." },
+      { id: 2, name: "espocrm/espocrm", cat: "crm", stars: "3.7k", hex: "#337ab7", theme: "oxford", tag: "CRM", desc: "CRM ứng dụng doanh nghiệp linh hoạt với quản lý hồ sơ và lịch sử tương tác khách hàng.", applied: "Quy trình chuyển đổi Lead thành Học viên chính thức và nhật ký cuộc gọi tư vấn." },
+      { id: 3, name: "suitecrm/suitecrm", cat: "crm", stars: "4.3k", hex: "#d9230f", theme: "campfire-amber", tag: "CRM", desc: "Hệ thống CRM nguồn mở chuẩn doanh nghiệp cho Sales, Marketing và dịch vụ đào tạo.", applied: "Quy trình phễu tuyển sinh Deal Stages và phân công tư vấn viên phụ trách." },
+      { id: 4, name: "chatwoot/chatwoot", cat: "crm", stars: "21.2k", hex: "#1f93ff", theme: "twenty-indigo", tag: "CRM", desc: "Nền tảng giao tiếp và chăm sóc khách hàng đa kênh (Facebook, Zalo, Website Livechat).", applied: "Widget hộp thư trao đổi nhanh và phản hồi tư vấn trực tiếp với phụ huynh." },
+      { id: 5, name: "papercups-io/papercups", cat: "crm", stars: "5.5k", hex: "#1890ff", theme: "oxford", tag: "CRM", desc: "Công cụ chat chăm sóc khách hàng mã nguồn mở viết bằng Elixir và React.", applied: "Giao diện nhắn tin hỗ trợ học viên thời gian thực trên thanh điều hướng." },
+      { id: 6, name: "erpnext/erpnext", cat: "crm", stars: "19.8k", hex: "#0089ff", theme: "github-primer", tag: "CRM", desc: "Hệ thống ERP & CRM nguồn mở lớn nhất trên nền tảng Frappe Framework.", applied: "Cấu trúc hóa dữ liệu học phí, phiếu thu hóa đơn điện tử và công nợ học viên." },
+      { id: 7, name: "odoo/odoo", cat: "crm", stars: "38.2k", hex: "#714b67", theme: "mantine-violet", tag: "CRM", desc: "Bộ ứng dụng doanh nghiệp tích hợp quản trị quan hệ khách hàng và tuyển sinh.", applied: "Tư duy kéo thả Kanban phân đoạn tuyển sinh (Mới -> Đã liên hệ -> Xếp test -> Hoàn tất)." },
+      { id: 8, name: "nocodb/nocodb", cat: "crm", stars: "46.1k", hex: "#1890ff", theme: "twenty-indigo", tag: "CRM", desc: "Biến cơ sở dữ liệu quan hệ SQL thành giao diện bảng trực quan thông minh như Airtable.", applied: "Chế độ xem bảng dữ liệu Grid View lọc động, sắp xếp đa trường và ẩn hiện cột." },
+      { id: 9, name: "baserow/baserow", cat: "crm", stars: "12.4k", hex: "#5932ea", theme: "mantine-violet", tag: "CRM", desc: "Cơ sở dữ liệu mã nguồn mở hỗ trợ cộng tác nhóm tuyển sinh theo thời gian thực.", applied: "Cơ chế quản lý danh sách học viên dự thính và lọc theo trình độ đầu vào." },
+      { id: 10, name: "budibase/budibase", cat: "crm", stars: "22.6k", hex: "#111827", theme: "cal-warm", tag: "CRM", desc: "Nền tảng low-code xây dựng biểu mẫu CRM nội bộ và cổng portal nhân viên.", applied: "Biểu mẫu nhập liệu Modal tư vấn nhanh với tính năng kiểm tra lỗi tức thì." },
+      { id: 11, name: "cortezaproject/corteza", cat: "crm", stars: "1.3k", hex: "#137cbd", theme: "oxford", tag: "CRM", desc: "Nền tảng CRM doanh nghiệp 100% tự do và tự quản lý dữ liệu riêng tư.", applied: "Mô hình bảo mật phân quyền RBAC đa chi nhánh cho Trung tâm Anh ngữ." },
+      { id: 12, name: "crater-invoice/crater", cat: "crm", stars: "8.1k", hex: "#2563eb", theme: "oxford", tag: "CRM", desc: "Hệ thống lập hóa đơn và quản trị biên lai thanh toán học phí nguồn mở.", applied: "Bảng chi tiết biên lai thu học phí, chính sách học bổng và lịch sử giao dịch." },
+      { id: 13, name: "formbricks/formbricks", cat: "crm", stars: "8.9k", hex: "#00e699", theme: "radix-jade", tag: "CRM", desc: "Hệ sinh thái khảo sát và thu thập thông tin khách hàng tiềm năng đa kênh.", applied: "Form đăng ký Placement Test trực tuyến với trải nghiệm micro-survey thân thiện." },
+      { id: 14, name: "documenso/documenso", cat: "crm", stars: "8.2k", hex: "#0f172a", theme: "cal-warm", tag: "CRM", desc: "Giải pháp ký hợp đồng điện tử mã nguồn mở thay thế DocuSign.", applied: "Quy trình ký hợp đồng cam kết đầu ra (IELTS 6.5+) bằng chữ ký số minh bạch." },
+      { id: 15, name: "posthog/posthog", cat: "crm", stars: "22.5k", hex: "#f54e00", theme: "campfire-amber", tag: "CRM", desc: "Nền tảng phân tích hành vi người dùng và theo dõi phễu tuyển sinh chuyên sâu.", applied: "Biểu đồ tỷ lệ rớt (drop-off) từ giai đoạn Test đến lúc nộp học phí hoàn tất." },
+      { id: 16, name: "plausible/analytics", cat: "crm", stars: "19.4k", hex: "#6366f1", theme: "twenty-indigo", tag: "CRM", desc: "Công cụ phân tích nguồn học viên gọn nhẹ, bảo mật quyền riêng tư tối đa.", applied: "Báo cáo cơ cấu nguồn Lead (Facebook Ads, Google Search, Bạn bè giới thiệu)." },
+      { id: 17, name: "umami-software/umami", cat: "crm", stars: "22.1k", hex: "#2563eb", theme: "oxford", tag: "CRM", desc: "Phần mềm thống kê lưu lượng người dùng mã nguồn mở tự host thân thiện.", applied: "Widget KPI trực quan gọn gàng trên thanh tiêu đề báo cáo tuyển sinh." },
+      { id: 18, name: "infisical/infisical", cat: "crm", stars: "15.7k", hex: "#84cc16", theme: "radix-jade", tag: "CRM", desc: "Nền tảng bảo mật thông tin và quản trị secret key chuẩn bảo mật ngân hàng.", applied: "Cơ chế bảo mật API và mã hóa thông tin liên lạc cá nhân của học sinh." },
+
+      // 2. Quản lý dự án & Kanban (18)
+      { id: 19, name: "makeplane/plane", cat: "pm", stars: "31.8k", hex: "#3f75fe", theme: "twenty-indigo", tag: "Kanban/PM", desc: "Công cụ quản lý dự án nguồn mở thay thế JIRA và Linear hiện đại nhất.", applied: "Thẻ Kanban học viên với độ tương phản cao, badge trạng thái bo góc tinh tế." },
+      { id: 20, name: "focalboard/focalboard", cat: "pm", stars: "19.5k", hex: "#2389d7", theme: "oxford", tag: "Kanban/PM", desc: "Ứng dụng bảng cộng tác đa góc nhìn của Mattermost (Board, Gallery, Table).", applied: "Chuyển đổi góc nhìn linh hoạt giữa bảng Kanban Pipeline và bảng dữ liệu Grid." },
+      { id: 21, name: "vikunja/vikunja", cat: "pm", stars: "6.1k", hex: "#1973ff", theme: "nordic-cyan", tag: "Kanban/PM", desc: "Phần mềm quản lý công việc và kế hoạch cá nhân nguồn mở đa nền tảng.", applied: "Danh sách nhắc lịch tư vấn gọi điện cho phụ huynh kèm cờ hạn chót gọi lại." },
+      { id: 22, name: "taigaio/taiga-front", cat: "pm", stars: "6.2k", hex: "#27ae60", theme: "radix-jade", tag: "Kanban/PM", desc: "Nền tảng quản trị dự án Agile/Scrum trực quan cho đội ngũ hiện đại.", applied: "Bộ chỉ số tiến độ hoàn thành chỉ tiêu tuyển sinh theo từng Sprint/Tháng." },
+      { id: 23, name: "wekan/wekan", cat: "pm", stars: "19.2k", hex: "#0079bf", theme: "github-primer", tag: "Kanban/PM", desc: "Bảng Kanban nguồn mở phổ biến nhất cho làm việc nhóm.", applied: "Cơ chế kéo thả thẻ học viên mượt mà với hiệu ứng phản hồi xúc giác nhẹ nhàng." },
+      { id: 24, name: "leantime/leantime", cat: "pm", stars: "5.4k", hex: "#104f55", theme: "nordic-cyan", tag: "Kanban/PM", desc: "Hệ thống quản lý chiến lược và mục tiêu định hướng theo giá trị sản phẩm.", applied: "Thước đo tỷ lệ chốt khóa học (Win Rate) theo từng nhân sự tư vấn." },
+      { id: 25, name: "openproject/openproject", cat: "pm", stars: "8.7k", hex: "#1763a6", theme: "oxford", tag: "Kanban/PM", desc: "Phần mềm quản lý dự án doanh nghiệp hỗ trợ biểu đồ Gantt tiến độ.", applied: "Sơ đồ xếp lớp và lịch học tuần học viên theo từng phòng học." },
+      { id: 26, name: "kanboard/kanboard", cat: "pm", stars: "8.3k", hex: "#333333", tag: "Kanban/PM", desc: "Bảng Kanban siêu tối giản tập trung vào hiệu suất và không có rườm rà.", applied: "Triết lý tối giản hóa các biểu tượng rác, không dùng emoji cợt nhả." },
+      { id: 27, name: "planka/planka", cat: "pm", stars: "7.4k", hex: "#0079bf", theme: "github-primer", tag: "Kanban/PM", desc: "Bảng theo dõi công việc thời gian thực xây dựng bằng React và Redux.", applied: "Đồng bộ hóa dữ liệu thời gian thực khi nhiều tư vấn viên cùng thao tác hồ sơ." },
+      { id: 28, name: "redmine/redmine", cat: "pm", stars: "5.1k", hex: "#b32d2e", theme: "campfire-amber", tag: "Kanban/PM", desc: "Hệ thống quản trị vấn đề và tác vụ kinh điển có độ ổn định 20 năm.", applied: "Nhật ký kiểm toán (Audit Trail) ghi lại mọi thao tác sửa đổi điểm Placement Test." },
+      { id: 29, name: "super-productivity/super-productivity", cat: "pm", stars: "11.5k", hex: "#e11d48", theme: "campfire-amber", tag: "Kanban/PM", desc: "Ứng dụng theo dõi năng suất cá nhân với kỹ thuật Pomodoro và Time Tracker.", applied: "Bộ đếm thời gian gọi điện tư vấn chăm sóc khách hàng chất lượng cao." },
+      { id: 30, name: "tasking-manager/tasking-manager", cat: "pm", stars: "1.1k", hex: "#cf2e2e", theme: "campfire-amber", tag: "Kanban/PM", desc: "Công cụ điều phối tác vụ phân tán của tổ chức OpenStreetMap.", applied: "Phân chia khu vực thị trường tuyển sinh theo trường học và quận huyện." },
+      { id: 31, name: "trilium/trilium", cat: "pm", stars: "26.4k", hex: "#455a64", theme: "cal-warm", tag: "Kanban/PM", desc: "Hệ thống quản lý tri thức dạng cây phân cấp cho lưu trữ tài liệu giáo dục.", applied: "Cây thư mục phân cấp chương trình đào tạo từ Mầm non đến IELTS Master." },
+      { id: 32, name: "logseq/logseq", cat: "pm", stars: "31.5k", hex: "#106ba3", theme: "oxford", tag: "Kanban/PM", desc: "Cơ sở tri thức liên kết mạng lưới (Bi-directional linking) bảo mật cục bộ.", applied: "Liên kết chéo giữa kết quả kiểm tra đầu vào và lộ trình học tập đề xuất." },
+      { id: 33, name: "appflowy-io/appflowy", cat: "pm", stars: "55.8k", hex: "#5c479d", theme: "mantine-violet", tag: "Kanban/PM", desc: "Ứng dụng quản trị không gian làm việc thay thế Notion viết bằng Rust & Flutter.", applied: "Thiết kế tài liệu đặc tả khóa học và giáo án lớp học dạng khối nội dung." },
+      { id: 34, name: "affine-designer/affine", cat: "pm", stars: "43.2k", hex: "#3b82f6", theme: "twenty-indigo", tag: "Kanban/PM", desc: "Không gian làm việc hợp nhất giữa ghi chú, bảng vẽ và cơ sở dữ liệu.", applied: "Khung vẽ sơ đồ xếp lớp học viên tương tác trực quan kéo thả." },
+      { id: 35, name: "standardnotes/app", cat: "pm", stars: "5.3k", hex: "#087df1", theme: "github-primer", tag: "Kanban/PM", desc: "Ứng dụng ghi chú bảo mật mã hóa đầu cuối 100% riêng tư.", applied: "Mã hóa điểm thi đánh giá và phản hồi nhạy cảm của học viên." },
+      { id: 36, name: "joplin/joplin", cat: "pm", stars: "45.3k", hex: "#1b4fd8", theme: "oxford", tag: "Kanban/PM", desc: "Công cụ ghi chép và đồng bộ hóa tài liệu học tập đa nền tảng.", applied: "Đồng bộ tài liệu bài giảng và bài tập về nhà giữa giảng viên và trung tâm." },
+
+      // 3. Design Systems & UI Foundations (24)
+      { id: 37, name: "tailwindlabs/tailwindcss", cat: "ds", stars: "82.4k", hex: "#38bdf8", theme: "twenty-indigo", tag: "Design System", desc: "Framework CSS utility-first phổ biến nhất thế giới với thang màu Slate/Stone/Zinc.", applied: "Hệ thống tỷ lệ khoảng cách 4px-grid, bo góc 6px-12px và thang màu nền cao cấp." },
+      { id: 38, name: "radix-ui/colors", cat: "ds", stars: "4.8k", hex: "#0091ff", theme: "radix-jade", tag: "Design System", desc: "Hệ thống thang màu 12-bước chuẩn P3 cho giao diện tương tác có độ tương phản tuyệt hảo.", applied: "Áp dụng cấu trúc 12 bước màu cho trạng thái hover, focus, border và text." },
+      { id: 39, name: "primer/primitives", cat: "ds", stars: "1.6k", hex: "#0969da", theme: "github-primer", tag: "Design System", desc: "Design tokens gốc của GitHub phục vụ hàng trăm triệu nhà phát triển.", applied: "Theme GitHub Primer Enterprise với tỷ lệ tương phản xanh dương chuẩn mực." },
+      { id: 40, name: "carbon-design-system/carbon", cat: "ds", stars: "8.3k", hex: "#0f62fe", theme: "oxford", tag: "Design System", desc: "Hệ thống thiết kế mã nguồn mở của tập đoàn IBM dành cho sản phẩm doanh nghiệp.", applied: "Cấu trúc lưới số liệu dày đặc (Data Density) và hệ thống phân cấp font chữ chuẩn." },
+      { id: 41, name: "shopify/polaris", cat: "ds", stars: "6.2k", hex: "#008060", theme: "radix-jade", tag: "Design System", desc: "Design system của Shopify tối ưu hóa cho quản trị thương mại và thanh toán.", applied: "Thiết kế thẻ tóm tắt số liệu (Metric Banner) và thông báo Toast xác nhận." },
+      { id: 42, name: "adobe/spectrum-css", cat: "ds", stars: "1.5k", hex: "#eb1000", theme: "campfire-amber", tag: "Design System", desc: "Triển khai CSS chuẩn của Adobe Spectrum cho các công cụ sáng tạo cao cấp.", applied: "Thanh trượt Gauge lấp đầy chỉ số sĩ số lớp học với màu sắc chuyển tiếp mượt." },
+      { id: 43, name: "ant-design/ant-design", cat: "ds", stars: "92.8k", hex: "#1677ff", theme: "oxford", tag: "Design System", desc: "Thư viện component UI doanh nghiệp phổ biến nhất tại Châu Á.", applied: "Bố cục chia màn hình Header + Fixed Sidebar + Main Content tiêu chuẩn." },
+      { id: 44, name: "chakra-ui/chakra-ui", cat: "ds", stars: "36.5k", hex: "#319795", theme: "campfire-amber", tag: "Design System", desc: "Thư viện React component linh hoạt, dễ tùy biến với hệ thống props hiện đại.", applied: "Bảng màu Campfire & Warm Amber lấy cảm hứng từ thang màu Teal/Orange." },
+      { id: 45, name: "mantinedev/mantine", cat: "ds", stars: "26.3k", hex: "#339af0", theme: "mantine-violet", tag: "Design System", desc: "Bộ sưu tập hơn 100 component React phong phú nhất hệ sinh thái mã nguồn mở.", applied: "Theme Mantine Violet & Raycast với sắc tím học viện sáng tạo, hiện đại." },
+      { id: 46, name: "shadcn-ui/ui", cat: "ds", stars: "76.4k", hex: "#18181b", theme: "cal-warm", tag: "Design System", desc: "Bộ component copy-paste tinh gọn nhất hiện nay dựa trên Radix và Tailwind.", applied: "Phong cách thiết kế phẳng, viền xám mỏng 1px sắc nét không viền đậm thô kệch." },
+      { id: 47, name: "tremorlabs/tremor", cat: "ds", stars: "15.6k", hex: "#3b82f6", theme: "twenty-indigo", tag: "Design System", desc: "Các component chuyên dụng cho Dashboard và phân tích dữ liệu nhanh.", applied: "Thẻ chỉ số KPI doanh thu tuyển sinh, tỷ lệ lấp đầy lớp và biểu đồ phễu." },
+      { id: 48, name: "atlassian/atlassian-frontend", cat: "ds", stars: "2.1k", hex: "#0052cc", theme: "github-primer", tag: "Design System", desc: "Hệ thống thiết kế chuẩn của Jira và Trello cho quy trình cộng tác quốc tế.", applied: "Quy ước đặt tên mã lớp học, huy hiệu cấp độ (Level Pills) và Avatar nhân sự." },
+      { id: 49, name: "salesforce/design-system", cat: "ds", stars: "4.7k", hex: "#0176d3", theme: "oxford", tag: "Design System", desc: "Salesforce Lightning Design System (SLDS) cho trải nghiệm CRM phức tạp.", applied: "Thước đo trạng thái tiến trình (Lead Status Progress Tracker)." },
+      { id: 50, name: "uber/baseweb", cat: "ds", stars: "8.7k", hex: "#000000", theme: "oled-dark", tag: "Design System", desc: "Hệ thống thiết kế Base Web của Uber tối ưu hóa cho thao tác người dùng tốc độ cao.", applied: "Hộp thoại Modal nhập liệu mở nhanh với phím tắt Esc và tự động bắt nét." },
+      { id: 51, name: "palantir/blueprint", cat: "ds", stars: "20.5k", hex: "#137cbd", theme: "oxford", tag: "Design System", desc: "Bộ công cụ giao diện React cho các phần mềm phân tích dữ liệu phức tạp.", applied: "Chế độ xem bảng thông tin học viên dày đặc dữ liệu (Dense Data Mode)." },
+      { id: 52, name: "microsoft/fluentui", cat: "ds", stars: "18.3k", hex: "#0078d4", theme: "github-primer", tag: "Design System", desc: "Hệ thống thiết kế Fluent UI của Microsoft được dùng trong Teams và Office.", applied: "Các biểu tượng SVG thanh mảnh độ nét cao và bố cục thanh điều hướng phụ." },
+      { id: 53, name: "elastic/eui", cat: "ds", stars: "5.3k", hex: "#0079a5", theme: "nordic-cyan", tag: "Design System", desc: "Thư viện giao diện người dùng của Elastic (Kibana) cho tìm kiếm và lọc dữ liệu.", applied: "Thanh tìm kiếm tức thì với icon kính lúp và phím tắt tìm kiếm toàn hệ thống." },
+      { id: 54, name: "nordtheme/nord", cat: "ds", stars: "7.7k", hex: "#88c0d0", theme: "nordic-cyan", tag: "Design System", desc: "Bảng màu băng tuyết Bắc Âu tinh tế, hạn chế mỏi mắt khi làm việc nhiều giờ.", applied: "Theme Nordic Frost & Canvas Teal với tông xanh ngọc thanh thoát, dễ chịu." },
+      { id: 55, name: "dracula/dracula-theme", cat: "ds", stars: "21.4k", hex: "#bd93f9", theme: "oled-dark", tag: "Design System", desc: "Chủ đề màu tối huyền thoại với độ tương phản cao cho dân công nghệ.", applied: "Thang màu tím và xanh dạ quang cho chế độ OLED Midnight Dark." },
+      { id: 56, name: "catppuccin/catppuccin", cat: "ds", stars: "18.9k", hex: "#cba6f7", theme: "mantine-violet", tag: "Design System", desc: "Bảng màu pastel dịu nhẹ được yêu thích nhất bởi các nhà thiết kế trẻ hiện nay.", applied: "Các nhãn trạng thái pastel nhạt (Status Pills) thân thiện, không chói gắt." },
+      { id: 57, name: "lucide-icons/lucide", cat: "ds", stars: "14.5k", hex: "#f59e0b", theme: "twenty-indigo", tag: "Design System", desc: "Bộ biểu tượng vector mã nguồn mở thống nhất và đẹp mắt nhất hiện nay.", applied: "Bộ icon SVG 100% đồng nhất độ dày nét (stroke-width 1.75px) toàn ứng dụng." },
+      { id: 58, name: "feathericons/feather", cat: "ds", stars: "24.2k", hex: "#3b82f6", theme: "oxford", tag: "Design System", desc: "Bộ icon tối giản kinh điển định hình phong cách giao diện phẳng toàn cầu.", applied: "Các biểu tượng điều hướng tinh gọn ở thanh Sidebar điều hành." },
+      { id: 59, name: "tabler/tabler", cat: "ds", stars: "37.5k", hex: "#206bc4", theme: "github-primer", tag: "Design System", desc: "Bộ giao diện Dashboard mã nguồn mở viết bằng HTML/CSS chuẩn W3C.", applied: "Cấu trúc container thẻ nội dung trắng trên nền xám nhạt chống mỏi mắt." },
+      { id: 60, name: "coreui/coreui-free-bootstrap-admin-template", cat: "ds", stars: "12.7k", hex: "#321fdb", theme: "oxford", tag: "Design System", desc: "Khung giao diện quản trị Admin miễn phí chuẩn Responsive trên di động.", applied: "Khả năng co giãn giao diện tự thích ứng trên màn hình máy tính bảng và laptop." },
+
+      // 4. EdTech, LMS & Học thuật (18)
+      { id: 61, name: "moodle/moodle", cat: "lms", stars: "11.2k", hex: "#f98012", theme: "campfire-amber", tag: "EdTech/LMS", desc: "Hệ thống quản lý học tập (LMS) nguồn mở lớn nhất thế giới với hàng triệu khóa học.", applied: "Cấu trúc quản lý khóa học nhiều cấp độ (Pre-IELTS -> IELTS Fighter -> IELTS Master)." },
+      { id: 62, name: "instructure/canvas-lms", cat: "lms", stars: "6.4k", hex: "#e02424", theme: "nordic-cyan", tag: "EdTech/LMS", desc: "LMS hàng đầu được các trường đại học Ivy League tại Mỹ sử dụng.", applied: "Phiếu đánh giá năng lực học viên theo 4 kỹ năng Nghe - Nói - Đọc - Viết." },
+      { id: 63, name: "openedx/edx-platform", cat: "lms", stars: "7.1k", hex: "#00262b", theme: "oxford", tag: "EdTech/LMS", desc: "Nền tảng học trực tuyến quy mô lớn do MIT và Harvard đồng sáng lập.", applied: "Theme Oxford Academic & Royal Navy chuẩn học thuật đại học danh giá." },
+      { id: 64, name: "chamilo/chamilo-lms", cat: "lms", stars: "1.3k", hex: "#a94442", theme: "campfire-amber", tag: "EdTech/LMS", desc: "Phần mềm E-learning thân thiện tối ưu cho các trung tâm đào tạo ngôn ngữ.", applied: "Quy trình phân lớp tự động dựa trên phổ điểm kiểm tra đầu vào (Placement Score)." },
+      { id: 65, name: "ilias-e-learning/ilias", cat: "lms", stars: "0.8k", hex: "#0a3d62", theme: "oxford", tag: "EdTech/LMS", desc: "LMS học thuật đạt chứng nhận SCORM của các học viện Châu Âu.", applied: "Báo cáo chuyên cần và tỷ lệ chuyển tiếp khóa học giữa các kỳ tuyển sinh." },
+      { id: 66, name: "frappe/lms", cat: "lms", stars: "1.6k", hex: "#171717", theme: "cal-warm", tag: "EdTech/LMS", desc: "Nền tảng LMS hiện đại, tối giản cho các trường đào tạo kỹ năng thế hệ mới.", applied: "Bảng điểm điện tử Oxford Scorecard sang trọng thay thế các card tối màu lạc lõng." },
+      { id: 67, name: "bigbluebutton/bigbluebutton", cat: "lms", stars: "9.3k", hex: "#0c3383", theme: "oxford", tag: "EdTech/LMS", desc: "Hệ thống lớp học trực tuyến chuyên sâu cho giảng dạy từ xa.", applied: "Chỉ số trạng thái phòng học ảo và tích hợp lịch phỏng vấn Speaking 1-on-1." },
+      { id: 68, name: "opencast/opencast", cat: "lms", stars: "0.4k", hex: "#2a75a0", theme: "nordic-cyan", tag: "EdTech/LMS", desc: "Hệ thống quản lý video bài giảng và tài nguyên số cho học viện.", applied: "Kho tài liệu mẫu đề thi Cambridge Practice Tests đính kèm theo từng bài thi." },
+      { id: 69, name: "kolibri/kolibri", cat: "lms", stars: "2.6k", hex: "#0d6efd", theme: "github-primer", tag: "EdTech/LMS", desc: "Ứng dụng giáo dục ngoại tuyến phục vụ các vùng mạng yếu của Learning Equality.", applied: "Cơ chế lưu trữ tạm thời LocalStorage cho phép chạy Offline 100% không cần Internet." },
+      { id: 70, name: "exercism/exercism", cat: "lms", stars: "4.2k", hex: "#2e1065", theme: "mantine-violet", tag: "EdTech/LMS", desc: "Nền tảng luyện tập kỹ năng có cố vấn chấm điểm nhận xét chi tiết.", applied: "Ô nhận xét đánh giá chi tiết của giáo viên sau buổi phỏng vấn kiểm tra đầu vào." },
+      { id: 71, name: "freeCodeCamp/freeCodeCamp", cat: "lms", stars: "402k", hex: "#0a0a23", theme: "oled-dark", tag: "EdTech/LMS", desc: "Cộng đồng học lập trình nguồn mở lớn nhất hành tinh với lộ trình bài bản.", applied: "Thanh lộ trình từng bước (Step-by-step roadmap) từ người mất gốc đến mục tiêu." },
+      { id: 72, name: "the-odin-project/theodinproject", cat: "lms", stars: "6.8k", hex: "#c59b27", theme: "campfire-amber", tag: "EdTech/LMS", desc: "Chương trình học tập có cấu trúc minh bạch và theo dõi tiến độ rõ ràng.", applied: "Thiết kế thẻ khóa học hiển thị thời lượng (60 giờ), học phí và lịch khai giảng." },
+      { id: 73, name: "habitica/habitica", cat: "lms", stars: "10.4k", hex: "#4f2a58", theme: "mantine-violet", tag: "EdTech/LMS", desc: "Ứng dụng hình thành thói quen học tập với cơ chế Gamification vui nhộn.", applied: "Huy hiệu mức độ ưu tiên nhẹ nhàng nhắc nhở tư vấn viên liên hệ kịp thời." },
+      { id: 74, name: "open-learning-exchange/planet", cat: "lms", stars: "0.3k", hex: "#008080", theme: "nordic-cyan", tag: "EdTech/LMS", desc: "Cổng thông tin giáo dục toàn cầu cho các trường học cơ sở.", applied: "Cơ chế quản lý danh sách học sinh theo khối lớp và ca học sáng/tối." },
+      { id: 75, name: "omeka/omeka-s", cat: "lms", stars: "0.5k", hex: "#2b3e50", theme: "cal-warm", tag: "EdTech/LMS", desc: "Nền tảng xuất bản web cho các thư viện, bảo tàng và học viện nghiên cứu.", applied: "Trình bày danh mục khóa học chuẩn chỉnh, thông số minh bạch, tạo dựng niềm tin." },
+      { id: 76, name: "pkp/ojs", cat: "lms", stars: "1.2k", hex: "#007ab8", theme: "oxford", tag: "EdTech/LMS", desc: "Hệ thống xuất bản tạp chí nghiên cứu khoa học học thuật thế giới.", applied: "Định dạng font chữ Inter thanh lịch với letter-spacing -0.011em chuẩn học thuật." },
+      { id: 77, name: "zulip/zulip", cat: "lms", stars: "21.6k", hex: "#5276a7", theme: "github-primer", tag: "EdTech/LMS", desc: "Ứng dụng trò chuyện nhóm dạng luồng chuyên sâu cho giáo viên và trợ giảng.", applied: "Nhật ký trao đổi nội bộ giữa tư vấn viên và giảng viên về từng học viên." },
+      { id: 78, name: "matrix-org/matrix-spec", cat: "lms", stars: "4.7k", hex: "#0dbd8b", theme: "radix-jade", tag: "EdTech/LMS", desc: "Giao thức truyền thông mở phi tập trung an toàn cho các tổ chức giáo dục.", applied: "Cơ chế thông báo tự động cho phụ huynh học sinh qua cổng liên lạc trung tâm." },
+
+      // 5. Modern SaaS & Infra (16)
+      { id: 79, name: "calcom/cal.com", cat: "saas", stars: "32.4k", hex: "#111827", theme: "cal-warm", tag: "Modern SaaS", desc: "Hạ tầng lên lịch hẹn nguồn mở hàng đầu thế giới (thay thế Calendly).", applied: "Theme Cal.com & Warm Stone với màu đá ấm tinh tế, trải nghiệm đặt lịch Test." },
+      { id: 80, name: "dubinc/dub", cat: "saas", stars: "19.8k", hex: "#000000", theme: "cal-warm", tag: "Modern SaaS", desc: "Nền tảng quản lý liên kết và theo dõi chuyển đổi tuyển sinh cao cấp nhất.", applied: "Tích hợp mã nguồn tuyển sinh chiến dịch (UTM Campaign Tracking) vào Lead." },
+      { id: 81, name: "supabase/supabase", cat: "saas", stars: "73.9k", hex: "#3ecf8e", theme: "radix-jade", tag: "Modern SaaS", desc: "Hạ tầng backend PostgreSQL mã nguồn mở số 1 thay thế Firebase.", applied: "Cấu trúc Schema cơ sở dữ liệu quan hệ chặt chẽ giữa Leads, Classes, Enrollments." },
+      { id: 82, name: "medusajs/medusa", cat: "saas", stars: "26.5k", hex: "#7c3aed", theme: "mantine-violet", tag: "Modern SaaS", desc: "Nền tảng thương mại số module hóa cho thu học phí và bán khóa học.", applied: "Quy trình thanh toán học phí nhiều đợt, kiểm soát đặt cọc giữ chỗ và hoàn phí." },
+      { id: 83, name: "strapi/strapi", cat: "saas", stars: "64.2k", hex: "#4945ff", theme: "twenty-indigo", tag: "Modern SaaS", desc: "Headless CMS mã nguồn mở hàng đầu với bảng điều khiển trực quan.", applied: "Khả năng cấu hình nội dung các buổi học và tiêu chí chấm điểm linh hoạt." },
+      { id: 84, name: "directus/directus", cat: "saas", stars: "28.4k", hex: "#6644ff", theme: "mantine-violet", tag: "Modern SaaS", desc: "Công cụ quản trị dữ liệu SQL thời gian thực với giao diện quản trị tuyệt đẹp.", applied: "Thanh tìm kiếm bộ lọc đa tiêu chí (Chi nhánh, Trạng thái, Trình độ mục tiêu)." },
+      { id: 85, name: "payloadcms/payload", cat: "saas", stars: "26.7k", hex: "#000000", theme: "oled-dark", tag: "Modern SaaS", desc: "TypeScript CMS hướng lập trình viên với giao diện tối giản chuẩn hiện đại.", applied: "Định dạng thẻ giao diện tối giản, phân chia khoảng trắng khoa học không rối mắt." },
+      { id: 86, name: "ghost/ghost", cat: "saas", stars: "47.1k", hex: "#15171a", theme: "cal-warm", tag: "Modern SaaS", desc: "Nền tảng xuất bản nội dung độc lập với tiêu chuẩn thiết kế chữ cực kỳ tinh tế.", applied: "Phân cấp tiêu đề H1/H2/H3 rõ ràng, độ cao dòng 1.5 tạo cảm giác thoải mái khi đọc." },
+      { id: 87, name: "keycloak/keycloak", cat: "saas", stars: "22.3k", hex: "#0088ce", theme: "github-primer", tag: "Modern SaaS", desc: "Giải pháp xác thực và ủy quyền truy cập tập trung mã nguồn mở của Red Hat.", applied: "Mô hình phân quyền người dùng (Sales, Academic Officer, Center Manager)." },
+      { id: 88, name: "auth0/samples", cat: "saas", stars: "1.2k", hex: "#eb5424", theme: "campfire-amber", tag: "Modern SaaS", desc: "Mẫu kiến trúc đăng nhập bảo mật và quản lý phiên làm việc người dùng.", applied: "Khu vực hồ sơ nhân sự ở góc phải Header với Avatar và chức danh làm việc." },
+      { id: 89, name: "casbin/casbin", cat: "saas", stars: "17.4k", hex: "#337ab7", theme: "oxford", tag: "Modern SaaS", desc: "Thư viện quản lý quyền truy cập hỗ trợ các mô hình ACL, RBAC, ABAC.", applied: "Kiểm soát nút hành động: chỉ Quản lý mới được duyệt hủy ghi danh lớp." },
+      { id: 90, name: "glitchtip/glitchtip", cat: "saas", stars: "3.2k", hex: "#f35454", theme: "campfire-amber", tag: "Modern SaaS", desc: "Hệ thống theo dõi lỗi phần mềm mã nguồn mở tương thích với Sentry.", applied: "Xử lý thông báo lỗi người dùng dạng Toast nhẹ nhàng không chặn giao diện." },
+      { id: 91, name: "novu/novu", cat: "saas", stars: "35.8k", hex: "#ff4081", theme: "mantine-violet", tag: "Modern SaaS", desc: "Hạ tầng gửi thông báo đa kênh mã nguồn mở (Email, SMS, Push, In-app).", applied: "Hệ thống gửi tin nhắn SMS tự động nhắc lịch thi và thư chào mừng nhập học." },
+      { id: 92, name: "courier-api/courier", cat: "saas", stars: "1.4k", hex: "#673ab7", theme: "mantine-violet", tag: "Modern SaaS", desc: "Nền tảng điều phối thông báo thông minh cho phụ huynh học sinh.", applied: "Mẫu thông báo thông tin lớp học, phòng học, giáo viên phụ trách qua Email." },
+      { id: 93, name: "typebot-io/typebot.io", cat: "saas", stars: "8.7k", hex: "#0042da", theme: "twenty-indigo", tag: "Modern SaaS", desc: "Công cụ tạo chatbot khảo sát tuyển sinh tương tác trực quan.", applied: "Form trắc nghiệm trực quan cho học viên đăng ký hẹn giờ làm bài thi đầu vào." },
+      { id: 94, name: "botpress/botpress", cat: "saas", stars: "12.8k", hex: "#2c3e50", theme: "cal-warm", tag: "Modern SaaS", desc: "Nền tảng trợ lý ảo tự động trả lời tư vấn khóa học cho học sinh.", applied: "Khu vực ghi chú tự động từ các câu hỏi thường gặp của học viên." },
+
+      // 6. Data Visualization & UI Toolkits (12)
+      { id: 95, name: "apache/echarts", cat: "data", stars: "59.4k", hex: "#5470c6", theme: "oxford", tag: "Data Viz", desc: "Thư viện biểu đồ dữ liệu mã nguồn mở đồ sộ và mượt mà nhất của Apache.", applied: "Biểu đồ cột doanh thu tuyển sinh và biểu đồ tròn cơ cấu nguồn ứng viên." },
+      { id: 96, name: "chartjs/Chart.js", cat: "data", stars: "63.2k", hex: "#ff6384", theme: "twenty-indigo", tag: "Data Viz", desc: "Thư viện vẽ biểu đồ Canvas JavaScript trực quan, nhẹ và linh hoạt.", applied: "Biểu đồ đường theo dõi chỉ tiêu tuyển sinh theo tuần của từng chi nhánh." },
+      { id: 97, name: "recharts/recharts", cat: "data", stars: "24.1k", hex: "#8884d8", theme: "twenty-indigo", tag: "Data Viz", desc: "Thư viện biểu đồ dựa trên React và D3 phổ biến nhất cho Dashboard SaaS.", applied: "Màu sắc biểu đồ đồng bộ hoàn toàn theo Palette đang được kích hoạt." },
+      { id: 98, name: "tanstack/table", cat: "data", stars: "25.6k", hex: "#000000", theme: "cal-warm", tag: "Data Viz", desc: "Bộ công cụ headless số 1 thế giới để xây dựng các bảng dữ liệu mạnh mẽ.", applied: "Cấu trúc cột dữ liệu bảng học viên với tính năng sắp xếp và lọc tức thì." },
+      { id: 99, name: "ag-grid/ag-grid", cat: "data", stars: "11.3k", hex: "#2196f3", theme: "github-primer", tag: "Data Viz", desc: "Bảng dữ liệu doanh nghiệp chuẩn ngân hàng và tài chính quốc tế.", applied: "Độ rộng cột dữ liệu tối ưu, phân trang nhanh và cố định tiêu đề bảng (Sticky)." },
+      { id: 100, name: "handsontable/handsontable", cat: "data", stars: "19.5k", hex: "#0073a8", theme: "oxford", tag: "Data Viz", desc: "Component bảng tính dạng Excel mã nguồn mở cho người dùng nhập liệu.", applied: "Bảng chấm điểm chi tiết 4 kỹ năng trong giao diện UC-02 Placement Test." },
+      { id: 101, name: "visgl/deck.gl", cat: "data", stars: "12.6k", hex: "#0f172a", theme: "oled-dark", tag: "Data Viz", desc: "Bộ máy trực quan hóa dữ liệu hiệu năng cao với WebGL của Uber.", applied: "Hiệu ứng chuyển cảnh mượt mà giữa các Tab nghiệp vụ không giật lag." },
+      { id: 102, name: "mermaid-js/mermaid", cat: "data", stars: "71.3k", hex: "#ff3670", theme: "twenty-indigo", tag: "Data Viz", desc: "Công cụ tạo sơ đồ quy trình, lưu đồ và ERD trực tiếp từ văn bản Markdown.", applied: "Vẽ sơ đồ quy trình nghiệp vụ BPMN và sơ đồ quan hệ thực thể Conceptual ERD." },
+      { id: 103, name: "highlightjs/highlight.js", cat: "data", stars: "23.4k", hex: "#e28935", theme: "campfire-amber", tag: "Data Viz", desc: "Thư viện tô màu cú pháp mã nguồn gọn nhẹ trên trình duyệt.", applied: "Khối hiển thị mã màu HEX và token CSS rõ ràng trong tài liệu hướng dẫn." },
+      { id: 104, name: "craftzdog/inkdrop", cat: "data", stars: "4.1k", hex: "#2b2d42", theme: "cal-warm", tag: "Data Viz", desc: "Ứng dụng ghi chép Markdown với triết lý thiết kế giao diện đơn giản, thanh tao.", applied: "Độ thẩm mỹ tối giản, tập trung vào nội dung văn bản và số liệu nghiệp vụ." },
+      { id: 105, name: "d3/d3", cat: "data", stars: "108k", hex: "#f9a03f", theme: "campfire-amber", tag: "Data Viz", desc: "Thư viện nền tảng số 1 thế giới về trực quan hóa dữ liệu theo chuẩn Web.", applied: "Tỷ lệ chuẩn mực trong thang đo năng lực tiếng Anh từ 0 đến 9.0 IELTS." },
+      { id: 106, name: "nivo-labs/nivo", cat: "data", stars: "13.2k", hex: "#e8c1a0", theme: "radix-jade", tag: "Data Viz", desc: "Bộ component biểu đồ React cao cấp hỗ trợ hiển thị đẹp mắt cả trên nền tối.", applied: "Các thẻ chỉ số thống kê tỷ lệ phần trăm lấp đầy lớp học sinh động." }
+    ];
+
+    let currentCategoryFilter = 'all';
+
+    function renderReposList(items) {
+      const grid = document.getElementById('repoCardsGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const countBadge = document.getElementById('repoCountBadge');
+      if (countBadge) {
+        countBadge.innerText = `Đang hiện: ${items.length} / 106 Repos`;
+      }
+
+      if (items.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--text-muted);">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-bottom: 8px; opacity: 0.5;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <p style="font-size: 14px; font-weight: 500;">Không tìm thấy mã nguồn mở phù hợp với từ khóa.</p>
+            <p style="font-size: 12px; color: var(--text-hint);">Thử tìm bằng tên repo như: twenty, plane, radix, moodle, calcom hoặc mã màu #...</p>
+          </div>
+        `;
+        return;
+      }
+
+      items.forEach(repo => {
+        const card = document.createElement('div');
+        card.style.background = 'var(--bg-surface)';
+        card.style.border = '1px solid var(--border-light)';
+        card.style.borderRadius = 'var(--radius-md)';
+        card.style.padding = '12px 14px';
+        card.style.display = 'flex';
+        card.style.flexDirection = 'column';
+        card.style.justifyContent = 'space-between';
+        card.style.borderLeft = `4px solid ${repo.hex}`;
+        card.style.boxShadow = 'var(--shadow-subtle)';
+        card.style.transition = 'transform 0.15s ease, box-shadow 0.15s ease';
+
+        card.onmouseenter = () => {
+          card.style.transform = 'translateY(-2px)';
+          card.style.boxShadow = 'var(--shadow-hover)';
+        };
+        card.onmouseleave = () => {
+          card.style.transform = 'translateY(0)';
+          card.style.boxShadow = 'var(--shadow-subtle)';
+        };
+
+        card.innerHTML = `
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px;">
+              <a href="https://github.com/${repo.name}" target="_blank" rel="noopener noreferrer" style="font-weight: 700; font-size: 13.5px; color: var(--brand-primary); text-decoration: none; display: flex; align-items: center; gap: 4px;" title="Xem repo trên GitHub">
+                <span>${repo.name}</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+              <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                <span class="menu-pill" style="font-size: 10.5px; font-weight: 600;">⭐ ${repo.stars}</span>
+                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${repo.hex}; border: 1px solid rgba(0,0,0,0.1);" title="Màu chính: ${repo.hex}"></span>
+              </div>
+            </div>
+
+            <p style="font-size: 12px; color: var(--text-body); margin-bottom: 8px; line-height: 1.45;">${repo.desc}</p>
+            
+            <div style="background: var(--bg-surface-hover); border-radius: var(--radius-sm); padding: 6px 8px; margin-bottom: 10px; font-size: 11.5px; border-left: 2px solid ${repo.hex};">
+              <span style="font-weight: 600; color: var(--text-heading);">Áp dụng:</span>
+              <span style="color: var(--text-muted);">${repo.applied}</span>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; pt-1; border-top: 1px dashed var(--border-light); padding-top: 8px;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-hint); font-weight: 500;">${repo.hex}</span>
+            <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 8px;" onclick="applyGlobalTheme('${repo.theme}')">
+              🎨 Thử Palette
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function setCategoryFilter(category, btnElement) {
+      currentCategoryFilter = category;
+      document.querySelectorAll('#repoCategoryPills .filter-pill').forEach(btn => {
+        btn.classList.remove('btn-primary', 'active');
+        btn.classList.add('btn-outline');
+      });
+      btnElement.classList.remove('btn-outline');
+      btnElement.classList.add('btn-primary', 'active');
+      filterReposList();
+    }
+
+    function filterReposList() {
+      const q = (document.getElementById('repoSearchInput')?.value || '').toLowerCase().trim();
+      const filtered = OPEN_SOURCE_REPOS.filter(repo => {
+        const matchCat = currentCategoryFilter === 'all' || repo.cat === currentCategoryFilter;
+        const matchQuery = !q || 
+          repo.name.toLowerCase().includes(q) || 
+          repo.desc.toLowerCase().includes(q) || 
+          repo.applied.toLowerCase().includes(q) || 
+          repo.hex.toLowerCase().includes(q) || 
+          repo.tag.toLowerCase().includes(q);
+        return matchCat && matchQuery;
+      });
+      renderReposList(filtered);
+    }
+
+
+    // Lead Database
+    let leads = [
+      { id: 'LD-01', name: 'Đặng Minh Châu', phone: '0988 123 456', source: 'Facebook Ads', course: 'Luyện thi IELTS', status: 'new', priority: 'high', consultant: 'phong phạm' },
+      { id: 'LD-02', name: 'Nguyễn Tấn Dũng', phone: '0977 456 789', source: 'Website Form', course: 'Tiếng Anh Giao tiếp', status: 'new', priority: 'med', consultant: 'phong phạm' },
+      { id: 'LD-03', name: 'Lê Hoàng Nam', phone: '0912 345 678', source: 'Hotline', course: 'Luyện thi IELTS', status: 'contacting', priority: 'high', consultant: 'phong phạm' },
+      { id: 'LD-04', name: 'Phạm Thu Thảo', phone: '0933 888 999', source: 'Giới thiệu', course: 'Luyện thi TOEIC', status: 'contacting', priority: 'low', consultant: 'phong phạm' },
+      { id: 'LD-05', name: 'Trần Văn Hưng', phone: '0905 111 222', source: 'Facebook Ads', course: 'Luyện thi IELTS', status: 'test_scheduled', priority: 'high', consultant: 'phong phạm' },
+      { id: 'LD-06', name: 'Vũ Thị Ngọc', phone: '0944 333 444', source: 'Khách vãng lai', course: 'Tiếng Anh Giao tiếp', status: 'test_scheduled', priority: 'med', consultant: 'phong phạm' },
+      { id: 'LD-07', name: 'Bùi Gia Khiêm', phone: '0982 777 888', source: 'Website Form', course: 'Luyện thi IELTS', status: 'won', priority: 'high', consultant: 'phong phạm' },
+      { id: 'LD-08', name: 'Đỗ Hữu Thắng', phone: '0966 555 444', source: 'Facebook Ads', course: 'Luyện thi TOEIC', status: 'lost', priority: 'low', consultant: 'phong phạm' }
+    ];
+
+    // Class Database
+    let classes = [
+      { id: 'CLS-01', code: 'IELTS-K42', name: 'IELTS Bứt Phá (5.5 - 6.5)', schedule: 'Thứ 2 - 4 - 6 (18:00 - 19:30)', room: 'Phòng 301', teacher: 'Thầy David Miller', enrolled: 12, max: 15 },
+      { id: 'CLS-02', code: 'IELTS-K43', name: 'IELTS Pre-Master (4.5 - 5.5)', schedule: 'Thứ 3 - 5 - 7 (19:45 - 21:15)', room: 'Phòng 202', teacher: 'Cô Thu Hương', enrolled: 14, max: 15 },
+      { id: 'CLS-03', code: 'COMM-K12', name: 'Tiếng Anh Giao Tiếp Phản Xạ', schedule: 'Thứ 2 - 4 - 6 (19:45 - 21:15)', room: 'Phòng 105', teacher: 'Thầy John Smith', enrolled: 15, max: 15 },
+      { id: 'CLS-04', code: 'TOEIC-K20', name: 'Luyện Đề TOEIC 750+ Cấp Tốc', schedule: 'Thứ 3 - 5 - 7 (18:00 - 19:30)', room: 'Phòng 204', teacher: 'Cô Mai Anh', enrolled: 8, max: 18 }
+    ];
+
+    let dragId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderKanbanCards();
+      renderClassMatrix();
+      recalcOverallScore();
+      if (typeof renderReposList === 'function') {
+        renderReposList(OPEN_SOURCE_REPOS);
+      }
+    });
+
+    // Navigation Tabs
+    function navToTab(tabId, el) {
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+
+      document.getElementById(tabId).classList.add('active');
+      if (el) el.classList.add('active');
+      if (tabId === 'tab-design-system' && typeof renderReposList === 'function') {
+        renderReposList(OPEN_SOURCE_REPOS);
+      }
+    }
+
+    // Render Kanban Cards
+    function renderKanbanCards(searchQuery = '', filterPriority = 'all') {
+      const statuses = ['new', 'contacting', 'test_scheduled', 'won', 'lost'];
+
+      statuses.forEach(st => {
+        const deck = document.getElementById(`deck-${st}`);
+        deck.innerHTML = '';
+
+        const list = leads.filter(l => {
+          const stMatch = l.status === st;
+          const qMatch = l.name.toLowerCase().includes(searchQuery.toLowerCase()) || l.phone.includes(searchQuery);
+          const prMatch = filterPriority === 'all' || l.priority === filterPriority;
+          return stMatch && qMatch && prMatch;
+        });
+
+        document.getElementById(`c-${st}`).innerText = list.length;
+
+        list.forEach(l => {
+          const card = document.createElement('div');
+          card.className = 'lead-card';
+          card.draggable = true;
+          card.id = `card-${l.id}`;
+          card.onclick = () => openDrawer(l);
+
+          card.ondragstart = (e) => {
+            dragId = l.id;
+            card.classList.add('dragging');
+          };
+          card.ondragend = () => card.classList.remove('dragging');
+
+          let prClass = 'tag-priority-med';
+          let prText = 'Trung bình';
+          if (l.priority === 'high') { prClass = 'tag-priority-high'; prText = 'Ưu tiên cao'; }
+          if (l.priority === 'low') { prClass = 'tag-priority-low'; prText = 'Tiêu chuẩn'; }
+
+          card.innerHTML = `
+            <div class="card-top">
+              <span class="badge-tag ${prClass}">${prText}</span>
+              <span class="card-source-txt">${l.source}</span>
+            </div>
+            <div class="card-client-name">${l.name}</div>
+            <div class="card-client-phone">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              ${l.phone}
+            </div>
+            <div class="card-course-pill">${l.course}</div>
+            <div class="card-bottom-info">
+              <span>👤 ${l.consultant}</span>
+              <span>${l.id}</span>
+            </div>
+          `;
+          deck.appendChild(card);
+        });
+      });
+
+      document.getElementById('badgeLeadsCount').innerText = leads.length;
+      document.getElementById('kpiLeadsCount').innerText = leads.length;
+    }
+
+    // Drag and Drop
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('drag-over');
+    }
+    function handleDragLeave(e) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+    function handleDropCol(e, targetStatus) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('drag-over');
+      if (!dragId) return;
+
+      const item = leads.find(l => l.id === dragId);
+      if (item && item.status !== targetStatus) {
+        if (targetStatus === 'lost') {
+          const reason = prompt(`Lý do khách hàng [${item.name}] từ chối:\n1. Học phí cao\n2. Xung đột thời gian\n3. Địa điểm xa\n4. Khác`, 'Học phí cao');
+          if (!reason) return;
+        }
+
+        item.status = targetStatus;
+        renderKanbanCards();
+        showToast(`Đã chuyển Lead [${item.name}] sang trạng thái mới`);
+      }
+      dragId = null;
+    }
+
+    // Filters
+    function searchLeads(q) { renderKanbanCards(q); }
+    function filterByPriority(pr, btn) {
+      document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderKanbanCards('', pr);
+    }
+
+    // Modals
+    function openModalDialog(id) { document.getElementById(id).classList.add('show'); }
+    function closeModalDialog(id) { document.getElementById(id).classList.remove('show'); }
+
+    // Submit Lead with Deduplication
+    function submitCreateLeadAction() {
+      const name = document.getElementById('mName').value.trim();
+      const phone = document.getElementById('mPhone').value.trim();
+      const source = document.getElementById('mSource').value;
+      const course = document.getElementById('mCourse').value;
+      const priority = document.getElementById('mPriority').value;
+
+      if (!name || !phone) {
+        alert('Vui lòng điền họ tên và số điện thoại!');
+        return;
+      }
+
+      const dup = leads.some(l => l.phone.replace(/\D/g, '') === phone.replace(/\D/g, ''));
+      if (dup) {
+        alert(`❌ CẢNH BÁO TRÙNG LẶP SĐT (UC-SYS-01):\nSố điện thoại "${phone}" đã tồn tại trong hệ thống! Không thể tạo trùng Lead.`);
+        return;
+      }
+
+      const newId = `LD-0${leads.length + 1}`;
+      leads.unshift({
+        id: newId,
+        name: name,
+        phone: phone,
+        source: source,
+        course: course,
+        priority: priority,
+        status: 'new',
+        consultant: 'phong phạm'
+      });
+
+      closeModalDialog('dlgCreateLead');
+      renderKanbanCards();
+      showToast(`Đã thêm mới hồ sơ: ${name}`);
+
+      document.getElementById('mName').value = '';
+      document.getElementById('mPhone').value = '';
+    }
+
+    // Drawer Slide-over
+    function openDrawer(lead) {
+      document.getElementById('drwFullName').innerText = lead.name;
+      document.getElementById('drwPhoneNumber').innerText = lead.phone;
+      document.getElementById('drwCourseName').innerText = lead.course;
+      document.getElementById('drwSourceName').innerText = lead.source;
+      document.getElementById('drwId').innerText = lead.id;
+
+      const pEl = document.getElementById('drwPriority');
+      pEl.className = `badge-tag ${lead.priority === 'high' ? 'tag-priority-high' : (lead.priority === 'med' ? 'tag-priority-med' : 'tag-priority-low')}`;
+      pEl.innerText = lead.priority === 'high' ? 'Ưu tiên cao' : (lead.priority === 'med' ? 'Trung bình' : 'Tiêu chuẩn');
+
+      document.getElementById('leadDrawer').classList.add('open');
+    }
+    function closeDrawer() {
+      document.getElementById('leadDrawer').classList.remove('open');
+    }
+    function saveNewCallNote() {
+      const txt = document.getElementById('inpNoteContent').value.trim();
+      if (!txt) return;
+
+      const container = document.getElementById('drwTimelineList');
+      const item = document.createElement('div');
+      item.className = 'timeline-node';
+      item.innerHTML = `
+        <div class="timeline-time-txt">Vừa xong - phong phạm</div>
+        <div class="timeline-desc-txt">${txt}</div>
+      `;
+      container.prepend(item);
+      document.getElementById('inpNoteContent').value = '';
+      showToast('Đã lưu nhật ký cuộc gọi mới vào Timeline');
+    }
+
+    // ================= UC-02: CAMBRIDGE SCORING =================
+    function onScoreSliderChange(skill, val) {
+      document.getElementById(`val${skill}`).innerText = parseFloat(val).toFixed(1);
+      recalcOverallScore();
+    }
+
+    function recalcOverallScore() {
+      const l = parseFloat(document.getElementById('rngL').value);
+      const r = parseFloat(document.getElementById('rngR').value);
+      const w = parseFloat(document.getElementById('rngW').value);
+      const s = parseFloat(document.getElementById('rngS').value);
+
+      const avg = (l + r + w + s) / 4;
+      const dec = avg - Math.floor(avg);
+      let rounded = Math.floor(avg);
+
+      if (dec < 0.25) { rounded += 0.0; }
+      else if (dec >= 0.25 && dec < 0.75) { rounded += 0.5; }
+      else { rounded += 1.0; }
+
+      document.getElementById('dispOverall').innerText = rounded.toFixed(1);
+      document.getElementById('dispFormula').innerHTML = `
+        Trung bình cộng: (${l} + ${r} + ${w} + ${s}) / 4 = ${avg.toFixed(3)}<br>
+        Quy tắc Cambridge: Phần lẻ ${dec.toFixed(3)} → Làm tròn chuẩn: <b>${rounded.toFixed(1)}</b>
+      `;
+
+      const cefr = document.getElementById('dispCefr');
+      const title = document.getElementById('dispCourseTitle');
+      const desc = document.getElementById('dispCourseDesc');
+
+      if (rounded < 4.5) {
+        cefr.innerText = 'Trình độ tương đương: CEFR A2/B1 (Pre-Intermediate)';
+        title.innerText = 'Khóa Tiếng Anh Nền Tảng (IELTS Foundation 3.5 - 4.5)';
+        desc.innerText = 'Thí sinh cần củng cố lại ngữ pháp cơ bản và phát âm trước khi luyện đề thi.';
+      } else if (rounded >= 4.5 && rounded <= 5.5) {
+        cefr.innerText = 'Trình độ tương đương: CEFR B1+ / B2 (Independent User)';
+        title.innerText = 'Khóa IELTS Bứt Phá (Target 5.5 - 6.5)';
+        desc.innerText = 'Thí sinh đạt chuẩn đầu vào của lớp IELTS-K42 mở tuần tới. Lộ trình tập trung bứt phá Viết & Nói.';
+      } else {
+        cefr.innerText = 'Trình độ tương đương: CEFR B2+ / C1 (Proficient User)';
+        title.innerText = 'Khóa IELTS Master Chuyên Sâu (Target 6.5 - 7.5+)';
+        desc.innerText = 'Năng lực xuất sắc. Đề xuất xếp vào lớp luyện đề nâng cao để sớm hoàn thành mục tiêu chứng chỉ.';
+      }
+    }
+
+    function saveCandidateScore() {
+      const band = document.getElementById('dispOverall').innerText;
+      showToast(`Đã cập nhật kết quả: Overall Band ${band} (Đã đồng bộ sang Lead)`);
+    }
+
+    function goToEnrollmentDirectly() {
+      navToTab('tab-classes', document.querySelectorAll('.menu-item')[2]);
+      openModalDialog('dlgEnroll');
+    }
+
+    // ================= UC-03: CLASS MATRIX & CAPACITY =================
+    function renderClassMatrix() {
+      const container = document.getElementById('classMatrixContainer');
+      const select = document.getElementById('selTargetClass');
+      container.innerHTML = '';
+      select.innerHTML = '';
+
+      classes.forEach(c => {
+        const isFull = c.enrolled >= c.max;
+        const pct = Math.round((c.enrolled / c.max) * 100);
+        let barClass = 'gauge-green';
+        if (pct >= 80 && !isFull) barClass = 'gauge-amber';
+        if (isFull) barClass = 'gauge-red';
+
+        const card = document.createElement('div');
+        card.className = `class-sheet-card ${isFull ? 'locked' : ''}`;
+        card.innerHTML = `
+          <div class="class-head-row">
+            <span class="class-code-tag">${c.code}</span>
+            <span class="class-state-chip ${isFull ? 'chip-full' : 'chip-open'}">
+              ${isFull ? 'Đã đủ sĩ số (Khóa)' : 'Đang mở tuyển sinh'}
+            </span>
+          </div>
+
+          <div class="class-name-large">${c.name}</div>
+
+          <ul class="class-meta-ul">
+            <li>Lịch học: ${c.schedule}</li>
+            <li>Phòng: ${c.room}</li>
+            <li>Giáo viên: ${c.teacher}</li>
+          </ul>
+
+          <div class="capacity-gauge-box">
+            <div class="capacity-numbers">
+              <span style="color: var(--text-muted);">Sĩ số khả dụng:</span>
+              <span style="color: ${isFull ? 'var(--status-danger)' : 'var(--text-heading)'};">${c.enrolled} / ${c.max} chỗ (${pct}%)</span>
+            </div>
+            <div class="gauge-track">
+              <div class="gauge-fill ${barClass}" style="width: ${pct}%;"></div>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.disabled = isFull;
+        opt.innerText = `${c.code} — ${c.name} (${c.enrolled}/${c.max} chỗ) ${isFull ? '[ĐẦY]' : ''}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function executeClassEnrollment() {
+      const clsId = document.getElementById('selTargetClass').value;
+      const studentName = document.getElementById('selStudentEnroll').value;
+      const cls = classes.find(c => c.id === clsId);
+
+      if (!cls) return;
+      if (cls.enrolled >= cls.max) {
+        alert('❌ Lớp này đã đủ sĩ số tối đa. Hệ thống đã tự động khóa tuyển sinh!');
+        return;
+      }
+
+      cls.enrolled += 1;
+      renderClassMatrix();
+      closeModalDialog('dlgEnroll');
+      showToast(`Đã xếp lớp thành công cho học viên [${studentName}] vào lớp [${cls.code}]`);
+    }
+
+    // Toast Utility
+    function showToast(text) {
+      const box = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast-msg';
+      toast.innerHTML = `<span>✓</span><span>${text}</span>`;
+      box.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.25s ease';
+        setTimeout(() => toast.remove(), 250);
+      }, 3200);
+    }
+  </script>
+</body>
+</html>
