@@ -15,7 +15,7 @@ interface PlacementTestCalendarProps {
   onQuickBookSlot: (date: string, timeSlot: string, room?: string) => void;
 }
 
-const TIME_SLOTS = [
+const STANDARD_SLOTS = [
   { key: '09:00 - 10:30', name: 'Ca Sáng', time: '09:00 - 10:30' },
   { key: '14:30 - 16:00', name: 'Ca Chiều', time: '14:30 - 16:00' },
   { key: '18:00 - 19:30', name: 'Ca Tối', time: '18:00 - 19:30' },
@@ -32,6 +32,29 @@ export const PlacementTestCalendar: React.FC<PlacementTestCalendarProps> = ({
   onSelectShift,
   onQuickBookSlot,
 }) => {
+  // Dynamically include any custom time slots detected in tests or availability
+  const timeSlots = React.useMemo(() => {
+    const customKeys = new Set<string>();
+    tests.forEach((t) => {
+      if (t.timeSlot && !STANDARD_SLOTS.some((s) => s.key === t.timeSlot)) {
+        customKeys.add(t.timeSlot);
+      }
+    });
+    availabilitySlots.forEach((a) => {
+      if (a.timeSlot && !STANDARD_SLOTS.some((s) => s.key === a.timeSlot)) {
+        customKeys.add(a.timeSlot);
+      }
+    });
+
+    const additional = Array.from(customKeys).map((k) => ({
+      key: k,
+      name: `Ca ${k.split(' - ')[0] || k}`,
+      time: k,
+    }));
+
+    return [...STANDARD_SLOTS, ...additional].sort((a, b) => a.time.localeCompare(b.time));
+  }, [tests, availabilitySlots]);
+
   // Generate 7 days of the week starting from currentWeekStart using local date
   const daysOfWeek = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(currentWeekStart);
@@ -122,18 +145,53 @@ export const PlacementTestCalendar: React.FC<PlacementTestCalendarProps> = ({
         {daysOfWeek.map((day) => {
           const dateStr = formatLocalDate(day);
           const isToday = dateStr === todayStr;
+
+          // Calculate daily statistics: total candidates & distinct shifts
+          const dayTests = tests.filter((t) => (t.testDate || '').split('T')[0] === dateStr);
+          const dayShiftsCount = new Set(
+            dayTests.map((t) => `${t.timeSlot}_${t.room || 'Phòng Lab 201'}`)
+          ).size;
+
           return (
             <div key={dateStr} className={`pt-cal-header-cell ${isToday ? 'today' : ''}`}>
               <span className="pt-day-name">{getDayNameVN(day.getDay())}</span>
               <span className="pt-day-date">
                 {day.getDate()}/{day.getMonth() + 1}
               </span>
+              {dayShiftsCount > 0 ? (
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '10px',
+                    background: isToday ? 'rgba(124, 58, 237, 0.15)' : 'rgba(59, 130, 246, 0.12)',
+                    color: isToday ? 'var(--color-primary-royal)' : '#2563eb',
+                    marginTop: '2px',
+                    display: 'inline-block',
+                    whiteSpace: 'nowrap',
+                  }}
+                  title={`Trong ngày có ${dayShiftsCount} ca thi với ${dayTests.length} thí sinh`}
+                >
+                  {dayShiftsCount} ca • {dayTests.length} bạn
+                </span>
+              ) : (
+                <span
+                  style={{
+                    fontSize: '10.5px',
+                    color: 'var(--text-subtle)',
+                    marginTop: '2px',
+                  }}
+                >
+                  Chưa có ca
+                </span>
+              )}
             </div>
           );
         })}
 
         {/* Time Slot Rows */}
-        {TIME_SLOTS.map((slot) => (
+        {timeSlots.map((slot) => (
           <React.Fragment key={slot.key}>
             {/* Slot label cell */}
             <div className="pt-slot-label-cell">
@@ -187,6 +245,9 @@ export const PlacementTestCalendar: React.FC<PlacementTestCalendarProps> = ({
                         roomName.toLowerCase().includes(selectedShift.room.toLowerCase()) ||
                         selectedShift.room.toLowerCase().includes(roomName.toLowerCase()));
 
+                    const roomTests = slotTests.filter((t) => (t.room || 'Phòng Lab 201') === roomName);
+                    const testTypes = Array.from(new Set(roomTests.map((t) => t.testType)));
+
                     return (
                       <div
                         key={roomName}
@@ -194,9 +255,26 @@ export const PlacementTestCalendar: React.FC<PlacementTestCalendarProps> = ({
                         onClick={() => handleShiftClick(dateStr, slot.key, roomName, isSelected)}
                         title={`Bấm để xem danh sách thí sinh ca ${slot.key} phòng ${roomName}`}
                       >
-                        <div className="pt-shift-room">
-                          <span>{roomName}</span>
-                          {isFull && <AlertTriangle size={12} color="#dc2626" />}
+                        <div className="pt-shift-room" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontWeight: 700, fontSize: '12px' }}>{roomName}</span>
+                          <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+                            {testTypes.map((type) => (
+                              <span
+                                key={type}
+                                style={{
+                                  fontSize: '9.5px',
+                                  fontWeight: 800,
+                                  padding: '1px 4px',
+                                  borderRadius: '4px',
+                                  background: type === 'IELTS' ? 'rgba(124, 58, 237, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                                  color: type === 'IELTS' ? '#7c3aed' : '#2563eb',
+                                }}
+                              >
+                                {type}
+                              </span>
+                            ))}
+                            {isFull && <AlertTriangle size={12} color="#dc2626" />}
+                          </div>
                         </div>
 
                         <div className="pt-capacity-bar-track">

@@ -286,10 +286,8 @@ export class PlacementTestRepository {
           JOIN leads l ON pt.lead_id = l.id
           ${whereClause}
         `;
-        const countResult = await query(countSql, params);
-        const total = parseInt(countResult.rows[0]?.total || '0', 10);
 
-        // Lấy danh sách bản ghi
+        // Lấy đồng thời cả tổng số bản ghi và dữ liệu qua Promise.all để giảm độ trễ mạng
         const sortColumn =
           filters.sortBy === 'overall_score'
             ? 'pt.overall_score'
@@ -336,7 +334,12 @@ export class PlacementTestRepository {
           LIMIT $${paramIndex++} OFFSET $${paramIndex++}
         `;
 
-        const dataResult = await query(dataSql, [...params, limit, offset]);
+        const [countResult, dataResult] = await Promise.all([
+          query(countSql, params),
+          query(dataSql, [...params, limit, offset]),
+        ]);
+
+        const total = parseInt(countResult.rows[0]?.total || '0', 10);
 
         return {
           tests: dataResult.rows,

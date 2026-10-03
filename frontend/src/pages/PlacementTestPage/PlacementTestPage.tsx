@@ -54,9 +54,9 @@ export const PlacementTestPage: React.FC = () => {
   }>({});
 
   // Fetch placement tests & availability
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (silent = false) => {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
 
       const weekStartStr = formatLocalDate(currentWeekStart);
       const weekEnd = new Date(currentWeekStart);
@@ -72,7 +72,6 @@ export const PlacementTestPage: React.FC = () => {
 
       if (selectedTestType !== 'ALL') filterParams.testType = selectedTestType as TestType;
       if (selectedAttendance !== 'ALL') filterParams.attendanceStatus = selectedAttendance as AttendanceStatus;
-      if (searchQuery.trim()) filterParams.search = searchQuery.trim();
 
       const [testsRes, availRes] = await Promise.all([
         PlacementTestService.getTests(filterParams),
@@ -90,9 +89,9 @@ export const PlacementTestPage: React.FC = () => {
     } catch (err) {
       console.error('Lỗi khi tải dữ liệu ca thi:', err);
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
-  }, [currentWeekStart, selectedTestType, selectedAttendance, searchQuery]);
+  }, [currentWeekStart, selectedTestType, selectedAttendance]);
 
   useEffect(() => {
     loadData();
@@ -192,7 +191,7 @@ export const PlacementTestPage: React.FC = () => {
             type="button"
             className="pt-btn-touch"
             style={{ background: '#fff', border: 'var(--glass-border-subtle)', color: 'var(--text-body)' }}
-            onClick={loadData}
+            onClick={() => loadData()}
             title="Làm mới dữ liệu"
           >
             <RefreshCw size={15} className={isLoading ? 'spin-icon' : ''} />
@@ -365,7 +364,7 @@ export const PlacementTestPage: React.FC = () => {
       {/* Candidate Roster & One-Touch Attendance Table */}
       <CandidateRosterTable
         tests={filteredCandidates}
-        onAttendanceChanged={loadData}
+        onAttendanceChanged={() => loadData(true)}
         selectedShiftInfo={selectedShift}
         onClearShiftFilter={() => setSelectedShift(null)}
         onAddCandidateToShift={(shift) => handleOpenBookingModal(shift.date, shift.timeSlot, shift.room, true)}
@@ -376,7 +375,7 @@ export const PlacementTestPage: React.FC = () => {
         isOpen={isBookingOpen}
         onClose={() => setIsBookingOpen(false)}
         onSuccess={() => {
-          loadData();
+          loadData(true);
         }}
         initialDate={bookingPreselect.date}
         initialTimeSlot={bookingPreselect.timeSlot}
