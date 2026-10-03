@@ -34,10 +34,33 @@ export class PlacementTestService {
     if (query?.sortBy) params.append('sortBy', query.sortBy);
     if (query?.sortOrder) params.append('sortOrder', query.sortOrder);
 
-    const res = await apiClient.get<ApiResponse<PaginatedPlacementTestsResponse>>(
+    const res = await apiClient.get<any>(
       `/placement-tests?${params.toString()}`
     );
-    return res.data.data;
+    const data = res.data?.data;
+    const meta = res.data?.meta;
+
+    if (Array.isArray(data)) {
+      return {
+        tests: data,
+        total: meta?.total ?? data.length,
+        page: meta?.page ?? 1,
+        limit: meta?.limit ?? data.length,
+        totalPages: meta?.totalPages ?? 1,
+      };
+    }
+
+    if (data?.tests && Array.isArray(data.tests)) {
+      return data;
+    }
+
+    return {
+      tests: [],
+      total: 0,
+      page: 1,
+      limit: 20,
+      totalPages: 1,
+    };
   }
 
   /**

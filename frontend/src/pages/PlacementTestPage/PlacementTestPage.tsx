@@ -78,7 +78,13 @@ export const PlacementTestPage: React.FC = () => {
         PlacementTestService.getAvailability(weekStartStr, weekEndStr),
       ]);
 
-      setTests(testsRes.tests || []);
+      const loadedTests = Array.isArray(testsRes)
+        ? testsRes
+        : testsRes?.tests && Array.isArray(testsRes.tests)
+        ? testsRes.tests
+        : [];
+
+      setTests(loadedTests);
       setAvailabilitySlots(availRes || []);
     } catch (err) {
       console.error('Lỗi khi tải dữ liệu ca thi:', err);
@@ -121,13 +127,6 @@ export const PlacementTestPage: React.FC = () => {
   const filteredCandidates = tests.filter((t) => {
     const itemDate = (t.testDate || '').split('T')[0];
 
-    // Filter by room if room dropdown filter is selected (unless 'ALL')
-    if (selectedRoom !== 'ALL' && t.room) {
-      const r1 = t.room.toLowerCase();
-      const r2 = selectedRoom.toLowerCase();
-      if (!r1.includes(r2) && !r2.includes(r1)) return false;
-    }
-
     // 1. If user clicked on a specific shift in the Calendar, filter to that shift:
     if (selectedShift) {
       if (itemDate !== selectedShift.date) return false;
@@ -138,6 +137,13 @@ export const PlacementTestPage: React.FC = () => {
         if (!r1.includes(r2) && !r2.includes(r1)) return false;
       }
       return true; // Match found for selected shift!
+    }
+
+    // Filter by room if room dropdown filter is selected (unless 'ALL')
+    if (selectedRoom !== 'ALL' && t.room) {
+      const r1 = t.room.toLowerCase();
+      const r2 = selectedRoom.toLowerCase();
+      if (!r1.includes(r2) && !r2.includes(r1)) return false;
     }
 
     // 2. If no specific shift selected, filter according to quickDateFilter:
