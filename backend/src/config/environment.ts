@@ -21,6 +21,8 @@ export interface EnvironmentConfig {
   jwt: {
     secret: string;
     expiresIn: string;
+    refreshSecret: string;
+    refreshExpiresIn: string;
   };
 }
 
@@ -42,6 +44,8 @@ export const env: EnvironmentConfig = {
   },
   jwt: {
     secret: process.env.JWT_SECRET || 'eduflow_crm_secret_jwt_token_key_2026_nhom8_ptit',
-    expiresIn: process.env.JWT_EXPIRES_IN || '8h',
+    expiresIn: process.env.JWT_EXPIRES_IN || '15m',
+    refreshSecret: process.env.JWT_REFRESH_SECRET || 'eduflow_crm_refresh_secret_jwt_key_2026_ptit_nhom8',
+    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
 };

@@ -15,12 +15,24 @@ export const pool = new Pool({
   connectionTimeoutMillis: env.db.connectionTimeoutMillis,
 });
 
+let dbConnectionState = false;
+
+export function isDbAvailable(): boolean {
+  return dbConnectionState;
+}
+
+export function setDbAvailable(state: boolean): void {
+  dbConnectionState = state;
+}
+
 pool.on('connect', () => {
-  logger.debug('Đã khởi tạo một client mới trong PostgreSQL Connection Pool');
+  dbConnectionState = true;
+  logger.debug('Đã kết nối một client mới trong PostgreSQL Connection Pool');
 });
 
 pool.on('error', (err) => {
-  logger.error('Lỗi bất ngờ xảy ra trên idle PostgreSQL client:', err);
+  dbConnectionState = false;
+  logger.debug('PostgreSQL client error (có thể do CSDL chưa khởi chạy):', err.message);
 });
 
 /**
@@ -33,13 +45,14 @@ export async function query<R extends QueryResultRow = any, I extends any[] = an
   const start = Date.now();
   try {
     const res = await pool.query<R>(text, params);
+    dbConnectionState = true;
     const duration = Date.now() - start;
     if (duration > 500) {
       logger.warn(`Truy vấn chậm (${duration}ms): ${text.substring(0, 100)}...`);
     }
     return res;
-  } catch (error) {
-    logger.error(`Lỗi thực thi truy vấn SQL: ${text}`, error);
+  } catch (error: any) {
+    dbConnectionState = false;
     throw error;
   }
 }
@@ -49,6 +62,7 @@ export async function query<R extends QueryResultRow = any, I extends any[] = an
  */
 export async function getClient(): Promise<PoolClient> {
   const client = await pool.connect();
+  dbConnectionState = true;
   return client;
 }
 
@@ -89,6 +103,7 @@ export async function testDbConnection(): Promise<DbHealthResult> {
   try {
     const res = await pool.query('SELECT NOW() as server_time, version() as db_version');
     const latencyMs = Date.now() - start;
+    dbConnectionState = true;
     return {
       connected: true,
       database: env.db.name,
@@ -98,6 +113,7 @@ export async function testDbConnection(): Promise<DbHealthResult> {
     };
   } catch (err: any) {
     const latencyMs = Date.now() - start;
+    dbConnectionState = false;
     return {
       connected: false,
       database: env.db.name,
