@@ -61,6 +61,28 @@ export interface RefreshTokenDto {
   refreshToken: string;
 }
 
+export interface ForgotPasswordDto {
+  email: string;
+}
+
+export interface ResetPasswordDto {
+  email: string;
+  otp: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordDto {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface PasswordResetRecord {
+  email: string;
+  otp: string;
+  expiresAt: Date;
+  isUsed: boolean;
+}
+
 // Mở rộng interface Request của Express để chứa user đã giải mã từ JWT
 declare global {
   namespace Express {
@@ -69,3 +91,4 @@ declare global {
     }
   }
 }
+

