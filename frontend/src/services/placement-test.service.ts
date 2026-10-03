@@ -165,4 +165,27 @@ export class PlacementTestService {
       status: created.pipelineStage || 'NEW',
     };
   }
+
+  /**
+   * Xóa hoàn toàn một thí sinh khỏi ca thi
+   */
+  static async deleteTest(id: number): Promise<void> {
+    await apiClient.delete(`/placement-tests/${id}`);
+  }
+
+  /**
+   * Hủy và xóa toàn bộ một ca thi theo Ngày, Khung giờ và Phòng
+   */
+  static async deleteShift(
+    date: string,
+    timeSlot: string,
+    room?: string
+  ): Promise<{ count: number }> {
+    const params = new URLSearchParams({ date, timeSlot });
+    if (room && room !== 'ALL') params.append('room', room);
+    const res = await apiClient.delete<ApiResponse<{ count: number }>>(
+      `/placement-tests/shift/cancel?${params.toString()}`
+    );
+    return res.data.data;
+  }
 }

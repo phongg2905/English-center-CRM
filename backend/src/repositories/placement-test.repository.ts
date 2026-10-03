@@ -712,7 +712,7 @@ export class PlacementTestRepository {
   }
 
   /**
-   * Hủy lịch thi
+   * Hủy lịch thi (Đánh dấu CANCELLED)
    */
   static async cancel(id: number): Promise<boolean> {
     if (isDbAvailable()) {
@@ -731,6 +731,54 @@ export class PlacementTestRepository {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Xóa hoàn toàn một thí sinh khỏi ca thi
+   */
+  static async delete(id: number): Promise<boolean> {
+    if (isDbAvailable()) {
+      try {
+        const sql = `DELETE FROM placement_tests WHERE id = $1`;
+        const res = await query(sql, [id]);
+        return (res.rowCount || 0) > 0;
+      } catch (err: any) {
+        logger.warn('delete CSDL thất bại:', err.message);
+      }
+    }
+    const idx = mockPlacementTests.findIndex((t) => t.id === id);
+    if (idx !== -1) {
+      mockPlacementTests.splice(idx, 1);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Xóa / Hủy toàn bộ ca thi theo Ngày, Khung giờ và Phòng
+   */
+  static async deleteShift(date: string, timeSlot: string, room?: string): Promise<number> {
+    if (isDbAvailable()) {
+      try {
+        let sql = `DELETE FROM placement_tests WHERE test_date = $1 AND time_slot = $2`;
+        const params: any[] = [date, timeSlot];
+        if (room && room !== 'ALL') {
+          sql += ` AND (room = $3 OR room ILIKE $3)`;
+          params.push(room);
+        }
+        const res = await query(sql, params);
+        return res.rowCount || 0;
+      } catch (err: any) {
+        logger.warn('deleteShift CSDL thất bại:', err.message);
+      }
+    }
+    const beforeCount = mockPlacementTests.length;
+    mockPlacementTests = mockPlacementTests.filter((t) => {
+      if (t.testDate !== date || t.timeSlot !== timeSlot) return true;
+      if (room && room !== 'ALL' && t.room !== room) return true;
+      return false;
+    });
+    return beforeCount - mockPlacementTests.length;
   }
 
   /**

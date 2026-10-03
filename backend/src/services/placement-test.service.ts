@@ -421,6 +421,20 @@ export class PlacementTestService {
   }
 
   /**
+   * Xóa hoàn toàn một thí sinh khỏi ca thi
+   */
+  static async deleteTest(id: number): Promise<boolean> {
+    return PlacementTestRepository.delete(id);
+  }
+
+  /**
+   * Hủy và xóa toàn bộ một ca thi
+   */
+  static async deleteShift(date: string, timeSlot: string, room?: string): Promise<number> {
+    return PlacementTestRepository.deleteShift(date, timeSlot, room);
+  }
+
+  /**
    * Lấy tình trạng sức chứa ca thi & phòng thi theo khoảng thời gian (phục vụ Calendar View)
    */
   static async getShiftsAvailability(

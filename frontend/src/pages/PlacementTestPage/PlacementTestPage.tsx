@@ -50,6 +50,7 @@ export const PlacementTestPage: React.FC = () => {
     date?: string;
     timeSlot?: string;
     room?: string;
+    lockShift?: boolean;
   }>({});
 
   // Fetch placement tests & availability
@@ -118,8 +119,13 @@ export const PlacementTestPage: React.FC = () => {
     setCurrentWeekStart(getMondayOfWeek(new Date()));
   };
 
-  const handleOpenBookingModal = (date?: string, timeSlot?: string, room?: string) => {
-    setBookingPreselect({ date, timeSlot, room });
+  const handleOpenBookingModal = (
+    date?: string,
+    timeSlot?: string,
+    room?: string,
+    lockShift?: boolean
+  ) => {
+    setBookingPreselect({ date, timeSlot, room, lockShift });
     setIsBookingOpen(true);
   };
 
@@ -362,6 +368,7 @@ export const PlacementTestPage: React.FC = () => {
         onAttendanceChanged={loadData}
         selectedShiftInfo={selectedShift}
         onClearShiftFilter={() => setSelectedShift(null)}
+        onAddCandidateToShift={(shift) => handleOpenBookingModal(shift.date, shift.timeSlot, shift.room, true)}
       />
 
       {/* Quick Booking Modal */}
@@ -374,6 +381,7 @@ export const PlacementTestPage: React.FC = () => {
         initialDate={bookingPreselect.date}
         initialTimeSlot={bookingPreselect.timeSlot}
         initialRoom={bookingPreselect.room}
+        lockShift={bookingPreselect.lockShift}
         availabilitySlots={availabilitySlots}
       />
     </div>

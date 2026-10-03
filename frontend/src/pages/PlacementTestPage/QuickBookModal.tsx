@@ -26,6 +26,7 @@ interface QuickBookModalProps {
   initialTimeSlot?: string;
   initialRoom?: string;
   availabilitySlots?: ShiftSlotAvailability[];
+  lockShift?: boolean;
 }
 
 interface NewCandidateInput {
@@ -43,6 +44,7 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
   initialTimeSlot,
   initialRoom,
   availabilitySlots = [],
+  lockShift = false,
 }) => {
   // Mode: 'select_existing' (Chọn từ Lead có sẵn) vs 'direct_input' (Nhập trực tiếp)
   const [activeTab, setActiveTab] = useState<'select_existing' | 'direct_input'>('select_existing');
@@ -232,7 +234,7 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
         <div className="pt-modal-header">
           <h3 className="pt-modal-title">
             <Calendar size={20} color="var(--color-primary-royal)" />
-            Đặt Lịch Hẹn & Quản Lý Ca Thi
+            {lockShift ? 'Thêm Thí Sinh Vào Ca Thi Đã Chọn' : 'Đặt Lịch Hẹn & Quản Lý Ca Thi'}
           </h3>
           <button className="pt-modal-close-btn" onClick={onClose} aria-label="Đóng">
             <X size={18} />
@@ -246,6 +248,31 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
               <div className="pt-toast-banner error">
                 <AlertCircle size={18} />
                 <span>{errorMsg}</span>
+              </div>
+            )}
+
+            {/* Lock Shift Banner */}
+            {lockShift && (
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(99,102,241,0.08))',
+                  border: '1px solid rgba(37,99,235,0.25)',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  color: '#1e40af',
+                  fontSize: '13px',
+                }}
+              >
+                <Calendar size={18} />
+                <div>
+                  <div>Đang thêm thí sinh vào ca: <strong>{timeSlot}</strong> • <strong>{room}</strong> ngày <strong>{testDate}</strong></div>
+                  <div style={{ fontSize: '11.5px', color: '#475569', marginTop: '2px' }}>
+                    Sức chứa hiện tại: <strong>{currentBooked}/{maxCapacity}</strong> thí sinh • Còn trống <strong>{availableSeats}</strong> chỗ
+                  </div>
+                </div>
               </div>
             )}
 
@@ -446,13 +473,15 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
               <div className="pt-form-group">
                 <label className="pt-form-label">
                   <Calendar size={13} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-                  Ngày Thi<span className="req">*</span>
+                  Ngày Thi<span className="req">*</span> {lockShift && <span style={{ fontSize: '11px', color: '#64748b' }}>(Cố định)</span>}
                 </label>
                 <input
                   type="date"
                   className="pt-form-input"
                   value={testDate}
                   onChange={(e) => setTestDate(e.target.value)}
+                  disabled={lockShift}
+                  style={lockShift ? { background: '#f8fafc', cursor: 'not-allowed' } : undefined}
                   required
                 />
               </div>
@@ -460,12 +489,14 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
               <div className="pt-form-group">
                 <label className="pt-form-label">
                   <Clock size={13} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-                  Khung Giờ (Ca Thi)<span className="req">*</span>
+                  Khung Giờ (Ca Thi)<span className="req">*</span> {lockShift && <span style={{ fontSize: '11px', color: '#64748b' }}>(Cố định)</span>}
                 </label>
                 <select
                   className="pt-form-select"
                   value={timeSlot}
                   onChange={(e) => setTimeSlot(e.target.value)}
+                  disabled={lockShift}
+                  style={lockShift ? { background: '#f8fafc', cursor: 'not-allowed' } : undefined}
                   required
                 >
                   <option value="09:00 - 10:30">09:00 - 10:30 (Ca Sáng)</option>
@@ -479,12 +510,14 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
               <div className="pt-form-group">
                 <label className="pt-form-label">
                   <MapPin size={13} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-                  Phòng Thi & Campus<span className="req">*</span>
+                  Phòng Thi & Campus<span className="req">*</span> {lockShift && <span style={{ fontSize: '11px', color: '#64748b' }}>(Cố định)</span>}
                 </label>
                 <select
                   className="pt-form-select"
                   value={room}
                   onChange={(e) => setRoom(e.target.value)}
+                  disabled={lockShift}
+                  style={lockShift ? { background: '#f8fafc', cursor: 'not-allowed' } : undefined}
                   required
                 >
                   <option value="Phòng Lab 201">Phòng Lab 201 (Cơ sở Q.1)</option>
@@ -576,7 +609,8 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
               ) : (
                 <>
                   <Check size={16} />
-                  Xác Nhận Đặt Lịch ({candidateCount} Thí Sinh)
+                  {lockShift ? 'Xác Nhận Thêm Vào Ca' : 'Xác Nhận Đặt Lịch'}{' '}
+                  {candidateCount > 0 ? `(${candidateCount} Thí Sinh)` : ''}
                 </>
               )}
             </button>

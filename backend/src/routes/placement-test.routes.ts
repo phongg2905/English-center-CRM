@@ -78,12 +78,32 @@ router.post(
 );
 
 /**
+ * @route DELETE /api/placement-tests/shift/cancel
+ * @desc  Hủy và xóa toàn bộ ca thi
+ */
+router.delete(
+  '/shift/cancel',
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  PlacementTestController.deleteShift
+);
+
+/**
  * @route DELETE /api/placement-tests/:id
- * @desc  Hủy ca thi
+ * @desc  Xóa hoàn toàn thí sinh khỏi ca thi
  */
 router.delete(
   '/:id',
-  authorizeRoles('ADMIN', 'SALES'),
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  PlacementTestController.deleteTest
+);
+
+/**
+ * @route POST /api/placement-tests/:id/cancel
+ * @desc  Hủy ca thi (chuyển trạng thái CANCELLED)
+ */
+router.post(
+  '/:id/cancel',
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
   PlacementTestController.cancelTest
 );
 

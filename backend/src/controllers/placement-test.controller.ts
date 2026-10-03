@@ -240,8 +240,46 @@ export class PlacementTestController {
   }
 
   /**
+   * @route DELETE /api/placement-tests/shift/cancel
+   * @desc  Hủy và xóa toàn bộ ca thi theo Ngày, Khung giờ và Phòng
+   */
+  static async deleteShift(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { date, timeSlot, room } = req.query;
+      if (!date || !timeSlot) {
+        throw AppError.badRequest('Vui lòng cung cấp ngày (date) và ca thi (timeSlot)');
+      }
+      const count = await PlacementTestService.deleteShift(
+        date as string,
+        timeSlot as string,
+        room as string | undefined
+      );
+      ApiResponse.success(res, { count }, `Đã hủy và xóa toàn bộ ca thi thành công (${count} thí sinh)`);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * @route DELETE /api/placement-tests/:id
-   * @desc  Hủy ca thi
+   * @desc  Xóa hoàn toàn thí sinh khỏi ca thi
+   */
+  static async deleteTest(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const success = await PlacementTestService.deleteTest(Number(id));
+      if (!success) {
+        throw AppError.notFound(`Không tìm thấy bài thi với ID = ${id}`);
+      }
+      ApiResponse.success(res, null, 'Xóa thí sinh khỏi ca thi thành công');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * @route POST /api/placement-tests/:id/cancel
+   * @desc  Hủy ca thi (chuyển trạng thái CANCELLED)
    */
   static async cancelTest(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

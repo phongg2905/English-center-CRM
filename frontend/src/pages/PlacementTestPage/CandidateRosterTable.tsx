@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, X, Clock, AlertCircle, Phone, Mail, RotateCcw } from 'lucide-react';
+import { Check, X, Clock, AlertCircle, Phone, Mail, RotateCcw, Trash2, UserPlus } from 'lucide-react';
 import { PlacementTestService } from '../../services/placement-test.service';
 import type { PlacementTestWithDetails, AttendanceStatus } from '../../types/placement-test';
 
@@ -12,6 +12,7 @@ interface CandidateRosterTableProps {
     room?: string;
   } | null;
   onClearShiftFilter?: () => void;
+  onAddCandidateToShift?: (shift: { date: string; timeSlot: string; room?: string }) => void;
 }
 
 export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
@@ -19,8 +20,11 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
   onAttendanceChanged,
   selectedShiftInfo,
   onClearShiftFilter,
+  onAddCandidateToShift,
 }) => {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [isDeletingShift, setIsDeletingShift] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; isError?: boolean } | null>(null);
 
   const handleUpdateAttendance = async (testId: number, newStatus: AttendanceStatus) => {
@@ -53,6 +57,62 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
     }
   };
 
+  const handleDeleteCandidate = async (testId: number, candidateName: string) => {
+    const confirmed = window.confirm(
+      `Bạn có chắc chắn muốn xóa thí sinh "${candidateName}" khỏi ca thi này không?\n\nChỗ thi trong phòng sẽ được giải phóng cho học viên khác.`
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(testId);
+      await PlacementTestService.deleteTest(testId);
+      setFeedbackMsg({ text: `✓ Đã xóa thí sinh "${candidateName}" khỏi ca thi thành công!` });
+      setTimeout(() => setFeedbackMsg(null), 3000);
+      onAttendanceChanged();
+    } catch (err: any) {
+      setFeedbackMsg({
+        text: err.response?.data?.message || err.message || 'Lỗi khi xóa thí sinh khỏi ca thi',
+        isError: true,
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleDeleteShift = async () => {
+    if (!selectedShiftInfo) return;
+    const count = tests.length;
+    const confirmed = window.confirm(
+      `CẢNH BÁO: Bạn có chắc chắn muốn HỦY & XÓA TOÀN BỘ ca thi này không?\n\n` +
+      `• Ngày thi: ${selectedShiftInfo.date}\n` +
+      `• Khung giờ: ${selectedShiftInfo.timeSlot}\n` +
+      (selectedShiftInfo.room ? `• Phòng: ${selectedShiftInfo.room}\n` : '') +
+      `• Tổng số thí sinh hiện tại: ${count} người\n\n` +
+      `Tất cả dữ liệu lịch thi của các thí sinh trong ca này sẽ bị xóa và phòng thi sẽ trở về trạng thái trống.`
+    );
+    if (!confirmed) return;
+
+    try {
+      setIsDeletingShift(true);
+      const res = await PlacementTestService.deleteShift(
+        selectedShiftInfo.date,
+        selectedShiftInfo.timeSlot,
+        selectedShiftInfo.room
+      );
+      setFeedbackMsg({ text: `✓ Đã xóa thành công ca thi (${res.count || count} thí sinh)!` });
+      setTimeout(() => setFeedbackMsg(null), 3500);
+      if (onClearShiftFilter) onClearShiftFilter();
+      onAttendanceChanged();
+    } catch (err: any) {
+      setFeedbackMsg({
+        text: err.response?.data?.message || err.message || 'Lỗi khi xóa toàn bộ ca thi',
+        isError: true,
+      });
+    } finally {
+      setIsDeletingShift(false);
+    }
+  };
+
   const getTestTypeBadge = (type: string) => {
     switch (type) {
       case 'IELTS':
@@ -81,7 +141,7 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
   return (
     <div id="candidate-roster-section" className="pt-roster-card">
       {/* Header */}
-      <div className="pt-roster-header">
+      <div className="pt-roster-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div className="pt-roster-title">
           <h3>
             {selectedShiftInfo
@@ -101,10 +161,63 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
           )}
         </div>
 
+        {/* Action Buttons for Selected Shift */}
+        {selectedShiftInfo && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {onAddCandidateToShift && (
+              <button
+                type="button"
+                className="pt-btn-primary"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '7px 14px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  borderRadius: '8px',
+                  background: 'linear-gradient(135deg, #4f46e5, #2563eb)',
+                  color: '#fff',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(37, 99, 235, 0.25)',
+                }}
+                onClick={() => onAddCandidateToShift(selectedShiftInfo)}
+                title="Thêm thí sinh vào ca thi đang chọn này"
+              >
+                <UserPlus size={15} /> Thêm Thí Sinh Vào Ca Này
+              </button>
+            )}
+
+            <button
+              type="button"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '7px 14px',
+                fontSize: '13px',
+                fontWeight: 600,
+                borderRadius: '8px',
+                background: '#fef2f2',
+                color: '#dc2626',
+                border: '1px solid #fecaca',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              onClick={handleDeleteShift}
+              disabled={isDeletingShift}
+              title="Hủy và xóa toàn bộ ca thi này"
+            >
+              <Trash2 size={15} /> {isDeletingShift ? 'Đang xóa...' : 'Hủy / Xóa Ca Thi'}
+            </button>
+          </div>
+        )}
+
         {feedbackMsg && (
           <div
             className={`pt-toast-banner ${feedbackMsg.isError ? 'error' : 'success'}`}
-            style={{ padding: '6px 14px', fontSize: '12.5px' }}
+            style={{ width: '100%', padding: '8px 14px', fontSize: '13px', marginTop: '4px' }}
           >
             {feedbackMsg.text}
           </div>
@@ -199,7 +312,7 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
                       )}
                     </td>
 
-                    {/* Thao tác Điểm danh một chạm */}
+                    {/* Thao tác Điểm danh một chạm & Xóa */}
                     <td>
                       <div className="pt-attendance-actions" style={{ justifyContent: 'center' }}>
                         {/* Nút Có mặt */}
@@ -207,7 +320,7 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
                           type="button"
                           className={`pt-btn-touch pt-btn-present ${item.attendanceStatus === 'PRESENT' ? 'active' : ''}`}
                           onClick={() => handleUpdateAttendance(item.id, 'PRESENT')}
-                          disabled={isUpdating}
+                          disabled={isUpdating || deletingId === item.id}
                           title="Đánh dấu Có mặt tham gia thi"
                         >
                           <Check size={14} /> Có mặt
@@ -218,7 +331,7 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
                           type="button"
                           className={`pt-btn-touch pt-btn-absent ${item.attendanceStatus === 'ABSENT' ? 'active' : ''}`}
                           onClick={() => handleUpdateAttendance(item.id, 'ABSENT')}
-                          disabled={isUpdating}
+                          disabled={isUpdating || deletingId === item.id}
                           title="Đánh dấu Vắng mặt không đến"
                         >
                           <X size={14} /> Vắng mặt
@@ -231,12 +344,29 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
                             className="pt-btn-touch"
                             style={{ background: '#f1f5f9', color: '#64748b' }}
                             onClick={() => handleUpdateAttendance(item.id, 'SCHEDULED')}
-                            disabled={isUpdating}
+                            disabled={isUpdating || deletingId === item.id}
                             title="Đặt lại trạng thái Chờ thi"
                           >
                             <RotateCcw size={12} />
                           </button>
                         )}
+
+                        {/* Nút Xóa thí sinh khỏi ca thi */}
+                        <button
+                          type="button"
+                          className="pt-btn-touch"
+                          style={{
+                            background: '#fef2f2',
+                            color: '#dc2626',
+                            border: '1px solid #fecaca',
+                            marginLeft: '4px',
+                          }}
+                          onClick={() => handleDeleteCandidate(item.id, item.leadFullName || `Thí sinh #${item.leadId}`)}
+                          disabled={isUpdating || deletingId === item.id}
+                          title="Xóa thí sinh khỏi ca thi (giải phóng chỗ)"
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </div>
                     </td>
                   </tr>
