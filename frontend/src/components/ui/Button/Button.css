@@ -5,7 +5,7 @@
   gap: 8px;
   font-family: var(--font-family-base);
   font-weight: 600;
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   cursor: pointer;
   transition: all var(--transition-normal);
   text-decoration: none;
@@ -26,22 +26,24 @@
 
 /* Sizes */
 .btn-sm {
-  padding: 6px 12px;
+  padding: 6px 14px;
   font-size: 12.5px;
   height: 32px;
+  border-radius: 10px;
 }
 
 .btn-md {
-  padding: 8px 16px;
+  padding: 8px 18px;
   font-size: 13.5px;
   height: 40px;
+  border-radius: 12px;
 }
 
 .btn-lg {
   padding: 12px 24px;
   font-size: 15px;
   height: 48px;
-  border-radius: var(--radius-md);
+  border-radius: 16px;
 }
 
 /* Variant: Primary Cosmic Sunset Gradient */

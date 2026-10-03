@@ -20,7 +20,7 @@
   backdrop-filter: var(--glass-blur-sm);
   -webkit-backdrop-filter: var(--glass-blur-sm);
   border: var(--glass-border-subtle);
-  border-radius: var(--radius-sm);
+  border-radius: 14px;
   box-shadow: var(--glass-shadow-sm);
   transition: all var(--transition-normal);
 }

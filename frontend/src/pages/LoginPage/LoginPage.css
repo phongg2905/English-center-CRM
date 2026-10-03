@@ -1,0 +1,215 @@
+.login-page-container {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  background: 
+    radial-gradient(1000px circle at 15% 15%, rgba(124, 58, 237, 0.12), transparent 55%),
+    radial-gradient(900px circle at 85% 30%, rgba(236, 72, 153, 0.1), transparent 50%),
+    radial-gradient(800px circle at 50% 85%, rgba(59, 130, 246, 0.08), transparent 50%),
+    #f6f8fc;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--glass-bg-elevated);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 24px 60px -15px rgba(124, 58, 237, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  padding: 40px 36px;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: loginCardFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes loginCardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Specular top reflection */
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+  pointer-events: none;
+}
+
+.login-brand-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-logo-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  background: var(--brand-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 8px 24px -2px rgba(124, 58, 237, 0.45);
+}
+
+.login-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-heading);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.login-subtitle {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.login-password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition-fast);
+}
+
+.password-toggle-btn:hover {
+  color: var(--text-heading);
+}
+
+.login-options-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.remember-me-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-body);
+  cursor: pointer;
+  user-select: none;
+}
+
+.remember-me-checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  accent-color: var(--color-primary-royal);
+  cursor: pointer;
+}
+
+.forgot-password-link {
+  color: var(--color-primary-royal);
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+}
+
+.forgot-password-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.login-error-alert {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+  font-size: 12.5px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: shake 0.3s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* Demo accounts helper */
+.demo-accounts-helper {
+  padding-top: 16px;
+  border-top: 1px solid rgba(226, 232, 240, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.demo-accounts-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-subtle);
+  text-align: center;
+}
+
+.demo-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.demo-pill-btn {
+  padding: 6px 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: 1px dashed rgba(124, 58, 237, 0.3);
+  background: rgba(124, 58, 237, 0.05);
+  color: var(--color-primary-royal);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.demo-pill-btn:hover {
+  background: rgba(124, 58, 237, 0.15);
+  border-color: var(--color-primary-royal);
+}

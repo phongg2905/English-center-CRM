@@ -191,11 +191,15 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 4px;
+  border-radius: 16px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .view-tab-btn {
   padding: 8px 16px;
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   background: transparent;
   border: none;
   font-family: var(--font-family-base);
@@ -216,7 +220,7 @@
 
 .view-tab-btn.active {
   color: var(--color-primary-royal);
-  background: rgba(124, 58, 237, 0.1);
+  background: rgba(124, 58, 237, 0.12);
   box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.25);
 }
 
@@ -228,7 +232,7 @@
 }
 
 /* ========================================================
-   KANBAN PIPELINE STYLES
+   KANBAN PIPELINE STYLES - ROUNDED VISION LIQUID GLASS
    ======================================================== */
 .kanban-board-container {
   display: flex;
@@ -240,30 +244,51 @@
 .kanban-column {
   flex: 1;
   min-width: 270px;
-  background: rgba(248, 250, 252, 0.65);
+  background: rgba(248, 250, 252, 0.7);
   backdrop-filter: var(--glass-blur-sm);
-  border: var(--glass-border-subtle);
-  border-radius: var(--radius-md);
+  border: var(--glass-border);
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
   max-height: 650px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
 }
 
 .kanban-column-header {
-  padding: 14px 16px;
+  padding: 13px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+  border-radius: 17px 17px 0 0;
+  transition: background var(--transition-normal);
 }
 
 .kanban-column-title {
   font-size: 13.5px;
   font-weight: 700;
-  color: var(--text-heading);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
+  letter-spacing: -0.01em;
+}
+
+.column-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.column-count-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  padding: 2px 9px;
+  border-radius: 9999px;
+  line-height: 1.3;
 }
 
 .kanban-card-list {
@@ -340,25 +365,34 @@
 .drawer-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.35);
-  backdrop-filter: blur(4px);
-  z-index: 100;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
   display: flex;
   justify-content: flex-end;
   animation: fadeIn 0.2s ease-out;
+  overscroll-behavior: contain;
 }
 
 .slide-over-drawer {
   width: 100%;
-  max-width: 440px;
-  height: 100%;
-  background: var(--glass-bg-elevated);
+  max-width: 450px;
+  height: calc(100vh - 28px);
+  max-height: calc(100vh - 28px);
+  margin: 14px;
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: var(--glass-blur);
-  border-left: var(--glass-border);
-  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: 24px;
+  box-shadow: -10px 0 40px -10px rgba(0, 0, 0, 0.15), 0 24px 60px -15px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overscroll-behavior: contain;
+  touch-action: auto;
 }
 
 @keyframes slideInRight {
@@ -374,18 +408,57 @@
 .drawer-header {
   padding: 20px 24px;
   border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+  border-radius: 24px 24px 0 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .drawer-body {
   padding: 24px;
   overflow-y: auto;
-  flex: 1;
+  flex: 1 1 0%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 58, 237, 0.3) transparent;
+}
+
+.drawer-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.drawer-body::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 9999px;
+}
+
+.drawer-body::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.28);
+  border-radius: 9999px;
+}
+
+.drawer-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.55);
+}
+
+.drawer-footer {
+  padding: 16px 24px 18px;
+  border-top: 1px solid rgba(226, 232, 240, 0.6);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 0 0 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .drawer-timeline {
@@ -426,7 +499,7 @@
 }
 
 /* ========================================================
-   ACADEMIC SCORECARD SECTION
+   ACADEMIC SCORECARD SECTION - ROUNDED VISION LIQUID GLASS
    ======================================================== */
 .scorecard-container {
   display: grid;
@@ -444,6 +517,7 @@
   padding: 32px;
   text-align: center;
   position: relative;
+  border-radius: 24px !important;
 }
 
 .scorecard-badge-top {

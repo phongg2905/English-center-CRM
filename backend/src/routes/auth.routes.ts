@@ -10,10 +10,13 @@ router.post('/register', AuthController.register);
 router.post('/login', AuthController.login);
 router.post('/refresh', AuthController.refresh);
 router.get('/roles', AuthController.getRoles);
+router.post('/forgot-password', AuthController.forgotPassword);
+router.post('/reset-password', AuthController.resetPassword);
 
 // Tuyến đường yêu cầu xác thực (Protected routes)
 router.post('/logout', verifyToken, AuthController.logout);
 router.get('/me', verifyToken, AuthController.getMe);
+router.post('/change-password', verifyToken, AuthController.changePassword);
 
 // Tuyến đường kiểm thử phân quyền RBAC (Role-based access test)
 router.get(

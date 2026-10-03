@@ -85,4 +85,50 @@ export class AuthController {
       next(error);
     }
   }
+
+  /**
+   * @route POST /api/auth/forgot-password
+   * @desc  Yêu cầu mã OTP khôi phục mật khẩu
+   */
+  static async forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email } = req.body;
+      const result = await AuthService.forgotPassword(email);
+      ApiResponse.success(res, result, result.message);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * @route POST /api/auth/reset-password
+   * @desc  Đặt lại mật khẩu mới bằng mã OTP
+   */
+  static async resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email, otp, newPassword } = req.body;
+      const result = await AuthService.resetPassword(email, otp, newPassword);
+      ApiResponse.success(res, result, result.message);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * @route POST /api/auth/change-password
+   * @desc  Đổi mật khẩu tài khoản cá nhân
+   */
+  static async changePassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        return next(new Error('Yêu cầu xác thực tài khoản'));
+      }
+      const { currentPassword, newPassword } = req.body;
+      const result = await AuthService.changePassword(userId, currentPassword, newPassword);
+      ApiResponse.success(res, result, result.message);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

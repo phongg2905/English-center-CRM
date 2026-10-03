@@ -64,6 +64,12 @@ export class UserRepository {
    * Tìm người dùng bằng username hoặc email (hỗ trợ xác thực đăng nhập)
    */
   static async findByUsernameOrEmail(identifier: string): Promise<(User & { roleCode: RoleCode; roleName: string }) | null> {
+    let cleanId = identifier.trim().toLowerCase();
+    // Hỗ trợ alias demo thuận tiện
+    if (cleanId === 'admin') cleanId = 'tamminh';
+    if (cleanId === 'sales01' || cleanId === 'sales') cleanId = 'longpham';
+    if (cleanId === 'academic01' || cleanId === 'academic') cleanId = 'phongpham';
+
     if (isDbAvailable()) {
       try {
         const sql = `
@@ -76,7 +82,7 @@ export class UserRepository {
           WHERE LOWER(u.username) = LOWER($1) OR LOWER(u.email) = LOWER($1)
           LIMIT 1;
         `;
-        const res = await query(sql, [identifier]);
+        const res = await query(sql, [cleanId]);
         if (res.rows.length > 0) {
           const row = res.rows[0];
           return {
@@ -102,7 +108,7 @@ export class UserRepository {
 
     // In-Memory fallback
     const found = mockUsers.find(
-      (u) => u.username.toLowerCase() === identifier.toLowerCase() || u.email.toLowerCase() === identifier.toLowerCase()
+      (u) => u.username.toLowerCase() === cleanId || u.email.toLowerCase() === cleanId
     );
     return found || null;
   }
@@ -161,6 +167,50 @@ export class UserRepository {
       createdAt: found.createdAt,
       updatedAt: found.updatedAt,
     };
+  }
+
+  /**
+   * Tìm người dùng theo ID kèm passwordHash (hỗ trợ đổi mật khẩu)
+   */
+  static async findWithPasswordById(id: number): Promise<(User & { roleCode: RoleCode; roleName: string }) | null> {
+    if (isDbAvailable()) {
+      try {
+        const sql = `
+          SELECT u.id, u.username, u.password_hash, u.full_name, u.email, 
+                 u.phone_number, u.role_id, u.avatar_url, u.is_active, 
+                 u.created_at, u.updated_at,
+                 r.role_code, r.role_name
+          FROM users u
+          JOIN roles r ON u.role_id = r.id
+          WHERE u.id = $1
+          LIMIT 1;
+        `;
+        const res = await query(sql, [id]);
+        if (res.rows.length > 0) {
+          const row = res.rows[0];
+          return {
+            id: row.id,
+            username: row.username,
+            passwordHash: row.password_hash,
+            fullName: row.full_name,
+            email: row.email,
+            phoneNumber: row.phone_number,
+            roleId: row.role_id,
+            avatarUrl: row.avatar_url,
+            isActive: row.is_active,
+            roleCode: row.role_code as RoleCode,
+            roleName: row.role_name,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+          };
+        }
+      } catch (err: any) {
+        logger.debug('Lỗi tìm user kèm password theo ID:', err.message);
+      }
+    }
+
+    const found = mockUsers.find((u) => u.id === id);
+    return found || null;
   }
 
   /**
@@ -303,5 +353,49 @@ export class UserRepository {
     }
 
     return [...mockRoles];
+  }
+
+  /**
+   * Cập nhật mật khẩu người dùng theo Email
+   */
+  static async updatePasswordByEmail(email: string, passwordHash: string): Promise<boolean> {
+    if (isDbAvailable()) {
+      try {
+        const sql = `UPDATE users SET password_hash = $1, updated_at = NOW() WHERE LOWER(email) = LOWER($2);`;
+        const res = await query(sql, [passwordHash, email.trim()]);
+        return (res.rowCount ?? 0) > 0;
+      } catch (err: any) {
+        logger.debug('Lỗi cập nhật mật khẩu CSDL:', err.message);
+      }
+    }
+    const user = mockUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    if (user) {
+      user.passwordHash = passwordHash;
+      user.updatedAt = new Date();
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Cập nhật mật khẩu người dùng theo ID
+   */
+  static async updatePassword(userId: number, passwordHash: string): Promise<boolean> {
+    if (isDbAvailable()) {
+      try {
+        const sql = `UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2;`;
+        const res = await query(sql, [passwordHash, userId]);
+        return (res.rowCount ?? 0) > 0;
+      } catch (err: any) {
+        logger.debug('Lỗi cập nhật mật khẩu CSDL theo ID:', err.message);
+      }
+    }
+    const user = mockUsers.find((u) => u.id === userId);
+    if (user) {
+      user.passwordHash = passwordHash;
+      user.updatedAt = new Date();
+      return true;
+    }
+    return false;
   }
 }
