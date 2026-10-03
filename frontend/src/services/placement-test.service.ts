@@ -135,8 +135,34 @@ export class PlacementTestService {
         assignedTo: item.assignedTo || item.assignedSalesName || null,
       }));
     } catch {
-      // Return empty array if leads endpoint has issue or mock fallback
       return [];
     }
+  }
+
+  /**
+   * Tạo nhanh Lead mới từ thông tin nhập trực tiếp
+   */
+  static async createLead(data: {
+    fullName: string;
+    phoneNumber: string;
+    email?: string;
+    interest?: string;
+  }): Promise<LeadSimple> {
+    const res = await apiClient.post<any>('/leads', {
+      fullName: data.fullName.trim(),
+      phoneNumber: data.phoneNumber.trim(),
+      email: data.email?.trim() || undefined,
+      interest: data.interest || 'IELTS',
+      sourceChannel: 'WALK_IN',
+      notes: 'Thí sinh đăng ký trực tiếp lịch thi Placement Test',
+    });
+    const created = res.data?.data;
+    return {
+      id: created.id,
+      fullName: created.fullName,
+      phoneNumber: created.phoneNumber,
+      email: created.email || null,
+      status: created.pipelineStage || 'NEW',
+    };
   }
 }

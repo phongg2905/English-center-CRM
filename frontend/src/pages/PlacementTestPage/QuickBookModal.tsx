@@ -1,8 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Calendar, Clock, MapPin, BookOpen, User, AlertCircle, Check } from 'lucide-react';
+import {
+  X,
+  Calendar,
+  Clock,
+  MapPin,
+  BookOpen,
+  User,
+  UserPlus,
+  AlertCircle,
+  Check,
+  Search,
+  Trash2,
+  Plus,
+} from 'lucide-react';
 import { PlacementTestService } from '../../services/placement-test.service';
 import type { TestType, ShiftSlotAvailability, LeadSimple } from '../../types/placement-test';
+import { formatLocalDate } from '../../utils/date';
 
 interface QuickBookModalProps {
   isOpen: boolean;
@@ -14,6 +28,13 @@ interface QuickBookModalProps {
   availabilitySlots?: ShiftSlotAvailability[];
 }
 
+interface NewCandidateInput {
+  id: string;
+  fullName: string;
+  phoneNumber: string;
+  email: string;
+}
+
 export const QuickBookModal: React.FC<QuickBookModalProps> = ({
   isOpen,
   onClose,
@@ -23,10 +44,22 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
   initialRoom,
   availabilitySlots = [],
 }) => {
+  // Mode: 'select_existing' (Chọn từ Lead có sẵn) vs 'direct_input' (Nhập trực tiếp)
+  const [activeTab, setActiveTab] = useState<'select_existing' | 'direct_input'>('select_existing');
+
+  // Existing Leads Mode
   const [leads, setLeads] = useState<LeadSimple[]>([]);
-  const [selectedLeadId, setSelectedLeadId] = useState<number | ''>('');
+  const [selectedLeadIds, setSelectedLeadIds] = useState<number[]>([]);
+  const [leadSearchQuery, setLeadSearchQuery] = useState('');
+
+  // Direct Input Mode (Nhập danh sách thí sinh mới trực tiếp)
+  const [newCandidates, setNewCandidates] = useState<NewCandidateInput[]>([
+    { id: '1', fullName: '', phoneNumber: '', email: '' },
+  ]);
+
+  // Shift & Room Settings
   const [testDate, setTestDate] = useState<string>(
-    initialDate || new Date().toISOString().split('T')[0]
+    initialDate || formatLocalDate(new Date())
   );
   const [timeSlot, setTimeSlot] = useState<string>(
     initialTimeSlot || '09:00 - 10:30'
@@ -36,18 +69,16 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
   );
   const [testType, setTestType] = useState<TestType>('IELTS');
   const [notes, setNotes] = useState<string>('');
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Fetch leads on mount
+  // Fetch leads on modal open
   useEffect(() => {
     if (isOpen) {
       PlacementTestService.getAvailableLeads()
         .then((data) => {
           setLeads(data);
-          if (data.length > 0) {
-            setSelectedLeadId(data[0].id);
-          }
         })
         .catch(() => {});
     }
@@ -61,44 +92,128 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
   }, [initialDate, initialTimeSlot, initialRoom]);
 
   // Calculate live capacity for selected date, slot and room
-  const matchedSlot = availabilitySlots.find(
-    (s) => s.testDate === testDate && s.timeSlot === timeSlot && s.room === room
-  );
-  const isSlotFull = matchedSlot ? matchedSlot.isFull || matchedSlot.totalBooked >= matchedSlot.maxCapacity : false;
+  const matchedSlot = availabilitySlots.find((s) => {
+    const sDate = (s.testDate || '').split('T')[0];
+    const sRoom = (s.room || '').toLowerCase();
+    const targetRoom = (room || '').toLowerCase();
+    return sDate === testDate && s.timeSlot === timeSlot && (sRoom.includes(targetRoom) || targetRoom.includes(sRoom));
+  });
+
   const currentBooked = matchedSlot ? matchedSlot.totalBooked : 0;
   const maxCapacity = matchedSlot ? matchedSlot.maxCapacity : 10;
+  const availableSeats = Math.max(0, maxCapacity - currentBooked);
+
+  // Candidates count to add
+  const candidateCount =
+    activeTab === 'select_existing'
+      ? selectedLeadIds.length
+      : newCandidates.filter((c) => c.fullName.trim() && c.phoneNumber.trim()).length;
+
+  const isOverCapacity = currentBooked + candidateCount > maxCapacity;
 
   if (!isOpen) return null;
 
+  // Toggle select lead
+  const handleToggleLead = (id: number) => {
+    setSelectedLeadIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllFiltered = () => {
+    const filteredIds = filteredLeads.map((l) => l.id);
+    setSelectedLeadIds(Array.from(new Set([...selectedLeadIds, ...filteredIds])));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedLeadIds([]);
+  };
+
+  // Direct Input Row Handlers
+  const handleAddCandidateRow = () => {
+    setNewCandidates((prev) => [
+      ...prev,
+      { id: Date.now().toString(), fullName: '', phoneNumber: '', email: '' },
+    ]);
+  };
+
+  const handleRemoveCandidateRow = (id: string) => {
+    if (newCandidates.length <= 1) return;
+    setNewCandidates((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const handleUpdateCandidate = (id: string, field: keyof NewCandidateInput, val: string) => {
+    setNewCandidates((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, [field]: val } : c))
+    );
+  };
+
+  // Filter existing leads list
+  const filteredLeads = leads.filter((l) => {
+    if (!leadSearchQuery.trim()) return true;
+    const q = leadSearchQuery.toLowerCase();
+    return (
+      l.fullName.toLowerCase().includes(q) ||
+      l.phoneNumber.includes(q) ||
+      (l.email && l.email.toLowerCase().includes(q))
+    );
+  });
+
+  // Handle Submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
-    let targetLeadId: number | null = null;
-    if (typeof selectedLeadId === 'number' && selectedLeadId > 0) {
-      targetLeadId = selectedLeadId;
-    }
-
-    if (!targetLeadId) {
-      setErrorMsg('Vui lòng chọn hồ sơ Lead hoặc nhập thông tin thí sinh.');
+    if (candidateCount === 0) {
+      setErrorMsg('Vui lòng chọn ít nhất 1 học viên từ danh sách hoặc nhập thông tin thí sinh mới.');
       return;
     }
 
-    if (isSlotFull) {
-      setErrorMsg('Ca thi và phòng thi đã chọn đã đủ 10/10 thí sinh. Vui lòng chọn ca hoặc phòng khác!');
+    if (isOverCapacity) {
+      setErrorMsg(
+        `Không thể đặt lịch: Bạn đang thêm ${candidateCount} thí sinh nhưng phòng chỉ còn ${availableSeats} chỗ trống!`
+      );
       return;
     }
 
     try {
       setLoading(true);
-      await PlacementTestService.bookTest({
-        leadId: targetLeadId,
-        testDate,
-        timeSlot,
-        room,
-        testType,
-        notes: notes.trim() || undefined,
-      });
+
+      if (activeTab === 'select_existing') {
+        // Bulk book for selected leads
+        for (const leadId of selectedLeadIds) {
+          await PlacementTestService.bookTest({
+            leadId,
+            testDate,
+            timeSlot,
+            room,
+            testType,
+            notes: notes.trim() || undefined,
+          });
+        }
+      } else {
+        // Direct input: Create lead then book for each candidate
+        const validCandidates = newCandidates.filter((c) => c.fullName.trim() && c.phoneNumber.trim());
+        for (const candidate of validCandidates) {
+          // 1. Create lead
+          const createdLead = await PlacementTestService.createLead({
+            fullName: candidate.fullName.trim(),
+            phoneNumber: candidate.phoneNumber.trim(),
+            email: candidate.email.trim() || undefined,
+            interest: testType,
+          });
+
+          // 2. Book test for this newly created lead
+          await PlacementTestService.bookTest({
+            leadId: createdLead.id,
+            testDate,
+            timeSlot,
+            room,
+            testType,
+            notes: notes.trim() || undefined,
+          });
+        }
+      }
 
       onSuccess();
       onClose();
@@ -112,12 +227,12 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
 
   return createPortal(
     <div className="pt-modal-backdrop" onClick={onClose}>
-      <div className="pt-modal-dialog" onClick={(e) => e.stopPropagation()}>
+      <div className="pt-modal-dialog" style={{ maxWidth: '680px' }} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="pt-modal-header">
           <h3 className="pt-modal-title">
             <Calendar size={20} color="var(--color-primary-royal)" />
-            Đặt Lịch Hẹn Placement Test Nhanh
+            Đặt Lịch Hẹn & Quản Lý Ca Thi
           </h3>
           <button className="pt-modal-close-btn" onClick={onClose} aria-label="Đóng">
             <X size={18} />
@@ -134,45 +249,203 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
               </div>
             )}
 
-            {/* Lead Selection */}
-            <div className="pt-form-group">
-              <label className="pt-form-label">
-                <User size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-                Chọn Hồ Sơ Học Viên (Lead)<span className="req">*</span>
-              </label>
-              {leads.length > 0 ? (
-                <select
-                  className="pt-form-select"
-                  value={selectedLeadId}
-                  onChange={(e) => setSelectedLeadId(Number(e.target.value))}
-                  required
-                >
-                  <option value="">-- Chọn thí sinh từ danh sách Lead --</option>
-                  {leads.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      #{l.id} - {l.fullName} ({l.phoneNumber}) - [{l.status}]
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input
-                    type="number"
-                    className="pt-form-input"
-                    placeholder="Nhập ID Lead (VD: 1, 2, 3...)"
-                    value={selectedLeadId}
-                    onChange={(e) => setSelectedLeadId(e.target.value ? Number(e.target.value) : '')}
-                    required
-                  />
-                </div>
-              )}
+            {/* Mode Selector Tabs */}
+            <div style={{ display: 'flex', gap: '8px', padding: '4px', background: '#f1f5f9', borderRadius: '10px' }}>
+              <button
+                type="button"
+                className={`pt-view-toggle-btn ${activeTab === 'select_existing' ? 'active' : ''}`}
+                style={{ flex: 1, justifyContent: 'center' }}
+                onClick={() => setActiveTab('select_existing')}
+              >
+                <User size={15} />
+                Chọn từ danh sách Lead ({selectedLeadIds.length} đã chọn)
+              </button>
+              <button
+                type="button"
+                className={`pt-view-toggle-btn ${activeTab === 'direct_input' ? 'active' : ''}`}
+                style={{ flex: 1, justifyContent: 'center' }}
+                onClick={() => setActiveTab('direct_input')}
+              >
+                <UserPlus size={15} />
+                Nhập trực tiếp thí sinh mới
+              </button>
             </div>
 
-            {/* Date & Time Slot Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            {/* TAB 1: SELECT EXISTING LEADS (MULTI-SELECT) */}
+            {activeTab === 'select_existing' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                    <input
+                      type="text"
+                      className="pt-form-input"
+                      style={{ paddingLeft: '32px', height: '36px', fontSize: '13px' }}
+                      placeholder="Tìm kiếm Lead theo tên hoặc số điện thoại..."
+                      value={leadSearchQuery}
+                      onChange={(e) => setLeadSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                      type="button"
+                      className="pt-date-pill"
+                      style={{ fontSize: '11px', padding: '4px 8px' }}
+                      onClick={handleSelectAllFiltered}
+                    >
+                      Chọn tất cả
+                    </button>
+                    <button
+                      type="button"
+                      className="pt-date-pill"
+                      style={{ fontSize: '11px', padding: '4px 8px' }}
+                      onClick={handleDeselectAll}
+                    >
+                      Bỏ chọn
+                    </button>
+                  </div>
+                </div>
+
+                {/* Scrollable Lead List */}
+                <div
+                  style={{
+                    maxHeight: '180px',
+                    overflowY: 'auto',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '10px',
+                    padding: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    background: '#f8fafc',
+                  }}
+                >
+                  {filteredLeads.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '16px', color: '#94a3b8', fontSize: '12.5px' }}>
+                      Không tìm thấy Lead nào phù hợp.
+                    </div>
+                  ) : (
+                    filteredLeads.map((lead) => {
+                      const isChecked = selectedLeadIds.includes(lead.id);
+                      return (
+                        <label
+                          key={lead.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            background: isChecked ? 'rgba(124, 58, 237, 0.08)' : '#fff',
+                            border: `1px solid ${isChecked ? 'rgba(124, 58, 237, 0.3)' : '#e2e8f0'}`,
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => handleToggleLead(lead.id)}
+                            style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--color-primary-royal)' }}
+                          />
+                          <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <strong style={{ fontSize: '13px', color: 'var(--text-heading)' }}>{lead.fullName}</strong>
+                              <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginLeft: '8px' }}>
+                                📞 {lead.phoneNumber}
+                              </span>
+                            </div>
+                            <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '12px', background: '#f1f5f9', color: '#475569', fontWeight: 600 }}>
+                              {lead.targetSubject || lead.status}
+                            </span>
+                          </div>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: DIRECT INPUT NEW CANDIDATES (NO EXISTING LEAD REQUIRED) */}
+            {activeTab === 'direct_input' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ fontSize: '12.5px', color: '#64748b' }}>
+                  Nhập thông tin thí sinh mới trực tiếp. Hệ thống sẽ tự động tạo hồ sơ Lead và xếp vào ca thi:
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
+                  {newCandidates.map((c, idx) => (
+                    <div
+                      key={c.id}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1.2fr 1fr 1fr auto',
+                        gap: '8px',
+                        alignItems: 'center',
+                        padding: '8px',
+                        borderRadius: '8px',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                      }}
+                    >
+                      <input
+                        type="text"
+                        className="pt-form-input"
+                        style={{ height: '34px', fontSize: '12.5px' }}
+                        placeholder={`Họ và tên thí sinh #${idx + 1} *`}
+                        value={c.fullName}
+                        onChange={(e) => handleUpdateCandidate(c.id, 'fullName', e.target.value)}
+                        required={idx === 0}
+                      />
+                      <input
+                        type="text"
+                        className="pt-form-input"
+                        style={{ height: '34px', fontSize: '12.5px' }}
+                        placeholder="Số điện thoại *"
+                        value={c.phoneNumber}
+                        onChange={(e) => handleUpdateCandidate(c.id, 'phoneNumber', e.target.value)}
+                        required={idx === 0}
+                      />
+                      <input
+                        type="email"
+                        className="pt-form-input"
+                        style={{ height: '34px', fontSize: '12.5px' }}
+                        placeholder="Email (tùy chọn)"
+                        value={c.email}
+                        onChange={(e) => handleUpdateCandidate(c.id, 'email', e.target.value)}
+                      />
+                      {newCandidates.length > 1 && (
+                        <button
+                          type="button"
+                          className="pt-modal-close-btn"
+                          style={{ color: '#dc2626' }}
+                          onClick={() => handleRemoveCandidateRow(c.id)}
+                          title="Xóa dòng thí sinh này"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  className="pt-btn-add-shift"
+                  style={{ alignSelf: 'flex-start', padding: '6px 12px' }}
+                  onClick={handleAddCandidateRow}
+                >
+                  <Plus size={13} /> Thêm người nữa vào ca này
+                </button>
+              </div>
+            )}
+
+            {/* Shift & Room Settings */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div className="pt-form-group">
                 <label className="pt-form-label">
-                  <Calendar size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
+                  <Calendar size={13} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
                   Ngày Thi<span className="req">*</span>
                 </label>
                 <input
@@ -186,7 +459,7 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
 
               <div className="pt-form-group">
                 <label className="pt-form-label">
-                  <Clock size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
+                  <Clock size={13} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
                   Khung Giờ (Ca Thi)<span className="req">*</span>
                 </label>
                 <select
@@ -202,11 +475,10 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
               </div>
             </div>
 
-            {/* Room & Test Type Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div className="pt-form-group">
                 <label className="pt-form-label">
-                  <MapPin size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
+                  <MapPin size={13} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
                   Phòng Thi & Campus<span className="req">*</span>
                 </label>
                 <select
@@ -223,8 +495,8 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
 
               <div className="pt-form-group">
                 <label className="pt-form-label">
-                  <BookOpen size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-                  Loại Bài Thi Đánh Giá<span className="req">*</span>
+                  <BookOpen size={13} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
+                  Loại Bài Thi<span className="req">*</span>
                 </label>
                 <select
                   className="pt-form-select"
@@ -234,7 +506,7 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
                 >
                   <option value="IELTS">IELTS Placement Test (4 kỹ năng)</option>
                   <option value="TOEIC">TOEIC Placement Test</option>
-                  <option value="GENERAL">Cambridge / Tiếng Anh Giao Tiếp (GENERAL)</option>
+                  <option value="GENERAL">Cambridge / Giao Tiếp (GENERAL)</option>
                 </select>
               </div>
             </div>
@@ -244,37 +516,38 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
               style={{
                 padding: '12px 14px',
                 borderRadius: '10px',
-                background: isSlotFull ? 'rgba(239, 68, 68, 0.08)' : 'rgba(16, 185, 129, 0.08)',
-                border: `1px solid ${isSlotFull ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+                background: isOverCapacity ? 'rgba(239, 68, 68, 0.08)' : 'rgba(16, 185, 129, 0.08)',
+                border: `1px solid ${isOverCapacity ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <span style={{ fontSize: '12.5px', fontWeight: 700, color: isSlotFull ? '#dc2626' : '#059669' }}>
-                  {isSlotFull ? '⚠️ PHÒNG ĐÃ KÍN CHỖ (10/10)' : '✓ SỨC CHỨA KHẢ DỤNG'}
+                <span style={{ fontSize: '12.5px', fontWeight: 700, color: isOverCapacity ? '#dc2626' : '#059669' }}>
+                  {isOverCapacity ? '⚠️ VƯỢT QUÁ SỨC CHỨA PHÒNG THI' : '✓ SỨC CHỨA KHẢ DỤNG'}
                 </span>
                 <span style={{ fontSize: '12px', fontWeight: 800 }}>
-                  {currentBooked} / {maxCapacity} Thí sinh ({maxCapacity - currentBooked} chỗ còn lại)
+                  Hiện có: {currentBooked} / {maxCapacity} | Sắp thêm: +{candidateCount} bạn (Còn lại: {Math.max(0, availableSeats - candidateCount)} chỗ)
                 </span>
               </div>
               <div className="pt-capacity-bar-track">
                 <div
-                  className={`pt-capacity-bar-fill ${isSlotFull ? 'full' : currentBooked >= 7 ? 'warning' : 'normal'}`}
-                  style={{ width: `${Math.min(100, (currentBooked / maxCapacity) * 100)}%` }}
+                  className={`pt-capacity-bar-fill ${isOverCapacity ? 'full' : currentBooked + candidateCount >= 7 ? 'warning' : 'normal'}`}
+                  style={{ width: `${Math.min(100, ((currentBooked + candidateCount) / maxCapacity) * 100)}%` }}
                 />
               </div>
-              {isSlotFull && (
+              {isOverCapacity && (
                 <div style={{ fontSize: '11.5px', color: '#dc2626', marginTop: '6px', fontWeight: 600 }}>
-                  Không thể tiếp nhận thêm thí sinh vào phòng thi này. Vui lòng chuyển sang ca thi khác hoặc phòng khác.
+                  Phòng thi này chỉ còn {availableSeats} chỗ trống. Vui lòng giảm số người hoặc chọn ca/phòng khác!
                 </div>
               )}
             </div>
 
             {/* Notes */}
             <div className="pt-form-group">
-              <label className="pt-form-label">Ghi Chú Cho Giám Thị / Tư Vấn Viên</label>
+              <label className="pt-form-label">Ghi Chú Chung</label>
               <textarea
                 className="pt-form-textarea"
-                placeholder="Nhập ghi chú đặc biệt (ví dụ: thi online, cần tai nghe rời, hẹn thi bù...)"
+                style={{ minHeight: '60px' }}
+                placeholder="Ghi chú đặc biệt cho ca thi này..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
               />
@@ -295,10 +568,17 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
             <button
               type="submit"
               className="pt-btn-touch pt-btn-present active"
-              style={{ padding: '8px 18px', fontSize: '13px' }}
-              disabled={loading || isSlotFull}
+              style={{ padding: '8px 20px', fontSize: '13px' }}
+              disabled={loading || candidateCount === 0 || isOverCapacity}
             >
-              {loading ? 'Đang Đặt Lịch...' : <><Check size={16} /> Xác Nhận Đặt Lịch</>}
+              {loading ? (
+                'Đang Xử Lý...'
+              ) : (
+                <>
+                  <Check size={16} />
+                  Xác Nhận Đặt Lịch ({candidateCount} Thí Sinh)
+                </>
+              )}
             </button>
           </div>
         </form>
