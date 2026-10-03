@@ -9,6 +9,7 @@
     "start": "node dist/server.js",
     "db:init": "tsx src/scripts/init-db.ts",
     "db:test": "tsx src/scripts/test-db.ts",
+    "seed:tests": "tsx src/scripts/seed-placement-and-classes.ts",
     "test:auth": "tsx src/scripts/test-auth.ts",
     "test:password": "tsx src/scripts/test-password-recovery.ts",
     "test:leads": "tsx src/scripts/test-leads.ts",
