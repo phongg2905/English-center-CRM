@@ -1,12 +1,20 @@
 import { AuthService } from '../services/auth.service.js';
 import { TokenService } from '../services/token.service.js';
 import { logger } from '../utils/logger.js';
-import { pool } from '../database/pool.js';
+import { pool, query, testDbConnection } from '../database/pool.js';
 
 async function testAuthModule(): Promise<void> {
   logger.info('========================================================');
   logger.info('   BẮT ĐẦU KIỂM THỬ TỰ ĐỘNG MODULE AUTHENTICATION & RBAC');
   logger.info('========================================================');
+
+  // Kiểm tra kết nối CSDL trước khi test
+  const dbHealth = await testDbConnection();
+  if (dbHealth.connected) {
+    logger.info(`💾 Đang kiểm thử trực tiếp trên PostgreSQL Database: ${dbHealth.database} (${dbHealth.latencyMs}ms)`);
+  } else {
+    logger.info('⚠️ PostgreSQL chưa kết nối, đang sử dụng In-Memory Mock Store');
+  }
 
   try {
     // 1. Kiểm thử Đăng ký người dùng mới (Register)
@@ -80,6 +88,15 @@ async function testAuthModule(): Promise<void> {
     logger.info('========================================================');
     logger.info('   🎉 TẤT CẢ CÁC BÀI KIỂM THỬ AUTH & RBAC ĐÃ HOÀN TẤT THÀNH CÔNG!');
     logger.info('========================================================');
+    // 9. Dọn dẹp dữ liệu kiểm thử
+    if (regResult?.user?.id) {
+      try {
+        await query('DELETE FROM users WHERE id = $1', [regResult.user.id]);
+        logger.info('   🧹 Đã dọn dẹp tài khoản kiểm thử khỏi cơ sở dữ liệu');
+      } catch (cleanErr: any) {
+        logger.debug('Lỗi dọn dẹp user test:', cleanErr.message);
+      }
+    }
   } catch (error: any) {
     logger.error('❌ Lỗi kiểm thử:', error);
   } finally {
