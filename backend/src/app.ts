@@ -12,12 +12,14 @@ export function createApp(): Application {
   // 1. Bảo mật HTTP Headers với Helmet
   app.use(helmet());
 
-  // 2. Cấu hình CORS an toàn
+  // 2. Cấu hình CORS an toàn (Hỗ trợ linh hoạt các port localhost trong dev)
   app.use(
     cors({
       origin: (origin, callback) => {
-        // Cho phép các request không có origin (như curl, mobile apps, Postman) hoặc nằm trong danh sách trắng
-        if (!origin || env.corsOrigins.includes(origin) || env.corsOrigins.includes('*')) {
+        const isLocalhost =
+          Boolean(origin && (/^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)));
+
+        if (!origin || isLocalhost || env.corsOrigins.includes(origin) || env.corsOrigins.includes('*')) {
           callback(null, true);
         } else {
           callback(new Error(`Origin '${origin}' bị từ chối bởi chính sách CORS`));
