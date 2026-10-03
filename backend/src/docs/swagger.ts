@@ -76,6 +76,73 @@ Tài liệu hóa chi tiết phân hệ Authentication & RBAC (Task [BE-02]) và 
           refreshToken: { type: 'string', description: 'Mã Refresh Token được cấp khi đăng nhập' },
         },
       },
+      ForgotPasswordRequest: {
+        type: 'object',
+        required: ['email'],
+        properties: {
+          email: { type: 'string', format: 'email', example: 'tamminh@eduflow.vn', description: 'Địa chỉ Email đăng ký tài khoản cần khôi phục' },
+        },
+      },
+      ResetPasswordRequest: {
+        type: 'object',
+        required: ['email', 'otp', 'newPassword'],
+        properties: {
+          email: { type: 'string', format: 'email', example: 'tamminh@eduflow.vn', description: 'Địa chỉ Email đã nhận mã OTP' },
+          otp: { type: 'string', example: '123456', description: 'Mã OTP 6 chữ số gửi qua email (hiệu lực 15 phút)' },
+          newPassword: { type: 'string', example: 'NewPassword@123', description: 'Mật khẩu mới tối thiểu 6 ký tự' },
+        },
+      },
+      ChangePasswordRequest: {
+        type: 'object',
+        required: ['currentPassword', 'newPassword'],
+        properties: {
+          currentPassword: { type: 'string', example: '123456', description: 'Mật khẩu hiện tại của tài khoản' },
+          newPassword: { type: 'string', example: 'MyNewSecurePass@2026', description: 'Mật khẩu mới tối thiểu 6 ký tự' },
+        },
+      },
+      AuthResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: true },
+          message: { type: 'string', example: 'Đăng nhập thành công' },
+          data: {
+            type: 'object',
+            properties: {
+              user: {
+                type: 'object',
+                properties: {
+                  id: { type: 'integer', example: 1 },
+                  username: { type: 'string', example: 'tamminh' },
+                  fullName: { type: 'string', example: 'Tam Minh' },
+                  email: { type: 'string', example: 'tamminh@eduflow.vn' },
+                  role: { type: 'string', example: 'ADMIN' },
+                  roleName: { type: 'string', example: 'Quản lý Trung tâm' },
+                  isActive: { type: 'boolean', example: true },
+                },
+              },
+              tokens: {
+                type: 'object',
+                properties: {
+                  accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+                  refreshToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+                  tokenType: { type: 'string', example: 'Bearer' },
+                  expiresIn: { type: 'string', example: '15m' },
+                },
+              },
+            },
+          },
+          timestamp: { type: 'string', format: 'date-time' },
+        },
+      },
+      ErrorResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: false },
+          message: { type: 'string', example: 'Thông báo lỗi chi tiết' },
+          statusCode: { type: 'integer', example: 401 },
+          timestamp: { type: 'string', format: 'date-time' },
+        },
+      },
       CreateLeadRequest: {
         type: 'object',
         required: ['fullName', 'phoneNumber', 'interest', 'sourceChannel'],
@@ -256,6 +323,64 @@ Tài liệu hóa chi tiết phân hệ Authentication & RBAC (Task [BE-02]) và 
         responses: {
           200: { description: 'Cấp mới token thành công' },
           401: { description: 'Refresh token không hợp lệ hoặc hết hạn' },
+        },
+      },
+    },
+    '/api/auth/forgot-password': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Yêu cầu gửi mã OTP khôi phục mật khẩu qua Email (Hiệu lực 15 phút)',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ForgotPasswordRequest' },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Đã gửi mã OTP thành công' },
+          400: { description: 'Địa chỉ email không hợp lệ' },
+          404: { description: 'Không tìm thấy tài khoản người dùng' },
+        },
+      },
+    },
+    '/api/auth/reset-password': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Đặt lại mật khẩu mới bằng mã xác thực OTP',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ResetPasswordRequest' },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Đặt lại mật khẩu thành công' },
+          400: { description: 'Mã OTP không chính xác, hết hạn hoặc mật khẩu quá ngắn' },
+          404: { description: 'Không tìm thấy tài khoản' },
+        },
+      },
+    },
+    '/api/auth/change-password': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Đổi mật khẩu tài khoản cá nhân (Yêu cầu đăng nhập & đối soát mật khẩu cũ)',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ChangePasswordRequest' },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Đổi mật khẩu thành công' },
+          400: { description: 'Mật khẩu hiện tại không đúng hoặc mật khẩu mới trùng mật khẩu cũ' },
+          401: { description: 'Chưa đăng nhập' },
         },
       },
     },

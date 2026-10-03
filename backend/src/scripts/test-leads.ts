@@ -23,11 +23,21 @@ async function testLeadModule(): Promise<void> {
   try {
     // 1. Kiểm thử xác thực người dùng (Lấy User ID của Sales và Admin)
     logger.info('\n1. Đăng nhập tài khoản Sales (longpham) & Admin (tamminh):');
-    const salesLogin = await AuthService.login({ username: 'longpham', password: '123456' });
+    let salesLogin;
+    try {
+      salesLogin = await AuthService.login({ username: 'longpham', password: 'Password@123' });
+    } catch {
+      salesLogin = await AuthService.login({ username: 'longpham', password: '123456' });
+    }
     const salesUser = salesLogin.user;
     logger.info(`   ✅ Đăng nhập Sales thành công: ${salesUser.fullName} (ID=${salesUser.id}, Role=${salesUser.role})`);
 
-    const adminLogin = await AuthService.login({ username: 'tamminh', password: '123456' });
+    let adminLogin;
+    try {
+      adminLogin = await AuthService.login({ username: 'tamminh', password: 'Password@123' });
+    } catch {
+      adminLogin = await AuthService.login({ username: 'tamminh', password: '123456' });
+    }
     const adminUser = adminLogin.user;
     logger.info(`   ✅ Đăng nhập Admin thành công: ${adminUser.fullName} (ID=${adminUser.id}, Role=${adminUser.role})`);
 
