@@ -6,6 +6,7 @@ import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { DashboardPage } from '../pages/DashboardPage';
+import { PlacementTestPage } from '../pages/PlacementTestPage';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
 
 export const AppRoutes: React.FC = () => {
@@ -42,16 +43,7 @@ export const AppRoutes: React.FC = () => {
           }
         />
 
-        <Route
-          path="tests"
-          element={
-            <PlaceholderPage
-              title="Kiểm tra Đầu vào & Xếp lớp"
-              subtitle="Lên lịch thi Cambridge/IELTS, chấm điểm 4 kỹ năng và đề xuất khóa học"
-              taskTag="UC-02 PLACEMENT TEST"
-            />
-          }
-        />
+        <Route path="tests" element={<PlacementTestPage />} />
 
         <Route
           path="classes"
