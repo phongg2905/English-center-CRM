@@ -18,18 +18,11 @@ import { PlacementTestCalendar } from './PlacementTestCalendar';
 import { CandidateRosterTable } from './CandidateRosterTable';
 import { ShiftCapacityAlert } from './ShiftCapacityAlert';
 import { QuickBookModal } from './QuickBookModal';
+import { formatLocalDate, getMondayOfWeek } from '../../utils/date';
 import './PlacementTestPage.css';
 
 export const PlacementTestPage: React.FC = () => {
-  // Calendar Week Start (defaults to Monday of current week)
-  const getMonday = (d: Date) => {
-    const date = new Date(d);
-    const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-    return new Date(date.setDate(diff));
-  };
-
-  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => getMonday(new Date()));
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => getMondayOfWeek(new Date()));
   const [tests, setTests] = useState<PlacementTestWithDetails[]>([]);
   const [availabilitySlots, setAvailabilitySlots] = useState<ShiftSlotAvailability[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -64,30 +57,25 @@ export const PlacementTestPage: React.FC = () => {
     try {
       setIsLoading(true);
 
-      const weekStartStr = currentWeekStart.toISOString().split('T')[0];
+      const weekStartStr = formatLocalDate(currentWeekStart);
       const weekEnd = new Date(currentWeekStart);
       weekEnd.setDate(weekEnd.getDate() + 14); // 2-week window
-      const weekEndStr = weekEnd.toISOString().split('T')[0];
+      const weekEndStr = formatLocalDate(weekEnd);
 
-      // Query tests
+      // Query tests without restricting room at query level so all rooms are available in memory
       const filterParams: any = {
         limit: 100,
         sortBy: 'test_date',
         sortOrder: 'ASC',
       };
 
-      if (selectedRoom !== 'ALL') filterParams.room = selectedRoom;
       if (selectedTestType !== 'ALL') filterParams.testType = selectedTestType as TestType;
       if (selectedAttendance !== 'ALL') filterParams.attendanceStatus = selectedAttendance as AttendanceStatus;
       if (searchQuery.trim()) filterParams.search = searchQuery.trim();
 
       const [testsRes, availRes] = await Promise.all([
         PlacementTestService.getTests(filterParams),
-        PlacementTestService.getAvailability(
-          weekStartStr,
-          weekEndStr,
-          selectedRoom !== 'ALL' ? selectedRoom : undefined
-        ),
+        PlacementTestService.getAvailability(weekStartStr, weekEndStr),
       ]);
 
       setTests(testsRes.tests || []);
@@ -97,7 +85,7 @@ export const PlacementTestPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [currentWeekStart, selectedRoom, selectedTestType, selectedAttendance, searchQuery]);
+  }, [currentWeekStart, selectedTestType, selectedAttendance, searchQuery]);
 
   useEffect(() => {
     loadData();
@@ -121,7 +109,7 @@ export const PlacementTestPage: React.FC = () => {
   };
 
   const handleToday = () => {
-    setCurrentWeekStart(getMonday(new Date()));
+    setCurrentWeekStart(getMondayOfWeek(new Date()));
   };
 
   const handleOpenBookingModal = (date?: string, timeSlot?: string, room?: string) => {
@@ -131,20 +119,42 @@ export const PlacementTestPage: React.FC = () => {
 
   // Filtered candidate list based on active filters and selectedShift
   const filteredCandidates = tests.filter((t) => {
-    if (selectedShift) {
-      if (t.testDate !== selectedShift.date) return false;
-      if (t.timeSlot !== selectedShift.timeSlot) return false;
-      if (selectedShift.room && t.room !== selectedShift.room) return false;
+    const itemDate = (t.testDate || '').split('T')[0];
+
+    // Filter by room if room dropdown filter is selected (unless 'ALL')
+    if (selectedRoom !== 'ALL' && t.room) {
+      const r1 = t.room.toLowerCase();
+      const r2 = selectedRoom.toLowerCase();
+      if (!r1.includes(r2) && !r2.includes(r1)) return false;
     }
 
+    // 1. If user clicked on a specific shift in the Calendar, filter to that shift:
+    if (selectedShift) {
+      if (itemDate !== selectedShift.date) return false;
+      if (t.timeSlot !== selectedShift.timeSlot) return false;
+      if (selectedShift.room && t.room) {
+        const r1 = t.room.toLowerCase();
+        const r2 = selectedShift.room.toLowerCase();
+        if (!r1.includes(r2) && !r2.includes(r1)) return false;
+      }
+      return true; // Match found for selected shift!
+    }
+
+    // 2. If no specific shift selected, filter according to quickDateFilter:
     if (quickDateFilter === 'today') {
-      const todayStr = new Date().toISOString().split('T')[0];
-      if (t.testDate !== todayStr) return false;
+      const todayStr = formatLocalDate(new Date());
+      if (itemDate !== todayStr) return false;
     } else if (quickDateFilter === 'tomorrow') {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowStr = tomorrow.toISOString().split('T')[0];
-      if (t.testDate !== tomorrowStr) return false;
+      const tomorrowStr = formatLocalDate(tomorrow);
+      if (itemDate !== tomorrowStr) return false;
+    } else if (quickDateFilter === 'week') {
+      const weekStartStr = formatLocalDate(currentWeekStart);
+      const weekEnd = new Date(currentWeekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      const weekEndStr = formatLocalDate(weekEnd);
+      if (itemDate < weekStartStr || itemDate > weekEndStr) return false;
     }
 
     return true;
@@ -345,6 +355,7 @@ export const PlacementTestPage: React.FC = () => {
         tests={filteredCandidates}
         onAttendanceChanged={loadData}
         selectedShiftInfo={selectedShift}
+        onClearShiftFilter={() => setSelectedShift(null)}
       />
 
       {/* Quick Booking Modal */}

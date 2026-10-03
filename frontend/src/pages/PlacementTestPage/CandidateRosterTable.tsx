@@ -11,12 +11,14 @@ interface CandidateRosterTableProps {
     timeSlot: string;
     room?: string;
   } | null;
+  onClearShiftFilter?: () => void;
 }
 
 export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
   tests,
   onAttendanceChanged,
   selectedShiftInfo,
+  onClearShiftFilter,
 }) => {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; isError?: boolean } | null>(null);
@@ -77,7 +79,7 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
   };
 
   return (
-    <div className="pt-roster-card">
+    <div id="candidate-roster-section" className="pt-roster-card">
       {/* Header */}
       <div className="pt-roster-header">
         <div className="pt-roster-title">
@@ -87,6 +89,16 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
               : 'Bảng Danh Sách Thí Sinh & Điểm Danh Một Chạm'}
           </h3>
           <span className="pt-roster-count">{tests.length} Thí sinh</span>
+          {selectedShiftInfo && onClearShiftFilter && (
+            <button
+              type="button"
+              className="pt-date-pill"
+              style={{ fontSize: '11.5px', padding: '4px 10px', background: '#f1f5f9', color: '#475569' }}
+              onClick={onClearShiftFilter}
+            >
+              ✕ Bỏ lọc ca thi (Xem tất cả)
+            </button>
+          )}
         </div>
 
         {feedbackMsg && (
