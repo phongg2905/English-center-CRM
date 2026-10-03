@@ -4,16 +4,27 @@ import { logger } from '../utils/logger.js';
 
 const { Pool } = pg;
 
-export const pool = new Pool({
-  host: env.db.host,
-  port: env.db.port,
-  database: env.db.name,
-  user: env.db.user,
-  password: env.db.password,
-  max: env.db.maxConnections,
-  idleTimeoutMillis: env.db.idleTimeoutMillis,
-  connectionTimeoutMillis: env.db.connectionTimeoutMillis,
-});
+const poolConfig: pg.PoolConfig = env.db.connectionString
+  ? {
+      connectionString: env.db.connectionString,
+      ssl: env.db.ssl ? { rejectUnauthorized: false } : undefined,
+      max: env.db.maxConnections,
+      idleTimeoutMillis: env.db.idleTimeoutMillis,
+      connectionTimeoutMillis: env.db.connectionTimeoutMillis,
+    }
+  : {
+      host: env.db.host,
+      port: env.db.port,
+      database: env.db.name,
+      user: env.db.user,
+      password: env.db.password,
+      ssl: env.db.ssl ? { rejectUnauthorized: false } : undefined,
+      max: env.db.maxConnections,
+      idleTimeoutMillis: env.db.idleTimeoutMillis,
+      connectionTimeoutMillis: env.db.connectionTimeoutMillis,
+    };
+
+export const pool = new Pool(poolConfig);
 
 let dbConnectionState = false;
 
@@ -101,12 +112,12 @@ export interface DbHealthResult {
 export async function testDbConnection(): Promise<DbHealthResult> {
   const start = Date.now();
   try {
-    const res = await pool.query('SELECT NOW() as server_time, version() as db_version');
+    const res = await pool.query('SELECT current_database() as current_db, NOW() as server_time, version() as db_version');
     const latencyMs = Date.now() - start;
     dbConnectionState = true;
     return {
       connected: true,
-      database: env.db.name,
+      database: res.rows[0]?.current_db || env.db.name,
       latencyMs,
       serverTime: res.rows[0]?.server_time,
       dbVersion: res.rows[0]?.db_version,
