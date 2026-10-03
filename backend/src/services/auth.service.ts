@@ -1,8 +1,17 @@
 import bcrypt from 'bcryptjs';
 import { UserRepository } from '../repositories/user.repository.js';
 import { TokenService } from './token.service.js';
-import { RegisterDto, LoginDto, UserWithRole, AuthTokens } from '../types/auth.types.js';
+import {
+  RegisterDto,
+  LoginDto,
+  UserWithRole,
+  AuthTokens,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+  ChangePasswordDto,
+} from '../types/auth.types.js';
 import { AppError } from '../utils/AppError.js';
+import { logger } from '../utils/logger.js';
 
 export interface AuthResult {
   user: UserWithRole;
@@ -160,5 +169,109 @@ export class AuthService {
       throw AppError.notFound('Không tìm thấy thông tin tài khoản');
     }
     return user;
+  }
+
+  /**
+   * Quên mật khẩu - Tạo mã OTP khôi phục (Hiệu lực 15 phút)
+   */
+  static async forgotPassword(dto: ForgotPasswordDto): Promise<{ email: string; expiresInMinutes: number; otpPreview?: string }> {
+    if (!dto.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dto.email.trim())) {
+      throw AppError.badRequest('Vui lòng cung cấp địa chỉ email hợp lệ');
+    }
+
+    const email = dto.email.trim().toLowerCase();
+    const user = await UserRepository.findByUsernameOrEmail(email);
+    if (!user) {
+      throw AppError.notFound(`Không tìm thấy tài khoản người dùng liên kết với email: ${dto.email}`);
+    }
+
+    // 1. Tạo mã OTP ngẫu nhiên 6 chữ số
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 phút
+
+    // 2. Lưu vào kho lưu trữ OTP
+    UserRepository.savePasswordResetOtp(email, otp, expiresAt);
+
+    // 3. Giả lập gửi email thông báo OTP cho người dùng
+    logger.info(`📧 [MOCK EMAIL SERVICE] Đã gửi mã OTP khôi phục mật khẩu đến: ${email} | Mã OTP: [${otp}] (Hết hạn: 15 phút)`);
+
+    return {
+      email,
+      expiresInMinutes: 15,
+      otpPreview: otp,
+    };
+  }
+
+  /**
+   * Đặt lại mật khẩu mới thông qua mã OTP
+   */
+  static async resetPassword(dto: ResetPasswordDto): Promise<void> {
+    if (!dto.email || !dto.otp || !dto.newPassword) {
+      throw AppError.badRequest('Vui lòng nhập đầy đủ email, mã OTP và mật khẩu mới');
+    }
+
+    if (dto.newPassword.length < 6) {
+      throw AppError.badRequest('Mật khẩu mới phải chứa tối thiểu 6 ký tự');
+    }
+
+    const email = dto.email.trim().toLowerCase();
+
+    // 1. Xác thực tính hợp lệ của mã OTP (kiểm tra tồn tại, chưa dùng, chưa hết hạn)
+    const isValidOtp = UserRepository.verifyPasswordResetOtp(email, dto.otp);
+    if (!isValidOtp) {
+      throw AppError.badRequest('Mã OTP không chính xác hoặc đã hết hạn (thời hạn hiệu lực: 15 phút)');
+    }
+
+    // 2. Tìm người dùng
+    const user = await UserRepository.findByUsernameOrEmail(email);
+    if (!user) {
+      throw AppError.notFound('Không tìm thấy tài khoản người dùng tương ứng');
+    }
+
+    // 3. Băm mật khẩu mới bằng bcryptjs
+    const newPasswordHash = await bcrypt.hash(dto.newPassword, 10);
+
+    // 4. Cập nhật mật khẩu trong CSDL / Store
+    await UserRepository.updatePassword(user.id, newPasswordHash);
+
+    // 5. Đánh dấu OTP đã được sử dụng
+    UserRepository.markOtpUsed(email);
+    logger.info(`✅ Tài khoản ${user.username} (${email}) đã đặt lại mật khẩu mới thành công.`);
+  }
+
+  /**
+   * Đổi mật khẩu tài khoản cá nhân (yêu cầu đăng nhập & xác thực mật khẩu cũ)
+   */
+  static async changePassword(userId: number, dto: ChangePasswordDto): Promise<void> {
+    if (!dto.currentPassword || !dto.newPassword) {
+      throw AppError.badRequest('Vui lòng nhập mật khẩu hiện tại và mật khẩu mới');
+    }
+
+    if (dto.newPassword.length < 6) {
+      throw AppError.badRequest('Mật khẩu mới phải chứa tối thiểu 6 ký tự');
+    }
+
+    if (dto.currentPassword === dto.newPassword) {
+      throw AppError.badRequest('Mật khẩu mới không được trùng với mật khẩu hiện tại');
+    }
+
+    // 1. Lấy thông tin user kèm chuỗi hash mật khẩu cũ
+    const user = await UserRepository.findByIdWithPassword(userId);
+    if (!user) {
+      throw AppError.notFound('Không tìm thấy thông tin tài khoản người dùng');
+    }
+
+    // 2. Xác thực mật khẩu cũ
+    const isPasswordValid = await bcrypt.compare(dto.currentPassword, user.passwordHash);
+    if (!isPasswordValid) {
+      throw AppError.badRequest('Mật khẩu hiện tại không chính xác');
+    }
+
+    // 3. Băm mật khẩu mới bằng bcryptjs
+    const newPasswordHash = await bcrypt.hash(dto.newPassword, 10);
+
+    // 4. Cập nhật mật khẩu
+    await UserRepository.updatePassword(userId, newPasswordHash);
+    logger.info(`✅ Người dùng ID=${userId} (${user.username}) đã đổi mật khẩu cá nhân thành công.`);
   }
 }
