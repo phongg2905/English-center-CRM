@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import healthRoutes from './health.routes.js';
 import authRoutes from './auth.routes.js';
+import leadRoutes from './lead.routes.js';
 import swaggerRoutes, { swaggerSpec } from '../docs/swagger.js';
 import { ApiResponse } from '../utils/response.js';
 
@@ -31,7 +32,18 @@ router.get('/', (req: Request, res: Response) => {
           adminOnly: 'GET /api/auth/admin-only',
           academicOnly: 'GET /api/auth/academic-only',
         },
-        leads: '/api/leads (Upcoming - BE-03)',
+        leads: {
+          list: 'GET /api/leads',
+          kanban: 'GET /api/leads/kanban',
+          stats: 'GET /api/leads/stats',
+          detail: 'GET /api/leads/:id',
+          create: 'POST /api/leads',
+          update: 'PUT /api/leads/:id',
+          updateStatus: 'PATCH /api/leads/:id/status',
+          assign: 'PATCH /api/leads/:id/assign',
+          delete: 'DELETE /api/leads/:id',
+          consultations: 'GET, POST /api/leads/:id/consultations',
+        },
         tests: '/api/placement-tests (Upcoming - BE-04)',
         courses: '/api/courses (Upcoming - BE-05)',
         classes: '/api/classes (Upcoming - BE-05)',
@@ -51,6 +63,7 @@ router.get('/docs.json', (req: Request, res: Response) => {
 // Gắn các router phân hệ
 router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
+router.use('/leads', leadRoutes);
 router.use('/docs', swaggerRoutes);
 
 export default router;

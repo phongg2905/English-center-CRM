@@ -10,7 +10,8 @@
     "db:init": "tsx src/scripts/init-db.ts",
     "db:test": "tsx src/scripts/test-db.ts",
     "test:auth": "tsx src/scripts/test-auth.ts",
-    "test:password": "tsx src/scripts/test-password-recovery.ts"
+    "test:password": "tsx src/scripts/test-password-recovery.ts",
+    "test:leads": "tsx src/scripts/test-leads.ts"
   },
   "keywords": [
     "crm",
