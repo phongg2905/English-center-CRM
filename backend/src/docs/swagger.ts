@@ -22,6 +22,10 @@ Tài liệu hóa chi tiết phân hệ Authentication & RBAC (Task [BE-02]) và 
   ],
   tags: [
     {
+      name: 'Placement Tests (UC-02)',
+      description: 'Quản lý ca thi, đặt lịch test, điểm danh thí sinh, nhập điểm 4 kỹ năng và thuật toán tự động đề xuất khóa học (UC-SYS-03)',
+    },
+    {
       name: 'Leads (UC-01)',
       description: 'Tiếp nhận, quản lý phân luồng Lead theo Kanban, ghi nhận tương tác chăm sóc và báo cáo thống kê tuyển sinh',
     },
@@ -255,6 +259,68 @@ Tài liệu hóa chi tiết phân hệ Authentication & RBAC (Task [BE-02]) và 
           updatedAt: { type: 'string', format: 'date-time' },
           lastContactedAt: { type: 'string', format: 'date-time', nullable: true },
           totalInteractions: { type: 'integer', example: 1 },
+        },
+      },
+      BookTestRequest: {
+        type: 'object',
+        required: ['leadId', 'testDate', 'timeSlot'],
+        properties: {
+          leadId: { type: 'integer', example: 5, description: 'Mã ID của Lead cần đặt lịch thi' },
+          testDate: { type: 'string', format: 'date', example: '2026-10-15', description: 'Ngày thi (YYYY-MM-DD)' },
+          timeSlot: { type: 'string', example: '14:30 - 16:00', description: 'Khung giờ / Ca thi' },
+          room: { type: 'string', example: 'Phòng Lab 201', description: 'Tên phòng thi (mặc định: Phòng Lab 201)' },
+          testType: { type: 'string', enum: ['IELTS', 'TOEIC', 'GENERAL'], example: 'IELTS', description: 'Loại bài thi' },
+          notes: { type: 'string', example: 'Thí sinh yêu cầu bài thi thử IELTS Academic 4 kỹ năng', description: 'Ghi chú đặc biệt' },
+        },
+      },
+      UpdateAttendanceRequest: {
+        type: 'object',
+        required: ['attendanceStatus'],
+        properties: {
+          attendanceStatus: {
+            type: 'string',
+            enum: ['SCHEDULED', 'PRESENT', 'ABSENT', 'CANCELLED'],
+            example: 'PRESENT',
+            description: 'Trạng thái điểm danh thí sinh',
+          },
+          notes: { type: 'string', example: 'Thí sinh đến đúng giờ, làm bài nghiêm túc', description: 'Ghi chú' },
+        },
+      },
+      RecordScoreRequest: {
+        type: 'object',
+        properties: {
+          listeningScore: { type: 'number', minimum: 0, maximum: 9, example: 5.5, description: 'Điểm Nghe (0.0 - 9.0)' },
+          readingScore: { type: 'number', minimum: 0, maximum: 9, example: 5.0, description: 'Điểm Đọc (0.0 - 9.0)' },
+          writingScore: { type: 'number', minimum: 0, maximum: 9, example: 5.0, description: 'Điểm Viết (0.0 - 9.0)' },
+          speakingScore: { type: 'number', minimum: 0, maximum: 9, example: 5.5, description: 'Điểm Nói (0.0 - 9.0)' },
+          overallScore: { type: 'number', minimum: 0, maximum: 9, example: 5.5, description: 'Điểm Overall (tự tính nếu bỏ trống)' },
+          examinerFeedback: { type: 'string', example: 'Phát âm rõ ràng, phản xạ tốt; cần trau dồi thêm từ vựng học thuật.' },
+          suggestedCourseId: { type: 'integer', example: 2, description: 'Mã khóa học chỉ định (tự động đề xuất nếu bỏ trống)' },
+        },
+      },
+      PlacementTestItem: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer', example: 1 },
+          leadId: { type: 'integer', example: 5 },
+          testDate: { type: 'string', format: 'date', example: '2026-10-15' },
+          timeSlot: { type: 'string', example: '14:30 - 16:00' },
+          room: { type: 'string', example: 'Phòng Lab 201' },
+          testType: { type: 'string', example: 'IELTS' },
+          attendanceStatus: { type: 'string', example: 'SCHEDULED' },
+          listeningScore: { type: 'number', nullable: true, example: 5.5 },
+          readingScore: { type: 'number', nullable: true, example: 5.0 },
+          writingScore: { type: 'number', nullable: true, example: 5.0 },
+          speakingScore: { type: 'number', nullable: true, example: 5.5 },
+          overallScore: { type: 'number', nullable: true, example: 5.5 },
+          suggestedCourseId: { type: 'integer', nullable: true, example: 2 },
+          suggestedCourseCode: { type: 'string', nullable: true, example: 'IELTS-FIGHT' },
+          suggestedCourseName: { type: 'string', nullable: true, example: 'IELTS Bứt phá (Target 6.5)' },
+          examinerFeedback: { type: 'string', nullable: true, example: 'Phản xạ tốt, cần bổ sung từ vựng Task 2' },
+          leadFullName: { type: 'string', example: 'Nguyễn Hoàng Nam' },
+          leadPhoneNumber: { type: 'string', example: '0912111005' },
+          leadEmail: { type: 'string', nullable: true, example: 'nam.nguyenhoang@gmail.com' },
+          assignedSalesName: { type: 'string', nullable: true, example: 'Long Phạm' },
         },
       },
     },
@@ -591,6 +657,142 @@ Tài liệu hóa chi tiết phân hệ Authentication & RBAC (Task [BE-02]) và 
           201: { description: 'Ghi nhật ký tương tác thành công' },
           400: { description: 'Dữ liệu không hợp lệ' },
           404: { description: 'Không tìm thấy Lead' },
+        },
+      },
+    },
+    '/api/placement-tests/book': {
+      post: {
+        tags: ['Placement Tests (UC-02)'],
+        summary: 'Đặt lịch hẹn kiểm tra trình độ đầu vào (Chống trùng lịch & kiểm tra sức chứa phòng)',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/BookTestRequest' },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Đặt lịch thi thành công, tự động chuyển Lead sang TEST_SCHEDULED' },
+          400: { description: 'Dữ liệu không hợp lệ hoặc phòng thi đã kín chỗ' },
+          409: { description: 'Lead đã có lịch thi chưa hoàn thành (trùng lịch)' },
+        },
+      },
+    },
+    '/api/placement-tests': {
+      get: {
+        tags: ['Placement Tests (UC-02)'],
+        summary: 'Lấy danh sách bài thi và thí sinh theo ngày/tuần có phân trang & lọc',
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: 'date', in: 'query', schema: { type: 'string', format: 'date' }, description: 'Lọc theo ngày thi' },
+          { name: 'startDate', in: 'query', schema: { type: 'string', format: 'date' } },
+          { name: 'endDate', in: 'query', schema: { type: 'string', format: 'date' } },
+          { name: 'timeSlot', in: 'query', schema: { type: 'string' } },
+          { name: 'room', in: 'query', schema: { type: 'string' } },
+          { name: 'attendanceStatus', in: 'query', schema: { type: 'string', enum: ['SCHEDULED', 'PRESENT', 'ABSENT', 'CANCELLED'] } },
+          { name: 'search', in: 'query', schema: { type: 'string' }, description: 'Tìm theo họ tên hoặc SĐT thí sinh' },
+          { name: 'page', in: 'query', schema: { type: 'integer', default: 1 } },
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 20 } },
+        ],
+        responses: {
+          200: { description: 'Lấy danh sách bài thi thành công' },
+        },
+      },
+    },
+    '/api/placement-tests/availability': {
+      get: {
+        tags: ['Placement Tests (UC-02)'],
+        summary: 'Kiểm tra trạng thái sức chứa và lịch ca thi theo phòng (phục vụ Calendar View)',
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: 'startDate', in: 'query', schema: { type: 'string', format: 'date' } },
+          { name: 'endDate', in: 'query', schema: { type: 'string', format: 'date' } },
+          { name: 'room', in: 'query', schema: { type: 'string' } },
+        ],
+        responses: {
+          200: { description: 'Lấy thông tin sức chứa ca thi thành công' },
+        },
+      },
+    },
+    '/api/placement-tests/recommend-course': {
+      get: {
+        tags: ['Placement Tests (UC-02)'],
+        summary: 'Thuật toán độc lập gợi ý khóa học phù hợp dựa trên điểm thi và mục tiêu (UC-SYS-03)',
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: 'overallScore', in: 'query', required: true, schema: { type: 'number' }, example: 5.5 },
+          { name: 'testType', in: 'query', schema: { type: 'string', default: 'IELTS' } },
+          { name: 'interest', in: 'query', schema: { type: 'string' } },
+        ],
+        responses: {
+          200: { description: 'Gợi ý khóa học phù hợp và danh sách lớp học mở thành công' },
+          400: { description: 'Điểm Overall không hợp lệ' },
+        },
+      },
+    },
+    '/api/placement-tests/{id}': {
+      get: {
+        tags: ['Placement Tests (UC-02)'],
+        summary: 'Lấy chi tiết một bài thi (kèm đề xuất lớp học mở tương ứng)',
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: {
+          200: { description: 'Lấy chi tiết bài thi thành công' },
+          404: { description: 'Không tìm thấy bài thi' },
+        },
+      },
+      delete: {
+        tags: ['Placement Tests (UC-02)'],
+        summary: 'Hủy lịch thi',
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: {
+          200: { description: 'Hủy lịch thi thành công' },
+          404: { description: 'Không tìm thấy bài thi' },
+        },
+      },
+    },
+    '/api/placement-tests/{id}/attendance': {
+      patch: {
+        tags: ['Placement Tests (UC-02)'],
+        summary: 'Điểm danh thí sinh một chạm (PRESENT / ABSENT / CANCELLED / SCHEDULED)',
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/UpdateAttendanceRequest' },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Điểm danh thành công' },
+          400: { description: 'Trạng thái điểm danh không hợp lệ' },
+          404: { description: 'Không tìm thấy bài thi' },
+        },
+      },
+    },
+    '/api/placement-tests/{id}/score': {
+      post: {
+        tags: ['Placement Tests (UC-02)'],
+        summary: 'Nhập điểm 4 kỹ năng & tự động tính Overall và kích hoạt thuật toán gợi ý khóa học (UC-SYS-03)',
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/RecordScoreRequest' },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Nhập điểm và sinh đề xuất lộ trình thành công' },
+          400: { description: 'Thang điểm không hợp lệ (phải từ 0.0 đến 9.0)' },
+          404: { description: 'Không tìm thấy bài thi' },
         },
       },
     },

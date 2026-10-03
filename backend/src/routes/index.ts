@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import healthRoutes from './health.routes.js';
 import authRoutes from './auth.routes.js';
 import leadRoutes from './lead.routes.js';
+import placementTestRoutes from './placement-test.routes.js';
 import swaggerRoutes, { swaggerSpec } from '../docs/swagger.js';
 import { ApiResponse } from '../utils/response.js';
 
@@ -44,7 +45,16 @@ router.get('/', (req: Request, res: Response) => {
           delete: 'DELETE /api/leads/:id',
           consultations: 'GET, POST /api/leads/:id/consultations',
         },
-        tests: '/api/placement-tests (Upcoming - BE-04)',
+        placementTests: {
+          book: 'POST /api/placement-tests/book',
+          list: 'GET /api/placement-tests',
+          detail: 'GET /api/placement-tests/:id',
+          attendance: 'PATCH /api/placement-tests/:id/attendance',
+          score: 'POST /api/placement-tests/:id/score',
+          recommendCourse: 'GET /api/placement-tests/recommend-course',
+          availability: 'GET /api/placement-tests/availability',
+          cancel: 'DELETE /api/placement-tests/:id',
+        },
         courses: '/api/courses (Upcoming - BE-05)',
         classes: '/api/classes (Upcoming - BE-05)',
         enrollments: '/api/enrollments (Upcoming - BE-05)',
@@ -64,6 +74,7 @@ router.get('/docs.json', (req: Request, res: Response) => {
 router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/leads', leadRoutes);
+router.use('/placement-tests', placementTestRoutes);
 router.use('/docs', swaggerRoutes);
 
 export default router;
