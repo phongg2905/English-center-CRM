@@ -68,11 +68,16 @@ router.put(
 );
 
 /**
- * @route PATCH /api/leads/:id/status
+ * @route PATCH /api/leads/:id/status & PATCH /api/leads/:id/stage
  * @desc  Cập nhật trạng thái giai đoạn Pipeline (Kanban Drag & Drop)
  */
 router.patch(
   '/:id/status',
+  authorizeRoles('ADMIN', 'SALES'),
+  LeadController.updateStatus
+);
+router.patch(
+  '/:id/stage',
   authorizeRoles('ADMIN', 'SALES'),
   LeadController.updateStatus
 );
@@ -98,21 +103,36 @@ router.delete(
 );
 
 /**
- * @route GET /api/leads/:id/consultations
- * @desc  Lấy lịch sử nhật ký tương tác / cuộc gọi của Lead
+ * @route GET /api/leads/:id/consultations, /:id/timeline, /:id/logs
+ * @desc  Lấy lịch sử nhật ký tương tác / cuộc gọi của Lead (Timeline)
  */
 router.get(
   '/:id/consultations',
   authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
   LeadController.getConsultations
 );
+router.get(
+  '/:id/timeline',
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  LeadController.getConsultations
+);
+router.get(
+  '/:id/logs',
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  LeadController.getConsultations
+);
 
 /**
- * @route POST /api/leads/:id/consultations
+ * @route POST /api/leads/:id/consultations, /:id/logs
  * @desc  Thêm mới nhật ký tương tác / cuộc gọi tư vấn
  */
 router.post(
   '/:id/consultations',
+  authorizeRoles('ADMIN', 'SALES'),
+  LeadController.addConsultation
+);
+router.post(
+  '/:id/logs',
   authorizeRoles('ADMIN', 'SALES'),
   LeadController.addConsultation
 );

@@ -137,7 +137,13 @@ export class LeadController {
       const userId = req.user?.userId || 1;
       const userName = req.user?.username || 'User';
 
-      const updated = await LeadService.updateStatus(id, req.body, userId, userName);
+      const targetStage = req.body.pipelineStage || req.body.stage;
+      const updated = await LeadService.updateStatus(
+        id,
+        { pipelineStage: targetStage, lostReason: req.body.lostReason },
+        userId,
+        userName
+      );
       ApiResponse.success(res, updated, 'Cập nhật trạng thái Lead thành công');
     } catch (error) {
       next(error);
