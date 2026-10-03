@@ -1,0 +1,128 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-family-base);
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  border: 1px solid transparent;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Sizes */
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 12.5px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.btn-md {
+  padding: 8px 18px;
+  font-size: 13.5px;
+  height: 40px;
+  border-radius: 12px;
+}
+
+.btn-lg {
+  padding: 12px 24px;
+  font-size: 15px;
+  height: 48px;
+  border-radius: 16px;
+}
+
+/* Variant: Primary Cosmic Sunset Gradient */
+.btn-primary {
+  background: var(--brand-gradient);
+  color: #ffffff;
+  box-shadow: 0 4px 14px -2px rgba(124, 58, 237, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.25) inset;
+  border: none;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--brand-gradient-hover);
+  box-shadow: 0 6px 20px -2px rgba(236, 72, 153, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.35) inset;
+  transform: translateY(-1px);
+}
+
+/* Variant: Vision Liquid Glass */
+.btn-glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  color: var(--text-heading);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow-sm);
+}
+
+.btn-glass:hover:not(:disabled) {
+  background: var(--glass-bg-hover);
+  border-color: rgba(124, 58, 237, 0.35);
+  box-shadow: 0 8px 24px -4px rgba(124, 58, 237, 0.12);
+  transform: translateY(-1px);
+}
+
+/* Variant: Secondary / Outline */
+.btn-outline {
+  background: transparent;
+  color: var(--color-primary-royal);
+  border: 1px solid rgba(124, 58, 237, 0.35);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: rgba(124, 58, 237, 0.08);
+  border-color: var(--color-primary-royal);
+}
+
+/* Variant: Ghost */
+.btn-ghost {
+  background: transparent;
+  color: var(--text-body);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: rgba(15, 23, 42, 0.05);
+  color: var(--text-heading);
+}
+
+/* Variant: Danger */
+.btn-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--color-danger);
+  color: #ffffff;
+  box-shadow: 0 4px 14px -2px rgba(239, 68, 68, 0.35);
+}
+
+/* Spinner */
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}

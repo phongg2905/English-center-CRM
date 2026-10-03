@@ -1,0 +1,210 @@
+/* Register Page Styles - Vision Liquid Glass */
+
+.register-page-container {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  position: relative;
+  overflow-x: hidden;
+  background: 
+    radial-gradient(1100px circle at 15% 15%, rgba(124, 58, 237, 0.12), transparent 55%),
+    radial-gradient(1000px circle at 85% 30%, rgba(236, 72, 153, 0.1), transparent 50%),
+    radial-gradient(800px circle at 50% 85%, rgba(59, 130, 246, 0.08), transparent 50%),
+    #f6f8fc;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 540px;
+  background: var(--glass-bg-elevated);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 24px 60px -15px rgba(124, 58, 237, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  padding: 36px 32px;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: registerCardFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes registerCardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.register-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+  pointer-events: none;
+}
+
+.register-brand-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.register-logo-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--brand-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 8px 20px -2px rgba(124, 58, 237, 0.45);
+}
+
+.register-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-heading);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.register-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.register-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 580px) {
+  .register-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Role Selector */
+.role-selector-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.role-selector-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.role-options-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.role-option-btn {
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--text-body);
+}
+
+.role-option-btn:hover {
+  border-color: rgba(124, 58, 237, 0.4);
+  background: rgba(124, 58, 237, 0.04);
+}
+
+.role-option-btn.selected {
+  border-color: var(--color-primary-royal);
+  background: rgba(124, 58, 237, 0.12);
+  color: var(--color-primary-royal);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
+  font-weight: 600;
+}
+
+.role-option-title {
+  font-size: 12.5px;
+}
+
+.role-option-sub {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.role-option-btn.selected .role-option-sub {
+  color: var(--color-primary-royal);
+}
+
+/* Alert Boxes */
+.register-alert {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.register-alert.error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+  animation: shake 0.3s ease-in-out;
+}
+
+.register-alert.success {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #059669;
+}
+
+.register-footer {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  border-top: 1px solid rgba(226, 232, 240, 0.7);
+  padding-top: 16px;
+}
+
+.register-link-highlight {
+  color: var(--color-primary-royal);
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+}
+
+.register-link-highlight:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}

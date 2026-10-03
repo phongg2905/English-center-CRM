@@ -12,6 +12,8 @@ router.post('/refresh', AuthController.refresh);
 router.post('/forgot-password', AuthController.forgotPassword);
 router.post('/reset-password', AuthController.resetPassword);
 router.get('/roles', AuthController.getRoles);
+router.post('/forgot-password', AuthController.forgotPassword);
+router.post('/reset-password', AuthController.resetPassword);
 
 // Tuyến đường yêu cầu xác thực (Protected routes)
 router.post('/logout', verifyToken, AuthController.logout);
