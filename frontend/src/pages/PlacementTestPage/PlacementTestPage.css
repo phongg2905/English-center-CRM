@@ -938,3 +938,919 @@
   max-height: 88vh;
   box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.3), 0 0 25px rgba(124, 58, 237, 0.15);
 }
+
+/* ==============================================================================
+   SCORING MODAL & 4-SKILL RANGE SLIDERS (FE-04B)
+   ============================================================================== */
+.pt-scoring-layout {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 820px) {
+  .pt-scoring-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pt-skill-slider-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  transition: all var(--transition-fast);
+}
+
+.pt-skill-slider-card:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.pt-slider-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.pt-slider-meta .label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.pt-slider-meta .val-badge {
+  font-size: 14px;
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: var(--text-heading);
+}
+
+.pt-skill-slider-card.listening .val-badge { color: #2563eb; border-color: rgba(37, 99, 235, 0.3); background: rgba(37, 99, 235, 0.08); }
+.pt-skill-slider-card.reading .val-badge { color: #059669; border-color: rgba(5, 150, 105, 0.3); background: rgba(5, 150, 105, 0.08); }
+.pt-skill-slider-card.writing .val-badge { color: #d97706; border-color: rgba(217, 119, 6, 0.3); background: rgba(217, 119, 6, 0.08); }
+.pt-skill-slider-card.speaking .val-badge { color: #e11d48; border-color: rgba(225, 29, 72, 0.3); background: rgba(225, 29, 72, 0.08); }
+
+.pt-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pt-range-slider {
+  flex: 1;
+  height: 6px;
+  border-radius: 4px;
+  background: #e2e8f0;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+
+.pt-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2.5px solid var(--color-primary-royal);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.pt-range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.pt-range-slider.listening { accent-color: #2563eb; }
+.pt-range-slider.reading { accent-color: #059669; }
+.pt-range-slider.writing { accent-color: #d97706; }
+.pt-range-slider.speaking { accent-color: #e11d48; }
+
+.pt-num-input {
+  width: 62px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-heading);
+  background: #ffffff;
+}
+
+.pt-num-input:focus {
+  outline: none;
+  border-color: var(--color-primary-royal);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+}
+
+/* Hero Overall Score Card */
+.pt-overall-hero-card {
+  background: linear-gradient(135deg, #1e1b4b, #312e81, #4338ca);
+  border-radius: 14px;
+  padding: 16px 20px;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(49, 46, 129, 0.25);
+  margin-bottom: 16px;
+}
+
+.pt-overall-hero-card .hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.pt-overall-hero-card .hero-top .title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #c7d2fe;
+}
+
+.pt-overall-hero-card .hero-top .badge-cefr {
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.pt-overall-hero-card .hero-score-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pt-overall-hero-card .hero-band-num {
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(180deg, #ffffff, #e0e7ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.pt-overall-hero-card .hero-desc strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.pt-overall-hero-card .hero-desc span {
+  font-size: 12px;
+  color: #c7d2fe;
+}
+
+/* Course & Classes Recommendation Box */
+.pt-recommend-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.pt-course-card-compact {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.pt-course-card-compact .meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pt-course-card-compact .meta .name {
+  display: block;
+  font-size: 13.5px;
+  color: var(--text-heading);
+}
+
+.pt-course-card-compact .meta .code {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.pt-course-card-compact .tuition {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--color-primary-royal);
+  white-space: nowrap;
+}
+
+.pt-classes-mini-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.pt-class-mini-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.pt-class-mini-item .class-info {
+  flex: 1;
+}
+
+.pt-class-mini-item .c-name {
+  font-size: 12.5px;
+  display: block;
+  color: var(--text-heading);
+}
+
+.pt-class-mini-item .c-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.pt-class-mini-item .capacity-bar {
+  margin-top: 4px;
+  height: 5px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.pt-class-mini-item .capacity-bar .fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.pt-class-mini-item .capacity-bar .text {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  display: inline-block;
+  margin-top: 2px;
+}
+
+.pt-btn-enroll-touch {
+  padding: 6px 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 6px;
+  border: none;
+  background: #10b981;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.pt-btn-enroll-touch:hover:not(:disabled) {
+  background: #059669;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+.pt-btn-enroll-touch:disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* ==============================================================================
+   OFFICIAL PLACEMENT TEST SCORECARD - EDUFLOW MODERN CRM STYLE (ZERO NOISE)
+   ============================================================================== */
+.pt-scorecard-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: hidden;
+}
+
+.pt-scorecard-dialog {
+  width: 100%;
+  max-width: 840px;
+  height: 94vh;
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 25px 60px -15px rgba(46, 16, 101, 0.35);
+  overflow: hidden;
+  position: relative;
+}
+
+.pt-scorecard-actions-bar {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  border-bottom: 1px solid #f3e8ff;
+  background: #ffffff;
+  z-index: 5;
+}
+
+/* Action Bar Buttons */
+.pt-btn-scale-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1px solid #e9d5ff;
+  background: #faf5ff;
+  color: #7c3aed;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pt-btn-scale-toggle:hover {
+  background: #f3e8ff;
+  border-color: #d8b4fe;
+}
+
+.pt-btn-print-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #ec4899 100%);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.3);
+  transition: all 0.2s ease;
+}
+
+.pt-btn-print-primary:hover {
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.45);
+  transform: translateY(-1px);
+}
+
+/* Scroll Wrapper with Smooth Scrolling */
+.pt-scorecard-scroll-wrapper {
+  flex: 1;
+  min-height: 0; /* CRITICAL FOR FLEX SCROLLING */
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #faf5ff;
+  padding: 20px 32px 28px 32px;
+  display: flex;
+  justify-content: center;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.pt-scorecard-scroll-wrapper::-webkit-scrollbar {
+  width: 7px;
+}
+
+.pt-scorecard-scroll-wrapper::-webkit-scrollbar-track {
+  background: #faf5ff;
+}
+
+.pt-scorecard-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: #d8b4fe;
+  border-radius: 4px;
+}
+
+.pt-scorecard-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #c084fc;
+}
+
+/* ==============================================================================
+   DESIGN 4: OXFORD IVY LEAGUE CLASSIC - DIAGNOSTIC SCORECARD
+   Prestigious, monochromatic parchment Ivy League academic examination scorecard
+   ============================================================================== */
+
+.pt-modern-scorecard-sheet.pt-oxford-sheet {
+  width: 100%;
+  max-width: 760px;
+  background-color: #fbf9f4;
+  color: #1c1917;
+  border-radius: 2px;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.12), 0 2px 10px rgba(0, 0, 0, 0.05);
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  position: relative;
+  transition: transform 0.2s ease;
+  height: fit-content;
+  box-sizing: border-box;
+  padding: 50px 80px 44px 80px;
+  overflow: hidden;
+  border: none;
+}
+
+/* Fit-to-screen mode for laptop preview */
+.pt-modern-scorecard-sheet.pt-oxford-sheet.fit-mode {
+  transform: scale(0.82);
+  transform-origin: top center;
+  margin-bottom: -150px;
+}
+
+/* Top-Right Blind-Embossed Watermark Seal */
+.pt-oxford-watermark {
+  position: absolute;
+  top: 26px;
+  right: 50px;
+  opacity: 0.18;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 0.3s ease;
+}
+
+/* Header: Centered Brand & Classical Ivy League Typography */
+.pt-oxford-header {
+  text-align: center;
+  margin-bottom: 28px;
+  position: relative;
+}
+
+.pt-oxford-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.pt-oxford-brand-cap {
+  color: #1c1917;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pt-oxford-brand-text {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #1c1917;
+}
+
+.pt-oxford-main-title {
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #111827;
+  letter-spacing: 0.8px;
+  margin: 0 0 6px 0;
+  text-transform: uppercase;
+}
+
+.pt-oxford-sub-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: #292524;
+  text-transform: uppercase;
+}
+
+/* Candidate Profile Row - 2 Columns with Double Underline Bar */
+.pt-oxford-profile-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  margin-bottom: 24px;
+}
+
+.oxford-prof-col.name-col {
+  flex: 1;
+}
+
+.oxford-prof-col.id-col {
+  width: 170px;
+}
+
+.oxford-prof-lbl {
+  display: block;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1c1917;
+  padding-bottom: 4px;
+  border-bottom: 1.5px solid #292524;
+  margin-bottom: 8px;
+}
+
+.oxford-prof-val {
+  display: block;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 17.5px;
+  font-weight: 600;
+  color: #1c1917;
+  padding-bottom: 4px;
+  border-bottom: 1.5px solid #292524;
+  letter-spacing: 0.3px;
+}
+
+/* Core 4-Skill Diagnostic Assessment Table */
+.pt-oxford-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.pt-oxford-table thead th {
+  background-color: #eae8e1;
+  color: #1c1917;
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 10px 14px;
+  border-top: 1.5px solid #292524;
+  border-bottom: 1.5px solid #292524;
+  border-right: 1px solid #78716c;
+  letter-spacing: 0.3px;
+}
+
+.pt-oxford-table thead th:last-child {
+  border-right: none;
+}
+
+.pt-oxford-table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #d6d3d1;
+  border-right: 1px solid #d6d3d1;
+  vertical-align: middle;
+}
+
+.pt-oxford-table tbody td:last-child {
+  border-right: none;
+}
+
+.pt-oxford-table .skill-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1c1917;
+}
+
+.pt-oxford-table .skill-score {
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  color: #1c1917;
+}
+
+.pt-oxford-table .skill-cefr {
+  font-size: 14.5px;
+  font-weight: 600;
+  text-align: center;
+  color: #292524;
+}
+
+.pt-oxford-table .skill-desc {
+  font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #292524;
+  text-align: justify;
+}
+
+/* Table Total / Overall Band Row */
+.pt-oxford-table tfoot .oxford-total-row {
+  border-top: 1.5px solid #292524;
+  border-bottom: 1.5px solid #292524;
+  background-color: rgba(234, 232, 225, 0.45);
+}
+
+.pt-oxford-table tfoot td {
+  border-right: 1px solid #d6d3d1;
+  vertical-align: middle;
+}
+
+.pt-oxford-table tfoot td:last-child {
+  border-right: none;
+}
+
+.pt-oxford-table .total-lbl {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1c1917;
+  padding: 12px 14px;
+  letter-spacing: 0.5px;
+}
+
+.pt-oxford-table .total-score {
+  font-size: 17px;
+  font-weight: 800;
+  text-align: center;
+  color: #1c1917;
+  padding: 12px 14px;
+}
+
+.pt-oxford-table .total-cefr {
+  font-size: 15px;
+  font-weight: 800;
+  text-align: center;
+  color: #1c1917;
+  padding: 12px 14px;
+}
+
+.pt-oxford-table .total-desc {
+  font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #1c1917;
+  padding: 12px 14px;
+}
+
+/* Diagnostic Feedback Notes */
+.pt-oxford-notes {
+  padding: 10px 14px;
+  margin-bottom: 24px;
+  background-color: rgba(234, 232, 225, 0.4);
+  border-left: 3px solid #292524;
+  font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #292524;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Footer: 3 Columns with Dual Signatures and Central Seal Stamp */
+.pt-oxford-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 26px;
+  padding: 0 10px;
+  margin-bottom: 14px;
+}
+
+.oxford-sig-col {
+  width: 175px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.oxford-sig-handwriting {
+  font-family: 'Dancing Script', 'Brush Script MT', cursive;
+  font-size: 34px;
+  color: #111827;
+  line-height: 1;
+  margin-bottom: -2px;
+  font-weight: 700;
+  user-select: none;
+}
+
+.oxford-sig-line {
+  width: 100%;
+  height: 1.5px;
+  background-color: #292524;
+  margin-bottom: 6px;
+}
+
+.oxford-sig-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1c1917;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.oxford-sig-date {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 12px;
+  color: #292524;
+}
+
+.oxford-seal-col {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.oxford-seal-stamp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oxford-seal-stamp svg {
+  width: 82px;
+  height: 82px;
+  display: block;
+}
+
+/* Bottom Disclaimer */
+.pt-oxford-disclaimer {
+  font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11px;
+  color: #57534e;
+  text-align: center;
+  margin-top: 14px;
+  font-style: italic;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(120, 113, 108, 0.3);
+}
+
+/* ==============================================================================
+   PRINT STYLES FOR SCORECARD MODAL
+   ============================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+
+  /* 1. COMPLETELY REMOVE APP ROOT AND ALL NON-MODAL CONTENT FROM PRINT FLOW */
+  #root,
+  body > *:not(.pt-scorecard-backdrop),
+  .no-print,
+  .pt-scorecard-actions-bar {
+    display: none !important;
+  }
+
+  /* 2. RESET BODY & HTML GEOMETRY TO TOP OF PAGE 1 */
+  html, body {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+  }
+
+  /* 3. FLATTEN BACKDROP & DIALOG CONTAINERS */
+  .pt-scorecard-backdrop {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    overflow: visible !important;
+  }
+
+  .pt-scorecard-dialog {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+
+  .pt-scorecard-scroll-wrapper {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  /* 4. SCORECARD SHEET: STARTS IMMEDIATELY ON PAGE 1, FITS EXACTLY 1 A4 PAGE */
+  .pt-modern-scorecard-sheet.pt-oxford-sheet {
+    display: block !important;
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    margin: 0 auto !important;
+    padding: 20px 48px 16px 48px !important;
+    box-shadow: none !important;
+    border: none !important;
+    background-color: #fbf9f4 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    transform: none !important;
+    page-break-before: avoid !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-before: avoid !important;
+    break-after: avoid !important;
+    break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Spacing optimizations for single-page A4 print */
+  .pt-oxford-header {
+    margin-bottom: 18px !important;
+  }
+
+  .pt-oxford-brand {
+    margin-bottom: 6px !important;
+  }
+
+  .pt-oxford-main-title {
+    font-size: 24px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .pt-oxford-profile-row {
+    margin-bottom: 16px !important;
+  }
+
+  .pt-oxford-table {
+    margin-bottom: 14px !important;
+  }
+
+  .pt-oxford-table thead th {
+    padding: 8px 12px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .pt-oxford-table tbody td {
+    padding: 9px 12px !important;
+  }
+
+  .pt-oxford-table tfoot td {
+    padding: 9px 12px !important;
+  }
+
+  .pt-oxford-table tfoot .oxford-total-row {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .pt-oxford-notes {
+    margin-bottom: 16px !important;
+    padding: 8px 12px !important;
+  }
+
+  .pt-oxford-footer {
+    margin-top: 16px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .pt-oxford-disclaimer {
+    margin-top: 10px !important;
+    padding-top: 6px !important;
+  }
+
+  .pt-oxford-watermark,
+  .oxford-seal-stamp {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

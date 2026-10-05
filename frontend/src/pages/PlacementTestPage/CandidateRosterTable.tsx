@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Check, X, Clock, AlertCircle, Phone, Mail, RotateCcw, Trash2, UserPlus } from 'lucide-react';
+import { Check, X, Clock, AlertCircle, Phone, Mail, RotateCcw, Trash2, UserPlus, Award } from 'lucide-react';
 import { PlacementTestService } from '../../services/placement-test.service';
+import { ScoringModal } from './ScoringModal';
 import type { PlacementTestWithDetails, AttendanceStatus } from '../../types/placement-test';
 
 interface CandidateRosterTableProps {
@@ -24,6 +25,7 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
 }) => {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [scoringTest, setScoringTest] = useState<PlacementTestWithDetails | null>(null);
   const [isDeletingShift, setIsDeletingShift] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; isError?: boolean } | null>(null);
 
@@ -295,20 +297,57 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
                     {/* Điểm & Gợi ý khóa học */}
                     <td>
                       {item.overallScore !== null ? (
-                        <div>
-                          <span style={{ fontWeight: 800, color: 'var(--color-primary-royal)', fontSize: '13.5px' }}>
-                            Band {item.overallScore}
-                          </span>
-                          {item.suggestedCourseName && (
-                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                              → {item.suggestedCourseName}
-                            </div>
-                          )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div>
+                            <span style={{ fontWeight: 800, color: 'var(--color-primary-royal)', fontSize: '13.5px', whiteSpace: 'nowrap' }}>
+                              Band {item.overallScore}
+                            </span>
+                            {item.suggestedCourseName && (
+                              <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                → {item.suggestedCourseName}
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            className="pt-btn-touch"
+                            style={{
+                              padding: '3px 8px',
+                              fontSize: '11px',
+                              background: 'rgba(124, 58, 237, 0.08)',
+                              color: 'var(--color-primary-royal)',
+                              border: '1px solid rgba(124, 58, 237, 0.25)',
+                              borderRadius: '6px',
+                            }}
+                            onClick={() => setScoringTest(item)}
+                            title="Xem lại điểm / Xuất phiếu điểm PDF"
+                          >
+                            <Award size={12} /> Xem / Sửa
+                          </button>
                         </div>
                       ) : (
-                        <span style={{ fontSize: '12px', color: 'var(--text-subtle)', fontStyle: 'italic' }}>
-                          Chưa chấm điểm
-                        </span>
+                        <button
+                          type="button"
+                          className="pt-btn-touch"
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '11.5px',
+                            fontWeight: 700,
+                            background: '#f8fafc',
+                            color: '#4f46e5',
+                            border: '1px solid #c7d2fe',
+                            borderRadius: '6px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            whiteSpace: 'nowrap',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => setScoringTest(item)}
+                          title="Nhập điểm 4 kỹ năng & đề xuất lớp học"
+                        >
+                          <Award size={13} color="#4f46e5" /> Chấm điểm
+                        </button>
                       )}
                     </td>
 
@@ -376,6 +415,18 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
           </tbody>
         </table>
       </div>
+
+      {scoringTest && (
+        <ScoringModal
+          isOpen={Boolean(scoringTest)}
+          onClose={() => setScoringTest(null)}
+          test={scoringTest}
+          onScoreSaved={() => {
+            onAttendanceChanged();
+            setScoringTest(null);
+          }}
+        />
+      )}
     </div>
   );
 };
