@@ -60,7 +60,7 @@ export const env: EnvironmentConfig = {
     password: process.env.DB_PASSWORD || '',
     ssl: enableSsl,
     maxConnections: parseInt(process.env.DB_MAX_CONNECTIONS || '20', 10),
-    idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT_MILLIS || '30000', 10),
+    idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT_MILLIS || '120000', 10),
     connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT_MILLIS || '10000', 10),
   },
   jwt: {

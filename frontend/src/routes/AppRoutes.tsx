@@ -7,6 +7,7 @@ import { RegisterPage } from '../pages/RegisterPage';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { PlacementTestPage } from '../pages/PlacementTestPage';
+import { LeadsPage } from '../pages/LeadsPage';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
 
 export const AppRoutes: React.FC = () => {
@@ -32,10 +33,7 @@ export const AppRoutes: React.FC = () => {
         {/* Core modules */}
         <Route path="dashboard" element={<DashboardPage />} />
         
-        <Route
-          path="leads"
-          element={<PlaceholderPage title="Tuyển sinh & Leads" />}
-        />
+        <Route path="leads" element={<LeadsPage />} />
 
         <Route path="tests" element={<PlacementTestPage />} />
 
