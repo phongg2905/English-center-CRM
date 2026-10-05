@@ -81,12 +81,18 @@
   height: 40px;
   min-width: 40px;
   border-radius: 12px;
-  background: var(--brand-gradient);
+  background: #ffffff;
+  border: 1px solid rgba(124, 58, 237, 0.16);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
-  box-shadow: 0 4px 14px -1px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 4px 14px -1px rgba(124, 58, 237, 0.18);
+  transition: transform var(--transition-bounce), box-shadow var(--transition-normal);
+}
+
+.sidebar-logo-icon:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 18px -1px rgba(124, 58, 237, 0.28);
 }
 
 .sidebar-brand-info {

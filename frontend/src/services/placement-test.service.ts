@@ -7,6 +7,8 @@ import type {
   UpdateAttendanceDto,
   ShiftSlotAvailability,
   LeadSimple,
+  RecordScoreDto,
+  CourseRecommendation,
 } from '../types/placement-test';
 
 interface ApiResponse<T> {
@@ -185,6 +187,37 @@ export class PlacementTestService {
     if (room && room !== 'ALL') params.append('room', room);
     const res = await apiClient.delete<ApiResponse<{ count: number }>>(
       `/placement-tests/shift/cancel?${params.toString()}`
+    );
+    return res.data.data;
+  }
+
+  /**
+   * Nhập điểm 4 kỹ năng & nhận đề xuất khóa học phù hợp (UC-SYS-03)
+   */
+  static async recordScore(
+    id: number,
+    data: RecordScoreDto
+  ): Promise<{ test: PlacementTestWithDetails; recommendation: CourseRecommendation }> {
+    const res = await apiClient.post<ApiResponse<{ test: PlacementTestWithDetails; recommendation: CourseRecommendation }>>(
+      `/placement-tests/${id}/score`,
+      data
+    );
+    return res.data.data;
+  }
+
+  /**
+   * Thuật toán độc lập gợi ý khóa học theo điểm thi và nguyện vọng
+   */
+  static async recommendCourse(
+    overallScore: number,
+    testType?: string,
+    interest?: string
+  ): Promise<CourseRecommendation> {
+    const params = new URLSearchParams({ overallScore: overallScore.toString() });
+    if (testType) params.append('testType', testType);
+    if (interest) params.append('interest', interest);
+    const res = await apiClient.get<ApiResponse<CourseRecommendation>>(
+      `/placement-tests/recommend-course?${params.toString()}`
     );
     return res.data.data;
   }

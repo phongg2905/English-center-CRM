@@ -51,6 +51,31 @@ Sau khi khảo sát và đánh giá 106 kho mã nguồn mở cùng 9 bộ màu t
 * **Tiêu đề chính (`--text-heading`):** `#2e1065` (Tím đen siêu tương phản chuẩn WCAG AAA).
 * **Văn bản nội dung (`--text-body`):** `#4c1d95` (Dịu mắt, phân biệt rõ ràng với chú thích).
 
+### 2.4. Biểu tượng Thương hiệu Chính thức (Official Brand Logo: Edu Cap & Flow)
+* **Ý tưởng thiết kế:** Kết hợp giữa hình khối **Mũ Cử Nhân 3D vát cạnh hoàng gia (Edu)** và **Làn Sóng Năng Lượng Tri Thức (Flow)** cuộn mượt mà phía dưới. Biểu trưng cho sự chuẩn mực học thuật quốc tế song hành cùng luồng dữ liệu CRM tự động hóa và phễu tuyển sinh thông suốt.
+* **Màu sắc chủ đạo:** Cosmic Sunset Gradient (`#4c1d95` -> `#7c3aed` -> `#ec4899`) với ánh phản quang đa chiều.
+* **Định dạng tài nguyên:**
+  * Master 4x Retina PNG: `frontend/src/assets/brand/eduflow-logo.png` (1092 x 632)
+  * Square Icon 1:1: `frontend/src/assets/brand/eduflow-logo-square.png` (512 x 512)
+  * Favicon chuẩn trình duyệt: `frontend/public/favicon.svg` & `frontend/public/favicon.png`
+  * React Component dùng chung: `<EduFlowLogo size={...} variant="mark" | "square" showText={...} />`
+* **Vị trí áp dụng đồng bộ:** Thanh Sidebar điều hướng, Màn hình đăng nhập/đăng ký, Màn hình tải phiên khởi tạo hệ thống, và Phiếu Báo Điểm A4 Diagnostic Scorecard.
+
+### 2.5. Quy chuẩn Phiếu Báo Điểm Đơn Sắc Học Thuật (Diagnostic Placement Test Scorecard - Design 4: Oxford Ivy League Classic)
+* **Ý tưởng thiết kế:** Chuẩn hóa theo trường phái bảng điểm học thuật cổ điển của các viện đại học danh tiếng thế giới (Oxford / Ivy League). Loại bỏ hoàn toàn khung viền bao ngoài rối rắm, sử dụng lề mở trang nhã, kiểu chữ có chân serif tương phản cao cùng các chi tiết dập chìm bảo chứng giá trị học thuật.
+* **Bảng màu đơn sắc cốt lõi:**
+  * **Nền giấy kem ngà sang trọng (Parchment Ivory):** `#fbf9f4` (Khi in ấn PDF tự động tối ưu phông nền trắng `#ffffff` tiết kiệm mực tối đa).
+  * **Màu mực than học thuật:** `#1c1917` / `#111827` (Tương phản cao tuyệt đối chuẩn WCAG AAA cho tiêu đề và nội dung khảo thí).
+  * **Đầu bảng màu đá ấm (Warm Stone Gray Header):** `#eae8e1` (Tạo điểm tựa thị giác trang nhã cho ma trận chẩn đoán 4 kỹ năng).
+  * **Đường phân cách sắc nét:** Đường kẻ đơn/kép `1.5px solid #292524` và hairline `#d6d3d1`.
+* **Cấu trúc hình thái đặc trưng:**
+  * **Con dấu chìm Watermark:** Dập chìm góc trên bên phải `University of Excellence • Academic Examination` với độ trong suốt tinh tế.
+  * **Thanh thông tin thí sinh 2 cột gạch chân kép:** `Candidate Profile` (Tên thí sinh in hoa) & `ID` (Mã hồ sơ PT).
+  * **Ma trận điểm 4 kỹ năng chuẩn CEFR:** Phân định rõ ràng Listening, Reading, Writing, Speaking, điểm số, cấp độ và nhận xét chuyên môn.
+  * **Khối tổng kết:** Overall Band Score, cấp độ CEFR và lộ trình khóa học đề xuất.
+  * **Chân trang bảo chứng 3 cột:** Chữ ký đôi viết tay nghệ thuật `EduFlow Registrar` và con dấu mộc tròn đen chính thức ở chính giữa.
+  * **Chuẩn in ấn A4 1 trang tuyệt đối:** Tự động loại bỏ hoàn toàn các thành phần giao diện nền, bắt đầu ngay đỉnh Trang 1, không tràn trang, không dư trang trắng.
+
 ---
 
 ## 3. QUY CHUẨN DESIGN TOKENS CHUNG

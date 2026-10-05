@@ -96,3 +96,44 @@ export interface LeadSimple {
   targetSubject?: string;
   assignedTo?: string | null;
 }
+
+export interface RecordScoreDto {
+  listeningScore?: number;
+  readingScore?: number;
+  writingScore?: number;
+  speakingScore?: number;
+  overallScore?: number;
+  examinerFeedback?: string;
+  suggestedCourseId?: number;
+}
+
+export interface CourseRecommendation {
+  course: {
+    id: number;
+    courseCode: string;
+    courseName: string;
+    totalLessons: number;
+    standardTuition: number;
+    minEntryScore: number | null;
+    maxEntryScore: number | null;
+    targetOutput: string | null;
+    description: string | null;
+  };
+  matchScore: number;
+  matchReason: string;
+  availableClasses: Array<{
+    id: number;
+    classCode: string;
+    className: string;
+    scheduleDays: string;
+    timeSlot: string;
+    room: string | null;
+    teacherName: string | null;
+    startDate: string;
+    maxCapacity: number;
+    currentEnrolled: number;
+    availableSeats: number;
+    status: string;
+  }>;
+}
+

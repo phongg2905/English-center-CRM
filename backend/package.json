@@ -13,7 +13,8 @@
     "test:auth": "tsx src/scripts/test-auth.ts",
     "test:password": "tsx src/scripts/test-password-recovery.ts",
     "test:leads": "tsx src/scripts/test-leads.ts",
-    "test:tests": "tsx src/scripts/test-placement-tests.ts"
+    "test:tests": "tsx src/scripts/test-placement-tests.ts",
+    "studio": "prisma studio"
   },
   "keywords": [
     "crm",
@@ -26,6 +27,7 @@
   "author": "Nhóm 8 - PTIT",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^6.17.1",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -46,6 +48,7 @@
     "@types/node": "^22.10.2",
     "@types/pg": "^8.11.10",
     "@types/swagger-ui-express": "^4.1.7",
+    "prisma": "^6.17.1",
     "rimraf": "^6.0.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"

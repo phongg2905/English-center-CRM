@@ -15,6 +15,7 @@ import {
   Users,
   BookOpen,
 } from 'lucide-react';
+import { EduFlowLogo } from '../../components/common/EduFlowLogo';
 import './RegisterPage.css';
 
 export const RegisterPage: React.FC = () => {
@@ -92,7 +93,7 @@ export const RegisterPage: React.FC = () => {
         {/* Brand Header */}
         <div className="register-brand-header">
           <div className="register-logo-badge">
-            <GraduationCap size={26} />
+            <EduFlowLogo size={46} variant="square" />
           </div>
           <div>
             <h1 className="register-title">Đăng Ký Tài Khoản</h1>

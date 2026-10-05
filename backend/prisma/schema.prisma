@@ -1,0 +1,199 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  role_code   String   @unique @db.VarChar(30)
+  role_name   String   @db.VarChar(100)
+  description String?  @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  users       User[]
+
+  @@map("roles")
+}
+
+model User {
+  id                     Int              @id @default(autoincrement())
+  username               String           @unique @db.VarChar(50)
+  password_hash          String           @db.VarChar(255)
+  full_name              String           @db.VarChar(100)
+  email                  String           @unique @db.VarChar(120)
+  phone_number           String?          @db.VarChar(20)
+  role_id                Int
+  avatar_url             String?          @db.VarChar(500)
+  is_active              Boolean          @default(true)
+  created_at             DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
+  role                   Role             @relation(fields: [role_id], references: [id], onDelete: Restrict)
+  assigned_leads         Lead[]
+  interaction_logs       InteractionLog[]
+  consultant_enrollments Enrollment[]     @relation("ConsultantEnrollments")
+  received_payments      PaymentReceipt[] @relation("PaymentReceiver")
+
+  @@map("users")
+}
+
+model Lead {
+  id                Int               @id @default(autoincrement())
+  full_name         String            @db.VarChar(100)
+  phone_number      String            @unique @db.VarChar(20)
+  email             String?           @db.VarChar(120)
+  interest          String            @db.VarChar(50)
+  source_channel    String            @db.VarChar(50)
+  pipeline_stage    String            @default("NEW") @db.VarChar(30)
+  lost_reason       String?           @db.VarChar(100)
+  assigned_sales_id Int?
+  notes             String?           @db.Text
+  created_at        DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime          @default(now()) @updatedAt @db.Timestamptz(6)
+  assigned_sales    User?             @relation(fields: [assigned_sales_id], references: [id], onDelete: SetNull)
+  interaction_logs  InteractionLog[]
+  placement_tests   PlacementTest[]
+  student           Student?
+
+  @@map("leads")
+}
+
+model InteractionLog {
+  id                Int       @id @default(autoincrement())
+  lead_id           Int
+  user_id           Int
+  interaction_type  String    @db.VarChar(30)
+  potential_level   String    @db.VarChar(20)
+  content           String    @db.Text
+  next_follow_up_at DateTime? @db.Timestamptz(6)
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  lead              Lead      @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+  user              User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("interaction_logs")
+}
+
+model Course {
+  id               Int             @id @default(autoincrement())
+  course_code      String          @unique @db.VarChar(30)
+  course_name      String          @db.VarChar(100)
+  total_lessons    Int
+  standard_tuition Decimal         @db.Decimal(12, 2)
+  min_entry_score  Decimal?        @db.Decimal(3, 1)
+  max_entry_score  Decimal?        @db.Decimal(3, 1)
+  target_output    String?         @db.VarChar(100)
+  description      String?         @db.Text
+  is_active        Boolean         @default(true)
+  created_at       DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime        @default(now()) @updatedAt @db.Timestamptz(6)
+  classes          Class[]
+  placement_tests  PlacementTest[]
+
+  @@map("courses")
+}
+
+model PlacementTest {
+  id                  Int       @id @default(autoincrement())
+  lead_id             Int
+  test_date           DateTime  @db.Date
+  time_slot           String    @db.VarChar(20)
+  room                String?   @db.VarChar(50)
+  test_type           String    @db.VarChar(30)
+  attendance_status   String    @default("SCHEDULED") @db.VarChar(20)
+  listening_score     Decimal?  @db.Decimal(3, 1)
+  reading_score       Decimal?  @db.Decimal(3, 1)
+  writing_score       Decimal?  @db.Decimal(3, 1)
+  speaking_score      Decimal?  @db.Decimal(3, 1)
+  overall_score       Decimal?  @db.Decimal(3, 1)
+  suggested_course_id Int?
+  examiner_feedback   String?   @db.Text
+  created_at          DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  lead                Lead      @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+  suggested_course    Course?   @relation(fields: [suggested_course_id], references: [id], onDelete: SetNull)
+
+  @@map("placement_tests")
+}
+
+model Class {
+  id               Int          @id @default(autoincrement())
+  course_id        Int
+  class_code       String       @unique @db.VarChar(50)
+  class_name       String       @db.VarChar(100)
+  schedule_days    String       @db.VarChar(30)
+  time_slot        String       @db.VarChar(30)
+  room             String?      @db.VarChar(50)
+  teacher_name     String?      @db.VarChar(100)
+  start_date       DateTime     @db.Date
+  max_capacity     Int          @default(15)
+  current_enrolled Int          @default(0)
+  status           String       @default("PLANNING") @db.VarChar(20)
+  created_at       DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime     @default(now()) @updatedAt @db.Timestamptz(6)
+  course           Course       @relation(fields: [course_id], references: [id], onDelete: Restrict)
+  enrollments      Enrollment[]
+
+  @@map("classes")
+}
+
+model Student {
+  id                      Int          @id @default(autoincrement())
+  student_code            String       @unique @db.VarChar(30)
+  lead_id                 Int?         @unique
+  full_name               String       @db.VarChar(100)
+  phone_number            String       @unique @db.VarChar(20)
+  email                   String?      @db.VarChar(120)
+  date_of_birth           DateTime?    @db.Date
+  address                 String?      @db.VarChar(255)
+  emergency_contact_name  String?      @db.VarChar(100)
+  emergency_contact_phone String?      @db.VarChar(20)
+  created_at              DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime     @default(now()) @updatedAt @db.Timestamptz(6)
+  lead                    Lead?        @relation(fields: [lead_id], references: [id], onDelete: SetNull)
+  enrollments             Enrollment[]
+
+  @@map("students")
+}
+
+model Enrollment {
+  id               Int              @id @default(autoincrement())
+  student_id       Int
+  class_id         Int
+  consultant_id    Int?
+  enrollment_date  DateTime         @default(now()) @db.Date
+  original_tuition Decimal          @db.Decimal(12, 2)
+  discount_amount  Decimal          @default(0.00) @db.Decimal(12, 2)
+  final_amount     Decimal          @db.Decimal(12, 2)
+  payment_status   String           @default("UNPAID") @db.VarChar(20)
+  status           String           @default("ENROLLED") @db.VarChar(20)
+  notes            String?          @db.Text
+  created_at       DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
+  student          Student          @relation(fields: [student_id], references: [id], onDelete: Restrict)
+  class            Class            @relation(fields: [class_id], references: [id], onDelete: Restrict)
+  consultant       User?            @relation("ConsultantEnrollments", fields: [consultant_id], references: [id], onDelete: SetNull)
+  payment_receipts PaymentReceipt[]
+
+  @@unique([student_id, class_id], map: "uq_student_class")
+  @@map("enrollments")
+}
+
+model PaymentReceipt {
+  id                    Int        @id @default(autoincrement())
+  enrollment_id         Int
+  receipt_code          String     @unique @db.VarChar(50)
+  amount                Decimal    @db.Decimal(12, 2)
+  payment_method        String     @default("BANK_TRANSFER") @db.VarChar(30)
+  transaction_reference String?    @db.VarChar(100)
+  receiver_id           Int
+  paid_at               DateTime   @default(now()) @db.Timestamptz(6)
+  notes                 String?    @db.Text
+  enrollment            Enrollment @relation(fields: [enrollment_id], references: [id], onDelete: Restrict)
+  receiver              User       @relation("PaymentReceiver", fields: [receiver_id], references: [id], onDelete: Restrict)
+
+  @@map("payment_receipts")
+}
