@@ -11,6 +11,8 @@ const poolConfig: pg.PoolConfig = env.db.connectionString
       max: env.db.maxConnections,
       idleTimeoutMillis: env.db.idleTimeoutMillis,
       connectionTimeoutMillis: env.db.connectionTimeoutMillis,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000,
     }
   : {
       host: env.db.host,
@@ -22,6 +24,8 @@ const poolConfig: pg.PoolConfig = env.db.connectionString
       max: env.db.maxConnections,
       idleTimeoutMillis: env.db.idleTimeoutMillis,
       connectionTimeoutMillis: env.db.connectionTimeoutMillis,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000,
     };
 
 export const pool = new Pool(poolConfig);
@@ -47,17 +51,37 @@ pool.on('error', (err) => {
 });
 
 /**
+ * Làm ấm trước Connection Pool (Pre-warm pool) để tránh cold-start latency khi có request đầu tiên
+ */
+export async function warmPool(targetConnections = 2): Promise<void> {
+  const clients: PoolClient[] = [];
+  try {
+    for (let i = 0; i < targetConnections; i++) {
+      clients.push(await pool.connect());
+    }
+  } catch (err: any) {
+    logger.debug('Không thể làm ấm đủ connections trong pool:', err.message);
+  } finally {
+    for (const c of clients) {
+      c.release();
+    }
+  }
+}
+
+/**
  * Thực thi câu lệnh SQL đơn với Connection Pool
  */
 export async function query<R extends QueryResultRow = any, I extends any[] = any[]>(
   text: string,
   params?: I
 ): Promise<QueryResult<R>> {
-  const start = Date.now();
+  let client: PoolClient | null = null;
   try {
-    const res = await pool.query<R>(text, params);
+    client = await pool.connect();
+    const queryStart = Date.now();
+    const res = await client.query<R>(text, params);
     dbConnectionState = true;
-    const duration = Date.now() - start;
+    const duration = Date.now() - queryStart;
     if (duration > 500) {
       logger.warn(`Truy vấn chậm (${duration}ms): ${text.substring(0, 100)}...`);
     }
@@ -65,6 +89,10 @@ export async function query<R extends QueryResultRow = any, I extends any[] = an
   } catch (error: any) {
     dbConnectionState = false;
     throw error;
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
 }
 

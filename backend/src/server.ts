@@ -2,7 +2,7 @@ import http from 'http';
 import { app } from './app.js';
 import { env } from './config/environment.js';
 import { logger } from './utils/logger.js';
-import { testDbConnection, pool } from './database/pool.js';
+import { testDbConnection, pool, warmPool } from './database/pool.js';
 
 const server = http.createServer(app);
 
@@ -18,6 +18,9 @@ async function startServer(): Promise<void> {
     if (dbStatus.connected) {
       logger.info(`Kết nối PostgreSQL thành công! (Độ trễ: ${dbStatus.latencyMs}ms)`);
       logger.info(`Phiên bản Database: ${dbStatus.dbVersion?.split(' on ')[0]}`);
+      // Pre-warm connections để các request đầu tiên không bị cold-start latency
+      await warmPool(2);
+      logger.info(`Đã khởi tạo và làm ấm sẵn Connection Pool (2 connections).`);
     } else {
       logger.error(`CẢNH BÁO: Không thể kết nối PostgreSQL (${dbStatus.error}). Server vẫn khởi chạy nhưng các chức năng DB sẽ lỗi.`);
     }

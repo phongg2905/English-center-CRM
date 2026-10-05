@@ -286,11 +286,19 @@ export class LeadRepository {
             l.created_at, l.updated_at,
             u.full_name AS assigned_sales_name,
             u.email AS assigned_sales_email,
-            (SELECT MAX(created_at) FROM interaction_logs WHERE lead_id = l.id) AS last_contacted_at,
-            (SELECT COUNT(*) FROM interaction_logs WHERE lead_id = l.id)::int AS total_interactions,
+            il.last_contacted_at,
+            COALESCE(il.total_interactions, 0)::int AS total_interactions,
             COUNT(*) OVER() AS total_count
           FROM leads l
           LEFT JOIN users u ON l.assigned_sales_id = u.id
+          LEFT JOIN (
+            SELECT 
+              lead_id,
+              MAX(created_at) AS last_contacted_at,
+              COUNT(*)::int AS total_interactions
+            FROM interaction_logs
+            GROUP BY lead_id
+          ) il ON il.lead_id = l.id
           ${whereClause}
           ORDER BY ${sortCol} ${sortOrder}
           LIMIT $${paramIdx++} OFFSET $${paramIdx++};
@@ -428,10 +436,18 @@ export class LeadRepository {
             l.created_at, l.updated_at,
             u.full_name AS assigned_sales_name,
             u.email AS assigned_sales_email,
-            (SELECT MAX(created_at) FROM interaction_logs WHERE lead_id = l.id) AS last_contacted_at,
-            (SELECT COUNT(*) FROM interaction_logs WHERE lead_id = l.id)::int AS total_interactions
+            il.last_contacted_at,
+            COALESCE(il.total_interactions, 0)::int AS total_interactions
           FROM leads l
           LEFT JOIN users u ON l.assigned_sales_id = u.id
+          LEFT JOIN (
+            SELECT 
+              lead_id,
+              MAX(created_at) AS last_contacted_at,
+              COUNT(*)::int AS total_interactions
+            FROM interaction_logs
+            GROUP BY lead_id
+          ) il ON il.lead_id = l.id
           WHERE l.id = $1
           LIMIT 1;
         `;
@@ -846,54 +862,51 @@ export class LeadRepository {
   static async getStats(): Promise<LeadStatsResponse> {
     if (isDbAvailable()) {
       try {
-        const sqlStage = `SELECT pipeline_stage, COUNT(*)::int as count FROM leads GROUP BY pipeline_stage;`;
-        const sqlSource = `SELECT source_channel, COUNT(*)::int as count FROM leads GROUP BY source_channel;`;
-        const sqlInterest = `SELECT interest, COUNT(*)::int as count FROM leads GROUP BY interest;`;
+        const sql = `
+          SELECT
+            COUNT(*)::int AS total_leads,
+            COUNT(*) FILTER (WHERE pipeline_stage = 'NEW')::int AS stage_new,
+            COUNT(*) FILTER (WHERE pipeline_stage = 'CONTACTING')::int AS stage_contacting,
+            COUNT(*) FILTER (WHERE pipeline_stage = 'TEST_SCHEDULED')::int AS stage_test_scheduled,
+            COUNT(*) FILTER (WHERE pipeline_stage = 'ENROLLED')::int AS stage_enrolled,
+            COUNT(*) FILTER (WHERE pipeline_stage = 'LOST')::int AS stage_lost,
+            COUNT(*) FILTER (WHERE source_channel = 'FB_ADS')::int AS src_fb_ads,
+            COUNT(*) FILTER (WHERE source_channel = 'WEBSITE')::int AS src_website,
+            COUNT(*) FILTER (WHERE source_channel = 'HOTLINE')::int AS src_hotline,
+            COUNT(*) FILTER (WHERE source_channel = 'WALK_IN')::int AS src_walk_in,
+            COUNT(*) FILTER (WHERE source_channel = 'REFERRAL')::int AS src_referral,
+            COUNT(*) FILTER (WHERE interest = 'IELTS')::int AS interest_ielts,
+            COUNT(*) FILTER (WHERE interest = 'TOEIC')::int AS interest_toeic,
+            COUNT(*) FILTER (WHERE interest = 'COMMUNICATION')::int AS interest_comm
+          FROM leads;
+        `;
 
-        const [resStage, resSource, resInterest] = await Promise.all([
-          query(sqlStage),
-          query(sqlSource),
-          query(sqlInterest),
-        ]);
+        const res = await query(sql);
+        const row = res.rows[0] || {};
 
         const byStage: Record<LeadPipelineStage, number> = {
-          NEW: 0,
-          CONTACTING: 0,
-          TEST_SCHEDULED: 0,
-          ENROLLED: 0,
-          LOST: 0,
+          NEW: row.stage_new || 0,
+          CONTACTING: row.stage_contacting || 0,
+          TEST_SCHEDULED: row.stage_test_scheduled || 0,
+          ENROLLED: row.stage_enrolled || 0,
+          LOST: row.stage_lost || 0,
         };
-        for (const row of resStage.rows) {
-          if (byStage[row.pipeline_stage as LeadPipelineStage] !== undefined) {
-            byStage[row.pipeline_stage as LeadPipelineStage] = row.count;
-          }
-        }
 
         const bySource: Record<LeadSourceChannel, number> = {
-          FB_ADS: 0,
-          WEBSITE: 0,
-          HOTLINE: 0,
-          WALK_IN: 0,
-          REFERRAL: 0,
+          FB_ADS: row.src_fb_ads || 0,
+          WEBSITE: row.src_website || 0,
+          HOTLINE: row.src_hotline || 0,
+          WALK_IN: row.src_walk_in || 0,
+          REFERRAL: row.src_referral || 0,
         };
-        for (const row of resSource.rows) {
-          if (bySource[row.source_channel as LeadSourceChannel] !== undefined) {
-            bySource[row.source_channel as LeadSourceChannel] = row.count;
-          }
-        }
 
         const byInterest: Record<LeadInterest, number> = {
-          IELTS: 0,
-          TOEIC: 0,
-          COMMUNICATION: 0,
+          IELTS: row.interest_ielts || 0,
+          TOEIC: row.interest_toeic || 0,
+          COMMUNICATION: row.interest_comm || 0,
         };
-        for (const row of resInterest.rows) {
-          if (byInterest[row.interest as LeadInterest] !== undefined) {
-            byInterest[row.interest as LeadInterest] = row.count;
-          }
-        }
 
-        const totalLeads = Object.values(byStage).reduce((acc, c) => acc + c, 0);
+        const totalLeads = Number(row.total_leads) || 0;
         const conversionRate = totalLeads > 0 ? Math.round((byStage.ENROLLED / totalLeads) * 1000) / 10 : 0;
 
         return {
