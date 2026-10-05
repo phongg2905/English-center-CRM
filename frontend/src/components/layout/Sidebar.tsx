@@ -11,8 +11,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  GraduationCap,
 } from 'lucide-react';
+import { EduFlowLogo } from '../common/EduFlowLogo';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -86,7 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
       <div className="sidebar-brand-wrapper">
         <Link to="/dashboard" className="sidebar-brand-link">
           <div className="sidebar-logo-icon">
-            <GraduationCap size={22} />
+            <EduFlowLogo size={collapsed ? 26 : 28} variant="square" />
           </div>
           <div className="sidebar-brand-info">
             <div className="sidebar-brand-title">

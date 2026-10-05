@@ -3,7 +3,6 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Button, Input } from '../../components/ui';
 import { 
-  GraduationCap, 
   Lock, 
   User as UserIcon, 
   Eye, 
@@ -11,6 +10,7 @@ import {
   ArrowRight, 
   AlertCircle
 } from 'lucide-react';
+import { EduFlowLogo } from '../../components/common/EduFlowLogo';
 import './LoginPage.css';
 
 export const LoginPage: React.FC = () => {
@@ -61,7 +61,7 @@ export const LoginPage: React.FC = () => {
         {/* Brand Header */}
         <div className="login-brand-header">
           <div className="login-logo-badge">
-            <GraduationCap size={28} />
+            <EduFlowLogo size={46} variant="square" />
           </div>
           <div>
             <h1 className="login-title">EduFlow CRM</h1>
