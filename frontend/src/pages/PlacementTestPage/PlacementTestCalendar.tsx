@@ -90,18 +90,8 @@ export const PlacementTestCalendar: React.FC<PlacementTestCalendarProps> = ({
 
   const rangeTitle = `${currentWeekStart.getDate()}/${currentWeekStart.getMonth() + 1} - ${weekEnd.getDate()}/${weekEnd.getMonth() + 1}/${weekEnd.getFullYear()}`;
 
-  const handleShiftClick = (dateStr: string, slotKey: string, roomName: string, isCurrentlySelected: boolean) => {
-    const next = isCurrentlySelected ? null : { date: dateStr, timeSlot: slotKey, room: roomName };
-    onSelectShift(next);
-
-    if (next) {
-      setTimeout(() => {
-        const rosterEl = document.getElementById('candidate-roster-section');
-        if (rosterEl) {
-          rosterEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-      }, 60);
-    }
+  const handleShiftClick = (dateStr: string, slotKey: string, roomName: string) => {
+    onSelectShift({ date: dateStr, timeSlot: slotKey, room: roomName });
   };
 
   return (
@@ -252,8 +242,8 @@ export const PlacementTestCalendar: React.FC<PlacementTestCalendarProps> = ({
                       <div
                         key={roomName}
                         className={`pt-shift-card ${isSelected ? 'selected' : ''} ${isFull ? 'full' : ''}`}
-                        onClick={() => handleShiftClick(dateStr, slot.key, roomName, isSelected)}
-                        title={`Bấm để xem danh sách thí sinh ca ${slot.key} phòng ${roomName}`}
+                        onClick={() => handleShiftClick(dateStr, slot.key, roomName)}
+                        title={`Bấm để mở danh sách thí sinh ca ${slot.key} phòng ${roomName}`}
                       >
                         <div className="pt-shift-room" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ fontWeight: 700, fontSize: '12px' }}>{roomName}</span>

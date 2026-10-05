@@ -604,7 +604,7 @@
 }
 
 .pt-roster-table th {
-  padding: 12px 18px;
+  padding: 11px 14px;
   font-size: 11.5px;
   font-weight: 700;
   text-transform: uppercase;
@@ -616,11 +616,12 @@
 }
 
 .pt-roster-table td {
-  padding: 14px 18px;
+  padding: 12px 14px;
   font-size: 13px;
   color: var(--text-body);
   border-bottom: 1px solid rgba(226, 232, 240, 0.6);
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 .pt-roster-table tbody tr {
@@ -661,6 +662,7 @@
   font-size: 13.5px;
   font-weight: 700;
   color: var(--text-heading);
+  white-space: nowrap;
 }
 
 .pt-candidate-contact {
@@ -669,6 +671,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
 }
 
 /* One-Touch Attendance Button Group */
@@ -676,6 +679,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .pt-btn-touch {
@@ -685,9 +690,11 @@
   font-weight: 700;
   cursor: pointer;
   border: 1px solid transparent;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all var(--transition-fast);
 }
 
@@ -737,6 +744,8 @@
   border-radius: var(--radius-pill);
   font-size: 11.5px;
   font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .pt-status-badge.scheduled {
@@ -920,4 +929,12 @@
   background: rgba(239, 68, 68, 0.12);
   color: #991b1b;
   border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* SHIFT ROSTER MODAL DIALOG MODIFIER */
+.pt-modal-dialog.pt-roster-modal {
+  max-width: 1160px;
+  width: 95vw;
+  max-height: 88vh;
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.3), 0 0 25px rgba(124, 58, 237, 0.15);
 }
