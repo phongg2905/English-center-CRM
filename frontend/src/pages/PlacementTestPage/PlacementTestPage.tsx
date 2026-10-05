@@ -18,6 +18,7 @@ import { PlacementTestCalendar } from './PlacementTestCalendar';
 import { CandidateRosterTable } from './CandidateRosterTable';
 import { ShiftCapacityAlert } from './ShiftCapacityAlert';
 import { QuickBookModal } from './QuickBookModal';
+import { ShiftRosterModal } from './ShiftRosterModal';
 import { formatLocalDate, getMondayOfWeek } from '../../utils/date';
 import './PlacementTestPage.css';
 
@@ -342,7 +343,7 @@ export const PlacementTestPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Content Area: Calendar Mode */}
       {viewMode === 'calendar' && (
         <PlacementTestCalendar
           currentWeekStart={currentWeekStart}
@@ -357,12 +358,24 @@ export const PlacementTestPage: React.FC = () => {
         />
       )}
 
-      {/* Candidate Roster & One-Touch Attendance Table */}
-      <CandidateRosterTable
-        tests={filteredCandidates}
+      {/* Main Content Area: Table Mode */}
+      {viewMode === 'table' && (
+        <CandidateRosterTable
+          tests={filteredCandidates}
+          onAttendanceChanged={() => loadData(true)}
+          selectedShiftInfo={selectedShift}
+          onClearShiftFilter={() => setSelectedShift(null)}
+          onAddCandidateToShift={(shift) => handleOpenBookingModal(shift.date, shift.timeSlot, shift.room, true)}
+        />
+      )}
+
+      {/* Shift Roster Modal Window (Bật lên khi bấm vào ca thi trên lịch) */}
+      <ShiftRosterModal
+        isOpen={Boolean(selectedShift)}
+        onClose={() => setSelectedShift(null)}
+        shiftInfo={selectedShift}
+        tests={tests}
         onAttendanceChanged={() => loadData(true)}
-        selectedShiftInfo={selectedShift}
-        onClearShiftFilter={() => setSelectedShift(null)}
         onAddCandidateToShift={(shift) => handleOpenBookingModal(shift.date, shift.timeSlot, shift.room, true)}
       />
 
