@@ -3,6 +3,9 @@ import healthRoutes from './health.routes.js';
 import authRoutes from './auth.routes.js';
 import leadRoutes from './lead.routes.js';
 import placementTestRoutes from './placement-test.routes.js';
+import courseRoutes from './course.routes.js';
+import classRoutes from './class.routes.js';
+import enrollmentRoutes from './enrollment.routes.js';
 import swaggerRoutes, { swaggerSpec } from '../docs/swagger.js';
 import { ApiResponse } from '../utils/response.js';
 
@@ -55,9 +58,29 @@ router.get('/', (req: Request, res: Response) => {
           availability: 'GET /api/placement-tests/availability',
           cancel: 'DELETE /api/placement-tests/:id',
         },
-        courses: '/api/courses (Upcoming - BE-05)',
-        classes: '/api/classes (Upcoming - BE-05)',
-        enrollments: '/api/enrollments (Upcoming - BE-05)',
+        courses: {
+          list: 'GET /api/courses',
+          detail: 'GET /api/courses/:id',
+          create: 'POST /api/courses',
+          update: 'PUT /api/courses/:id',
+          delete: 'DELETE /api/courses/:id',
+        },
+        classes: {
+          list: 'GET /api/classes',
+          detail: 'GET /api/classes/:id',
+          availability: 'GET /api/classes/:id/availability',
+          create: 'POST /api/classes',
+          update: 'PUT /api/classes/:id',
+          delete: 'DELETE /api/classes/:id',
+        },
+        enrollments: {
+          enroll: 'POST /api/enrollments',
+          list: 'GET /api/enrollments',
+          detail: 'GET /api/enrollments/:id',
+          recordPayment: 'POST /api/enrollments/:id/payments',
+          receipts: 'GET /api/enrollments/:id/receipts',
+          transferClass: 'POST /api/enrollments/:id/transfer',
+        },
       },
     },
     'Chào mừng đến với API English Center CRM'
@@ -75,6 +98,9 @@ router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/leads', leadRoutes);
 router.use('/placement-tests', placementTestRoutes);
+router.use('/courses', courseRoutes);
+router.use('/classes', classRoutes);
+router.use('/enrollments', enrollmentRoutes);
 router.use('/docs', swaggerRoutes);
 
 export default router;
