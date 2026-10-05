@@ -9,8 +9,8 @@
 | **Dự án** | Quản lý dự án phần mềm - Nhóm 8 |
 | **Người thực hiện** | **Tam Minh** (`@tamminh6`) - UI/UX Designer / Frontend Lead |
 | **Người nghiệm thu** | **phong phạm** (`@phongphm2`) - Project Leader |
-| **Ngày lập** | 30/09/2026 |
-| **Phiên bản** | **v3.5 (Multi-Palette Theme Engine & 106 Open-Source Repository Directory)** |
+| **Ngày lập** | 05/10/2026 (Cập nhật quy chuẩn v3.6) |
+| **Phiên bản** | **v3.6 (Clean Enterprise UI, Zero Noise Guidelines & Quicksand Typography)** |
 | **Tài liệu căn cứ** | `SRS-01_Yeu_cau_chuc_nang_va_phi_chuc_nang.md`, `UML-01_Actors_va_So_do_Use_Case_tong_quan.md`, `UML-02_Dac_ta_kich_ban_Use_Case_chi_tiet_cho_3_luong_chinh.md` |
 | **Sản phẩm bàn giao** | 1. File tài liệu đặc tả Design System này.<br>2. Bản mẫu tương tác sống chạy trên trình duyệt có tích hợp bộ chuyển đổi 9 bảng màu và tìm kiếm 106 repo: `prototype/index.html`. |
 
@@ -18,14 +18,15 @@
 
 ## 1. NGUYÊN TẮC THIẾT KẾ BẢN SẮC RIÊNG (BESPOKE DESIGN PRINCIPLES)
 
-Nhận định các giao diện sinh tự động từ AI thường mắc các lỗi cố hữu: lạm dụng emoji (🔥, ⚡, ❄️), nhồi nhét gradient neon chói gắt, phông chữ thô kệch và chắp vá giữa nền sáng và hộp đen lạc quẻ. 
+Nhận định các giao diện mẫu nghiệp dư thường mắc các lỗi cố hữu: lạm dụng emoji (🔥, ⚡, ❄️), nhồi nhét gradient neon chói gắt, phông chữ thô kệch, chắp vá giữa nền sáng và hộp đen lạc quẻ, cùng việc nhồi nhét quá nhiều câu chú thích phụ râu ria làm loãng dữ liệu. 
 
-Phiên bản **v3.5** được nhóm thiết kế thủ công tinh xảo, tiến hành **khảo sát sâu rộng trên 106 dự án mã nguồn mở hàng đầu thế giới** (Twenty CRM, Plane, Radix Colors, Tailwind, GitHub Primer, Mantine, Cal.com, Supabase, Moodle, Canvas LMS...) nhằm định hình **Bản sắc nhận diện riêng biệt cho ngành Giáo dục Quốc tế**:
+Phiên bản **v3.6** được nhóm thiết kế thủ công tinh xảo, tiến hành **khảo sát sâu rộng trên 106 dự án mã nguồn mở hàng đầu thế giới** (Twenty CRM, Plane, Radix Colors, Tailwind, GitHub Primer, Mantine, Cal.com, Supabase, Moodle, Canvas LMS...) nhằm định hình **Bản sắc nhận diện riêng biệt cho ngành Giáo dục Quốc tế**:
 1. **Tinh giản & Chuyên nghiệp (Minimal & Purposeful):** Loại bỏ hoàn toàn emoji sến sẩm, thay thế bằng các nhãn trạng thái tinh tế (Subtle Status Badges) và chỉ báo vi mô (Micro-dots).
-2. **Typography chuẩn mực quốc tế (Inter Font Family):** Sử dụng duy nhất phông chữ **Inter** với độ co giãn chữ `-0.011em`, phân tầng kích thước chính xác từ `11px` (caption/hint) đến `20px` (KPI) và `48px` (Overall Band Score).
+2. **Typography chuẩn mực & thân thiện (Quicksand Font Family):** Chuẩn hóa phông chữ **Quicksand** với nét bo tròn mềm mại, thân thiện, uốn lượn tự nhiên, chuẩn hóa dấu tiếng Việt.
 3. **Đa Bảng Màu Động (Multi-Palette Theme Engine):** Cung cấp **9 bảng màu tuyển chọn**, cho phép người dùng hoặc trung tâm đào tạo chuyển đổi linh hoạt theo nhận diện thương hiệu chỉ với 1 cú click chuột.
 4. **Bố cục thẻ Academic Certificate:** Phân hệ chấm điểm Placement Test được thiết kế như một **Phiếu báo điểm chuẩn học thuật (Academic Scorecard)** trên nền giấy trắng tinh khôi, viền kép Navy sang trọng.
 5. **Kho tra cứu tương tác 106 Repos:** Bản mẫu tích hợp công cụ tìm kiếm và lọc thời gian thực toàn bộ 106 kho mã nguồn mở để đội ngũ lập trình tra cứu mẫu code và token CSS mọi lúc.
+6. **Trải nghiệm Nghiệp vụ Thuần khiết (Zero Information Noise & High-Utility UI):** Loại bỏ hoàn toàn các văn bản chú thích râu ria, câu phụ đề rườm rà và các mã kỹ thuật thô (`UC-xx`, `FE-xx`). Mọi không gian trên màn hình đều ưu tiên hiển thị số liệu cốt lõi và công cụ tác nghiệp nhanh cho nhân sự.
 
 ---
 
@@ -54,10 +55,10 @@ Sau khi khảo sát và đánh giá 106 kho mã nguồn mở cùng 9 bộ màu t
 
 ## 3. QUY CHUẨN DESIGN TOKENS CHUNG
 
-### 3.1. Phân cấp Kiểu chữ (Typography Scale - Inter Font)
-* **Font Family:** `'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`.
+### 3.1. Phân cấp Kiểu chữ (Typography Scale - Quicksand Font)
+* **Font Family:** `'Quicksand', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif` (Nét chữ bo tròn mềm mại, thân thiện, uốn lượn tự nhiên, chuẩn hóa dấu tiếng Việt).
 * **Monospace Font:** `'JetBrains Mono', Consolas, monospace` (Dùng cho mã học viên, điểm số, mã màu hex).
-* **Letter-spacing:** `-0.011em` (Gia tăng độ tinh xảo và mật độ thông tin).
+* **Letter-spacing:** `-0.005em` (Đảm bảo độ thoáng mắt, mượt mà và tròn trịa).
 * **Quy chuẩn kích thước:**
   * **H1 / Page Title:** `17px - 18px`, Weight `700`, Letter-spacing `-0.02em`.
   * **H2 / Section Title:** `15px`, Weight `700`.
@@ -73,7 +74,20 @@ Sau khi khảo sát và đánh giá 106 kho mã nguồn mở cùng 9 bộ màu t
   * `radius-md`: $8	ext{px}$ (Dùng cho thẻ card, menu item, dropdown).
   * `radius-lg`: $12	ext{px}$ (Dùng cho bảng tổng hợp, panel điều hành).
   * `radius-xl`: $16	ext{px}$ (Dùng cho modal dialog popup).
-  * `radius-pill`: $9999	ext{px}$ (Dùng cho status pills, badge tròn, avatar).
+  * `radius-pill`: 9999px (Dùng cho status pills, badge tròn, avatar).
+
+### 3.3. Quy chuẩn Tối giản Thông tin & Chống Rác Giao diện (Zero Information Noise Standards)
+Nhằm đảm bảo sản phẩm đạt tiêu chuẩn thương mại cao cấp, đáp ứng tối đa hiệu suất vận hành của đội ngũ tư vấn, học vụ và quản lý, toàn bộ giao diện tuân thủ nghiêm ngặt 4 quy tắc chống rác thông tin:
+1. **Cấm hiển thị mã kỹ thuật & nhãn học thuật trên UI:**
+   * Cấm tuyệt đối đưa các mã Use Case (`UC-01`, `UC-02`), mã công việc (`FE-01`, `FE-04A`, `BE-04`), nhãn Sprint hay thuật ngữ đồ án vào giao diện người dùng thực tế (tiêu đề trang, thẻ badge, tab bar, modal).
+   * Toàn bộ nhãn màn hình phải dùng từ ngữ nghiệp vụ chuẩn mực doanh nghiệp (ví dụ: *Lịch Thi & Khảo Thí Đầu Vào*, *Phễu Tuyển Sinh (Kanban)*, *Phiếu Báo Điểm Học Viên*).
+2. **Cấm chèn thành phần thử nghiệm nội bộ vào màn hình nghiệp vụ:**
+   * Không đặt các tab "Thư viện component / Playground", khối nút bấm demo tài khoản thử nghiệm trên các màn hình chức năng chính (Dashboard, Login). Mọi màn hình phải là sản phẩm hoàn thiện phục vụ tác nghiệp thực tế.
+3. **Loại bỏ triệt để phụ đề giải thích & chú thích râu ria (Zero Filler Microcopy):**
+   * Tiêu đề trang (H1) và tiêu đề thẻ (Card Title) phải tự thân truyền đạt ý nghĩa rõ ràng; cấm chèn các dòng phụ đề (`<p>`, `subtitle`) giải thích lại những điều hiển nhiên.
+   * Thẻ chỉ số (Stat Cards / KPI) chỉ gồm Icon nhận diện + Tiêu đề ngắn gọn + Con số dữ liệu to rõ ràng; cấm chèn các câu văn chú thích râu ria (`pt-stat-hint`) như *"Trong khoảng thời gian đã chọn"*, *"Chưa điểm danh hoặc đang diễn ra"*, *"Tất cả các ca đều còn chỗ trống"*.
+4. **Nội dung Placeholder chuẩn sản phẩm thương mại:**
+   * Các màn hình đang phát triển phải sử dụng thông điệp chuẩn mực SaaS (*"Đang phát triển"*, *"Tính năng này đang được đồng bộ dữ liệu và chuẩn bị ra mắt trong phiên bản sắp tới"*); cấm tuyệt đối sử dụng các câu từ mang tính chất đồ án (*"Hệ thống routing đã kích hoạt theo User Story..."*).
 
 ---
 

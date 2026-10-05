@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bản Mẫu Phông Chữ Mềm Mại & Bo Tròn — EduFlow CRM</title>
+  
+  <!-- Google Fonts: Nunito, Quicksand, Comfortaa, Baloo 2, Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&family=Quicksand:wght@300;400;500;600;700&family=Comfortaa:wght@300;400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #0d1117;
+      --bg-card: #161b26;
+      --bg-surface: #1f2430;
+      --border: rgba(255, 255, 255, 0.1);
+      --border-focus: #ec4899;
+      --primary: #7c3aed;
+      --primary-gradient: linear-gradient(135deg, #7c3aed 0%, #ec4899 50%, #f97316 100%);
+      --accent-pink: #ec4899;
+      --accent-amber: #f97316;
+      --accent-green: #10b981;
+      --accent-blue: #38bdf8;
+      --text-white: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-white);
+      font-family: 'Nunito', sans-serif;
+      padding: 32px 24px;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(236, 72, 153, 0.15) 0%, transparent 45%),
+        radial-gradient(circle at 85% 20%, rgba(124, 58, 237, 0.15) 0%, transparent 45%),
+        radial-gradient(circle at 50% 85%, rgba(249, 115, 22, 0.12) 0%, transparent 50%);
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .badge-pill {
+      display: inline-block;
+      padding: 6px 18px;
+      border-radius: 9999px;
+      background: rgba(236, 72, 153, 0.18);
+      border: 1px solid rgba(236, 72, 153, 0.4);
+      color: #f472b6;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 14px;
+    }
+
+    .header h1 {
+      font-size: 34px;
+      font-weight: 900;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 15px;
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Sandbox */
+    .sandbox-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 40px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+    }
+
+    .sandbox-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .sandbox-title {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .font-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .font-btn {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-white);
+      padding: 9px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .font-btn:hover {
+      background: rgba(236, 72, 153, 0.25);
+      border-color: var(--accent-pink);
+    }
+
+    .font-btn.active {
+      background: var(--primary-gradient);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(236, 72, 153, 0.4);
+    }
+
+    .preview-canvas {
+      padding: 28px;
+      background: rgba(13, 17, 23, 0.75);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .mock-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .kpi-diff {
+      font-size: 13px;
+      color: var(--accent-green);
+      font-weight: 700;
+    }
+
+    /* Cards */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .font-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 26px;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .font-card:hover {
+      border-color: rgba(236, 72, 153, 0.6);
+      transform: translateY(-4px);
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .font-card.recommended {
+      border-color: #ec4899;
+      box-shadow: 0 0 24px rgba(236, 72, 153, 0.25);
+    }
+
+    .rec-tag {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--primary-gradient);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 12px;
+      border-radius: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .font-name {
+      font-size: 24px;
+      font-weight: 900;
+      margin-bottom: 4px;
+      color: #fff;
+    }
+
+    .font-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .sample-section {
+      margin-bottom: 18px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .sample-title {
+      font-size: 11px;
+      color: #f472b6;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .sample-heading {
+      font-size: 21px;
+      font-weight: 800;
+      line-height: 1.35;
+      margin-bottom: 6px;
+    }
+
+    .sample-body {
+      font-size: 14px;
+      line-height: 1.65;
+      color: #cbd5e1;
+    }
+
+    .sample-diacritics {
+      font-size: 14px;
+      line-height: 1.8;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 12px 14px;
+      border-radius: 10px;
+      color: #f1f5f9;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-sample {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      background: var(--primary-gradient);
+      color: #fff;
+      margin-top: 10px;
+    }
+
+    /* Font Specific Classes */
+    .font-nunito { font-family: 'Nunito', sans-serif; }
+    .font-quicksand { font-family: 'Quicksand', sans-serif; }
+    .font-comfortaa { font-family: 'Comfortaa', cursive, sans-serif; }
+    .font-baloo { font-family: 'Baloo 2', cursive, sans-serif; }
+
+    .custom-tester {
+      margin-top: 32px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+    }
+
+    .custom-input {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 16px;
+      margin-top: 12px;
+      outline: none;
+    }
+
+    .custom-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <span class="badge-pill">🌸 BỘ SƯU TẬP PHÔNG MỀM MẠI & BO TRÒN</span>
+      <h1>Bộ Sưu Tập Phông Chữ Tròn Trịa, Thân Thiện & Mềm Mại</h1>
+      <p>
+        Dành riêng cho EduFlow CRM: Tuyển chọn 4 phông chữ nổi tiếng thế giới có đường nét bo tròn tự nhiên, nét chữ uốn lượn mềm mại, dấu tiếng Việt tròn đầy, giảm tối đa cảm giác góc cạnh cứng nhắc.
+      </p>
+    </div>
+
+    <!-- Live Sandbox -->
+    <div class="sandbox-panel">
+      <div class="sandbox-header">
+        <div class="sandbox-title">
+          <span>⚡ Bấm thử từng phông để xem toàn bộ giao diện đổi thời gian thực:</span>
+        </div>
+        <div class="font-buttons">
+          <button class="font-btn active" onclick="switchFont('Nunito', this)">1. Nunito (Khuyên dùng số 1)</button>
+          <button class="font-btn" onclick="switchFont('Quicksand', this)">2. Quicksand (Thanh thoát)</button>
+          <button class="font-btn" onclick="switchFont('Comfortaa', this)">3. Comfortaa (Siêu tròn)</button>
+          <button class="font-btn" onclick="switchFont('Baloo 2', this)">4. Baloo 2 (Ấm áp, đầy đặn)</button>
+        </div>
+      </div>
+
+      <div class="preview-canvas font-nunito" id="liveCanvas">
+        <div class="mock-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Tổng Học Viên Mới</div>
+            <div class="kpi-value">1.482</div>
+            <div class="kpi-diff">↑ +24.8% so với tháng trước</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Tỷ Lệ Chốt Lead</div>
+            <div class="kpi-value">38.5%</div>
+            <div class="kpi-diff">↑ Vượt chỉ tiêu S.M.A.R.T (35%)</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Doanh Thu Đào Tạo</div>
+            <div class="kpi-value">850.000.000 đ</div>
+            <div class="kpi-diff">↑ 48 lớp đang vận hành</div>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-weight: 800; font-size: 17px; color: #fff;">Nguyễn Thị Thuỳ Dung — Đăng ký IELTS Bứt phá Target 6.5</span>
+            <span style="background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 700;">Đã Đặt Lịch Thi</span>
+          </div>
+          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 14px; line-height: 1.6;">
+            Thí sinh đăng ký ca thi Placement Test 4 kỹ năng lúc 18:00 ngày mai tại Phòng Lab 302. Giáo viên phụ trách chấm: Ms. Emily Nguyễn (8.5 IELTS).
+          </p>
+          <button class="btn-sample">Xem Chi Tiết Hồ Sơ & Phiếu Điểm</button>
+        </div>
+
+        <div class="sample-diacritics" id="dynamicText">
+          Kiểm tra tiếng Việt: "Hệ thống quản trị tuyển sinh, xếp lớp tự động, chống trùng lịch phòng thi và khóa sĩ số thời gian thực".
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 Cards -->
+    <div class="comparison-grid">
+
+      <!-- Card 1: Nunito -->
+      <div class="font-card recommended font-nunito">
+        <div class="rec-tag">Đề Xuất Hàng Đầu</div>
+        <div class="font-name">1. Phông Nunito</div>
+        <div class="font-subtitle">Tác giả: Vernon Adams | Phông chữ bo tròn số 1 thế giới cho App</div>
+
+        <div class="sample-section">
+          <div class="sample-title">Tiêu Đề & Số Liệu (Heading & Metric)</div>
+          <div class="sample-heading">Hệ Thống CRM Quản Lý Trung Tâm Ngoại Ngữ</div>
+          <div style="font-size: 26px; font-weight: 900; color: #ec4899; margin: 4px 0;">98.4% Điểm Danh</div>
+        </div>
+
+        <div class="sample-section">
+          <div class="sample-title">Nội Dung Văn Bản (Body Text)</div>
+          <div class="sample-body">
+            Đầu nét chữ được bo tròn hoàn hảo (Rounded Terminals), tạo cảm giác vô cùng mềm mại, thân thiện, dễ mến nhưng vẫn giữ trọn sự ngay ngắn, chuyên nghiệp của hệ thống quản lý. Duolingo và Canva rất chuộng phong cách này.
+          </div>
+        </div>
+
+        <div class="sample-section">
+          <div class="sample-title">Dấu Tiếng Việt Tròn Trịa</div>
+          <div class="sample-diacritics">
+            á, à, ả, ã, ạ, ắ, ằ, ẳ, ẵ, ặ, ấ, ầ, ẩ, ẫ, ậ, đ, ê, ế, ề, ể, ễ, ệ, ô, ố, ồ, ổ, ỗ, ộ, ơ, ớ, ờ, ở, ỡ, ợ, ư, ứng
+          </div>
+        </div>
+
+        <div style="font-size: 13px; color: #f472b6; font-weight: 700;">
+          ⭐ Đánh giá: 10/10 — Cân bằng hoàn hảo: vừa tròn mềm mại, vừa cực kỳ dễ đọc trong bảng biểu CRM!
+        </div>
+      </div>
+
+      <!-- Card 2: Quicksand -->
+      <div class="font-card font-quicksand">
+        <div class="font-name">2. Phông Quicksand</div>
+        <div class="font-subtitle">Tác giả: Andrew Paglinawan | Thanh thoát, hiện đại & mềm dịu</div>
+
+        <div class="sample-section">
+          <div class="sample-title">Tiêu Đề & Số Liệu (Heading & Metric)</div>
+          <div class="sample-heading">Hệ Thống CRM Quản Lý Trung Tâm Ngoại Ngữ</div>
+          <div style="font-size: 26px; font-weight: 800; color: #38bdf8; margin: 4px 0;">98.4% Điểm Danh</div>
+        </div>
+
+        <div class="sample-section">
+          <div class="sample-title">Nội Dung Văn Bản (Body Text)</div>
+          <div class="sample-body">
+            Các góc chữ uốn tròn thanh mảnh, nét chữ nhẹ nhàng, tinh tế. Mang lại cảm giác nhẹ nhõm, hiện đại theo phong cách ứng dụng giáo dục cao cấp.
+          </div>
+        </div>
+
+        <div class="sample-section">
+          <div class="sample-title">Dấu Tiếng Việt Tròn Trịa</div>
+          <div class="sample-diacritics">
+            á, à, ả, ã, ạ, ắ, ằ, ẳ, ẵ, ặ, ấ, ầ, ẩ, ẫ, ậ, đ, ê, ế, ề, ể, ễ, ệ, ô, ố, ồ, ổ, ỗ, ộ, ơ, ớ, ờ, ở, ỡ, ợ, ư, ứng
+          </div>
+        </div>
+
+        <div style="font-size: 13px; color: #38bdf8; font-weight: 700;">
+          ⭐ Đánh giá: 9.6/10 — Rất thanh lịch, nhẹ nhàng, bo tròn thanh thoát.
+        </div>
+      </div>
+
+      <!-- Card 3: Comfortaa -->
+      <div class="font-card font-comfortaa">
+        <div class="font-name">3. Phông Comfortaa</div>
+        <div class="font-subtitle">Tác giả: Johan Aakerlund | Siêu bo tròn (Ultra-Rounded Geometric)</div>
+
+        <div class="sample-section">
+          <div class="sample-title">Tiêu Đề & Số Liệu (Heading & Metric)</div>
+          <div class="sample-heading">Hệ Thống CRM Quản Lý Trung Tâm Ngoại Ngữ</div>
+          <div style="font-size: 26px; font-weight: 700; color: #fbbf24; margin: 4px 0;">98.4% Điểm Danh</div>
+        </div>
+
+        <div class="sample-section">
+          <div class="sample-title">Nội Dung Văn Bản (Body Text)</div>
+          <div class="sample-body">
+            Độ cong tròn ở mức tối đa, các chữ cái 'a', 'e', 'o', 'c' như những đường cong tròn trịa khép kín. Mang lại cảm giác dễ thương, êm ái tuyệt đối.
+          </div>
+        </div>
+
+        <div class="sample-section">
+          <div class="sample-title">Dấu Tiếng Việt Tròn Trịa</div>
+          <div class="sample-diacritics">
+            á, à, ả, ã, ạ, ắ, ằ, ẳ, ẵ, ặ, ấ, ầ, ẩ, ẫ, ậ, đ, ê, ế, ề, ể, ễ, ệ, ô, ố, ồ, ổ, ỗ, ộ, ơ, ớ, ờ, ở, ỡ, ợ, ư, ứng
+          </div>
+        </div>
+
+        <div style="font-size: 13px; color: #fbbf24; font-weight: 700;">
+          ⭐ Đánh giá: 9.2/10 — Tròn trịa nhất trong mọi phông chữ, đậm nét nghệ thuật.
+        </div>
+      </div>
+
+      <!-- Card 4: Baloo 2 -->
+      <div class="font-card font-baloo">
+        <div class="font-name">4. Phông Baloo 2</div>
+        <div class="font-subtitle">Tác giả: Ek Type | Tròn đầy đặn, ấm áp & sinh động</div>
+
+        <div class="sample-section">
+          <div class="sample-title">Tiêu Đề & Số Liệu (Heading & Metric)</div>
+          <div class="sample-heading">Hệ Thống CRM Quản Lý Trung Tâm Ngoại Ngữ</div>
+          <div style="font-size: 26px; font-weight: 800; color: #4ade80; margin: 4px 0;">98.4% Điểm Danh</div>
+        </div>
+
+        <div class="sample-section">
+          <div class="sample-title">Nội Dung Văn Bản (Body Text)</div>
+          <div class="sample-body">
+            Hình khối chữ tròn đẫy đà, các nét nối mềm mại tự nhiên, tạo cảm giác rất ấm áp, tràn đầy năng lượng tích cực cho học viên học ngoại ngữ.
+          </div>
+        </div>
+
+        <div class="sample-section">
+          <div class="sample-title">Dấu Tiếng Việt Tròn Trịa</div>
+          <div class="sample-diacritics">
+            á, à, ả, ã, ạ, ắ, ằ, ẳ, ẵ, ặ, ấ, ầ, ẩ, ẫ, ậ, đ, ê, ế, ề, ể, ễ, ệ, ô, ố, ồ, ổ, ỗ, ộ, ơ, ớ, ờ, ở, ỡ, ợ, ư, ứng
+          </div>
+        </div>
+
+        <div style="font-size: 13px; color: #4ade80; font-weight: 700;">
+          ⭐ Đánh giá: 9.4/10 — Đầy đặn, thân thiện, tạo sự gắn kết học vụ.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Custom Tester -->
+    <div class="custom-tester">
+      <div style="font-weight: 800; font-size: 16px; margin-bottom: 6px;">✍️ Gõ thử văn bản của anh để xem tức thì:</div>
+      <input 
+        type="text" 
+        class="custom-input font-nunito" 
+        id="customInput" 
+        placeholder="Nhập thử văn bản tiếng Việt bất kỳ tại đây..." 
+        value="EduFlow CRM — Nền tảng quản lý tuyển sinh thân thiện, mượt mà và tròn trịa"
+        oninput="updateCustomText(this.value)"
+      >
+    </div>
+  </div>
+
+  <script>
+    function switchFont(fontName, btn) {
+      document.querySelectorAll('.font-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const canvas = document.getElementById('liveCanvas');
+      canvas.className = 'preview-canvas';
+      if (fontName === 'Nunito') canvas.classList.add('font-nunito');
+      if (fontName === 'Quicksand') canvas.classList.add('font-quicksand');
+      if (fontName === 'Comfortaa') canvas.classList.add('font-comfortaa');
+      if (fontName === 'Baloo 2') canvas.classList.add('font-baloo');
+
+      const customInput = document.getElementById('customInput');
+      customInput.className = 'custom-input ' + canvas.className.replace('preview-canvas ', '');
+    }
+
+    function updateCustomText(val) {
+      document.getElementById('dynamicText').innerText = val;
+    }
+  </script>
+</body>
+</html>

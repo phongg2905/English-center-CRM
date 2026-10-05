@@ -93,7 +93,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
               EduFlow
               <span className="sidebar-version-badge">PRO</span>
             </div>
-            <div className="sidebar-brand-sub">Hệ thống CRM Anh ngữ</div>
           </div>
         </Link>
       </div>

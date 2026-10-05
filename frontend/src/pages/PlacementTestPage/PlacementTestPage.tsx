@@ -178,12 +178,8 @@ export const PlacementTestPage: React.FC = () => {
         <div className="pt-title-area">
           <h1>
             <Calendar size={26} color="var(--color-primary-royal)" />
-            Lịch Thi & Quản Lý Ca Thi Placement Test
-            <span className="pt-title-badge">UC-02 / FE-04A</span>
+            Lịch Thi & Khảo Thí Đầu Vào
           </h1>
-          <p>
-            Theo dõi ca thi trực quan, kiểm soát tải phòng thi (10 thí sinh/phòng) và điểm danh thí sinh một chạm.
-          </p>
         </div>
 
         <div className="pt-header-actions">

@@ -9,9 +9,7 @@ import {
   Eye, 
   EyeOff, 
   ArrowRight, 
-  AlertCircle,
-  Sparkles,
-  ShieldCheck
+  AlertCircle
 } from 'lucide-react';
 import './LoginPage.css';
 
@@ -57,12 +55,6 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleFillDemo = (demoUser: string, demoPass: string) => {
-    setUsername(demoUser);
-    setPassword(demoPass);
-    setErrorMsg(null);
-  };
-
   return (
     <div className="login-page-container">
       <div className="login-card">
@@ -73,7 +65,6 @@ export const LoginPage: React.FC = () => {
           </div>
           <div>
             <h1 className="login-title">EduFlow CRM</h1>
-            <p className="login-subtitle">Hệ thống Quản lý Tuyển sinh & Đào tạo Anh ngữ</p>
           </div>
         </div>
 
@@ -89,7 +80,7 @@ export const LoginPage: React.FC = () => {
         <form className="login-form" onSubmit={handleSubmit}>
           <Input
             label="Tên đăng nhập hoặc Email"
-            placeholder="admin / sales01 / academic01"
+            placeholder="Nhập tên đăng nhập hoặc email..."
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             leftIcon={<UserIcon size={18} />}
@@ -145,37 +136,6 @@ export const LoginPage: React.FC = () => {
             Đăng nhập hệ thống
           </Button>
         </form>
-
-        {/* Demo Accounts Helper */}
-        <div className="demo-accounts-helper">
-          <div className="demo-accounts-title">Tài khoản thử nghiệm nhanh (Demo)</div>
-          <div className="demo-buttons-grid">
-            <button
-              type="button"
-              className="demo-pill-btn"
-              onClick={() => handleFillDemo('tamminh', 'Password@123')}
-            >
-              <ShieldCheck size={13} style={{ display: 'inline', marginRight: 4 }} />
-              Admin (tamminh)
-            </button>
-            <button
-              type="button"
-              className="demo-pill-btn"
-              onClick={() => handleFillDemo('longpham', 'Password@123')}
-            >
-              <Sparkles size={13} style={{ display: 'inline', marginRight: 4 }} />
-              Tư vấn (longpham)
-            </button>
-            <button
-              type="button"
-              className="demo-pill-btn"
-              onClick={() => handleFillDemo('phongpham', 'Password@123')}
-            >
-              <GraduationCap size={13} style={{ display: 'inline', marginRight: 4 }} />
-              Học vụ (phongpham)
-            </button>
-          </div>
-        </div>
 
         {/* Register Prompt */}
         <div style={{ textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)', paddingTop: '14px', borderTop: '1px solid rgba(226, 232, 240, 0.7)' }}>

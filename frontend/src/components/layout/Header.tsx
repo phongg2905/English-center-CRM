@@ -30,13 +30,13 @@ export const Header: React.FC = () => {
 
   // Compute breadcrumb title based on path
   const getBreadcrumbTitle = (pathname: string) => {
-    if (pathname.includes('/leads')) return 'Quản lý Tuyển sinh & Leads';
-    if (pathname.includes('/tests')) return 'Kiểm tra Đầu vào & Xếp lớp';
+    if (pathname.includes('/leads')) return 'Tuyển sinh & Leads';
+    if (pathname.includes('/tests')) return 'Lịch thi & Xếp lớp';
     if (pathname.includes('/classes')) return 'Quản lý Lớp học';
-    if (pathname.includes('/reports')) return 'Báo cáo Doanh thu & Tuyển sinh';
-    if (pathname.includes('/staff')) return 'Đội ngũ Giảng viên & Nhân sự';
+    if (pathname.includes('/reports')) return 'Báo cáo Doanh thu';
+    if (pathname.includes('/staff')) return 'Đội ngũ Nhân sự';
     if (pathname.includes('/settings')) return 'Cài đặt Hệ thống';
-    return 'Bảng điều khiển Tổng quan (Dashboard)';
+    return 'Tổng quan';
   };
 
   const handleLogout = async () => {
@@ -139,7 +139,7 @@ export const Header: React.FC = () => {
                 role="menuitem"
                 onClick={() => {
                   setDropdownOpen(false);
-                  alert('Chức năng bảo mật phân quyền đang được bảo vệ bởi Supabase Row-Level Security.');
+                  navigate('/settings');
                 }}
               >
                 <Shield size={15} />

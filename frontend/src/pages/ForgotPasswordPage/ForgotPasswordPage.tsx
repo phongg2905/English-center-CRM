@@ -177,10 +177,10 @@ export const ForgotPasswordPage: React.FC = () => {
               <div className="otp-demo-hint">
                 <span>
                   <Sparkles size={14} style={{ display: 'inline', marginRight: 4 }} />
-                  Mã OTP Demo hệ thống cấp:
+                  Mã xác thực gửi về email:
                 </span>
-                <span className="otp-copy-chip" onClick={() => setOtp(demoOtp)}>
-                  {demoOtp} (Click để điền)
+                <span className="otp-copy-chip" onClick={() => setOtp(demoOtp)} title="Nhấn để tự động điền">
+                  {demoOtp}
                 </span>
               </div>
             )}

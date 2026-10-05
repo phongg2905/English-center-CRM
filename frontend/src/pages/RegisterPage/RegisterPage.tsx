@@ -96,7 +96,6 @@ export const RegisterPage: React.FC = () => {
           </div>
           <div>
             <h1 className="register-title">Đăng Ký Tài Khoản</h1>
-            <p className="register-subtitle">Hệ thống Quản lý Tuyển sinh & Đào tạo EduFlow CRM</p>
           </div>
         </div>
 

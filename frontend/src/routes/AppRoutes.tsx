@@ -34,59 +34,29 @@ export const AppRoutes: React.FC = () => {
         
         <Route
           path="leads"
-          element={
-            <PlaceholderPage
-              title="Quản lý Tuyển sinh & Leads"
-              subtitle="Theo dõi phễu học viên tiềm năng, tỷ lệ chuyển đổi và lịch sử tư vấn"
-              taskTag="UC-01 ADMISSIONS"
-            />
-          }
+          element={<PlaceholderPage title="Tuyển sinh & Leads" />}
         />
 
         <Route path="tests" element={<PlacementTestPage />} />
 
         <Route
           path="classes"
-          element={
-            <PlaceholderPage
-              title="Quản lý Lớp học & Thời khóa biểu"
-              subtitle="Danh sách lớp đang mở, sĩ số phòng học và lịch dạy của giảng viên"
-              taskTag="UC-03 CLASS MANAGEMENT"
-            />
-          }
+          element={<PlaceholderPage title="Quản lý Lớp học & Thời khóa biểu" />}
         />
 
         <Route
           path="reports"
-          element={
-            <PlaceholderPage
-              title="Báo cáo Doanh thu & Tuyển sinh"
-              subtitle="Biểu đồ trực quan doanh số học phí thực thu theo từng chi nhánh Campus"
-              taskTag="UC-04 REVENUE & ANALYTICS"
-            />
-          }
+          element={<PlaceholderPage title="Báo cáo Doanh thu & Tuyển sinh" />}
         />
 
         <Route
           path="staff"
-          element={
-            <PlaceholderPage
-              title="Đội ngũ Giảng viên & Nhân sự"
-              subtitle="Hồ sơ giáo viên bản xứ, trợ giảng và phân bổ chỉ tiêu tư vấn viên"
-              taskTag="UC-05 STAFF & TEACHERS"
-            />
-          }
+          element={<PlaceholderPage title="Đội ngũ Giảng viên & Nhân sự" />}
         />
 
         <Route
           path="settings"
-          element={
-            <PlaceholderPage
-              title="Cài đặt Hệ thống CRM"
-              subtitle="Cấu hình tham số trung tâm, phân quyền RBAC và tích hợp Webhook"
-              taskTag="SYSTEM CONFIG"
-            />
-          }
+          element={<PlaceholderPage title="Cài đặt Hệ thống" />}
         />
       </Route>
 
