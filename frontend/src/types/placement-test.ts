@@ -1,5 +1,5 @@
 /**
- * Types & Interfaces cho Phân hệ Placement Test (FE-04A / BE-04 / UC-02)
+ * Types & Interfaces cho Phân hệ Placement Test & Khảo Thí Đầu Vào
  * Quản lý lịch ca thi, điểm danh thí sinh và cảnh báo sức chứa phòng thi
  */
 

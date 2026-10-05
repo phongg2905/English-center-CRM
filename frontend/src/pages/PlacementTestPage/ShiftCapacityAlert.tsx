@@ -43,7 +43,6 @@ export const ShiftCapacityAlert: React.FC<ShiftCapacityAlertProps> = ({ slots, t
           <div className="pt-stat-info">
             <span className="pt-stat-label">Tổng Thí Sinh Đăng Ký</span>
             <span className="pt-stat-value">{totalBooked}</span>
-            <span className="pt-stat-hint">Trong khoảng thời gian đã chọn</span>
           </div>
         </div>
 
@@ -52,9 +51,8 @@ export const ShiftCapacityAlert: React.FC<ShiftCapacityAlertProps> = ({ slots, t
             <Clock size={22} />
           </div>
           <div className="pt-stat-info">
-            <span className="pt-stat-label">Đang Chờ Thi (Scheduled)</span>
+            <span className="pt-stat-label">Chờ Thi</span>
             <span className="pt-stat-value">{scheduledCount}</span>
-            <span className="pt-stat-hint">Chưa điểm danh hoặc đang diễn ra</span>
           </div>
         </div>
 
@@ -65,9 +63,6 @@ export const ShiftCapacityAlert: React.FC<ShiftCapacityAlertProps> = ({ slots, t
           <div className="pt-stat-info">
             <span className="pt-stat-label">Đã Có Mặt Điểm Danh</span>
             <span className="pt-stat-value">{presentCount}</span>
-            <span className="pt-stat-hint">
-              {totalBooked > 0 ? `${Math.round((presentCount / totalBooked) * 100)}% tỷ lệ tham dự` : 'Chưa có dữ liệu'}
-            </span>
           </div>
         </div>
 
@@ -82,12 +77,9 @@ export const ShiftCapacityAlert: React.FC<ShiftCapacityAlertProps> = ({ slots, t
             <Users size={22} />
           </div>
           <div className="pt-stat-info">
-            <span className="pt-stat-label">Ca Thi Kín Chỗ (10/10)</span>
+            <span className="pt-stat-label">Ca Thi Kín Chỗ</span>
             <span className="pt-stat-value" style={{ color: fullSlots.length > 0 ? '#dc2626' : undefined }}>
               {fullSlots.length}
-            </span>
-            <span className="pt-stat-hint">
-              {fullSlots.length > 0 ? 'Cần mở thêm phòng hoặc slot mới' : 'Tất cả các ca đều còn chỗ trống'}
             </span>
           </div>
         </div>

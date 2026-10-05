@@ -145,8 +145,8 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
         <div className="pt-roster-title">
           <h3>
             {selectedShiftInfo
-              ? `Danh Sách Thí Sinh Trong Ca: ${selectedShiftInfo.date} • ${selectedShiftInfo.timeSlot} ${selectedShiftInfo.room ? `(${selectedShiftInfo.room})` : ''}`
-              : 'Bảng Danh Sách Thí Sinh & Điểm Danh Một Chạm'}
+              ? `Ca thi: ${selectedShiftInfo.date} • ${selectedShiftInfo.timeSlot} ${selectedShiftInfo.room ? `(${selectedShiftInfo.room})` : ''}`
+              : 'Danh Sách Thí Sinh'}
           </h3>
           <span className="pt-roster-count">{tests.length} Thí sinh</span>
           {selectedShiftInfo && onClearShiftFilter && (
@@ -156,7 +156,7 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
               style={{ fontSize: '11.5px', padding: '4px 10px', background: '#f1f5f9', color: '#475569' }}
               onClick={onClearShiftFilter}
             >
-              ✕ Bỏ lọc ca thi (Xem tất cả)
+              ✕ Xem tất cả
             </button>
           )}
         </div>

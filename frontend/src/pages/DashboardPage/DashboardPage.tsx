@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Button,
   Card,
   CardHeader,
   CardTitle,
-  CardSubtitle,
   CardBody,
   Badge,
-  Input,
   StatCard,
 } from '../../components/ui';
 import {
   Kanban,
   FileCheck2,
-  Component,
   Phone,
   Calendar,
   Sparkles,
@@ -23,7 +21,6 @@ import {
   Plus,
   TrendingUp,
   Award,
-  Layers,
   GraduationCap,
 } from 'lucide-react';
 import '../../App.css';
@@ -40,9 +37,9 @@ interface LeadItem {
 }
 
 export const DashboardPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'kanban' | 'scorecard' | 'components'>('kanban');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'kanban' | 'scorecard'>('kanban');
   const [selectedLead, setSelectedLead] = useState<LeadItem | null>(null);
-  const [btnLoading, setBtnLoading] = useState(false);
 
   // Khóa cuộn nền đằng sau khi mở ngăn kéo chi tiết Lead
   useEffect(() => {
@@ -142,11 +139,6 @@ export const DashboardPage: React.FC = () => {
     },
   ];
 
-  const handleTestLoading = () => {
-    setBtnLoading(true);
-    setTimeout(() => setBtnLoading(false), 1500);
-  };
-
   return (
     <div className="dashboard-page">
       {/* KPI Row (Tremor Style) */}
@@ -193,21 +185,14 @@ export const DashboardPage: React.FC = () => {
             onClick={() => setActiveTab('kanban')}
           >
             <Kanban size={16} />
-            <span>Phễu Tuyển Sinh Kanban (UC-01)</span>
+            <span>Phễu Tuyển Sinh (Kanban)</span>
           </button>
           <button
             className={`view-tab-btn ${activeTab === 'scorecard' ? 'active' : ''}`}
             onClick={() => setActiveTab('scorecard')}
           >
             <FileCheck2 size={16} />
-            <span>Phiếu Báo Điểm Placement Test (UC-02)</span>
-          </button>
-          <button
-            className={`view-tab-btn ${activeTab === 'components' ? 'active' : ''}`}
-            onClick={() => setActiveTab('components')}
-          >
-            <Component size={16} />
-            <span>Thư Viện Atomic Components (FE-01)</span>
+            <span>Phiếu Báo Điểm Học Viên</span>
           </button>
         </div>
 
@@ -215,7 +200,7 @@ export const DashboardPage: React.FC = () => {
           variant="primary"
           size="sm"
           iconLeft={<Plus size={15} />}
-          onClick={() => alert('Thêm học viên mới (Mở Modal tạo Lead)')}
+          onClick={() => navigate('/leads')}
         >
           Thêm Lead Mới
         </Button>
@@ -297,7 +282,7 @@ export const DashboardPage: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 2: ACADEMIC SCORECARD (UC-02) */}
+      {/* TAB 2: ACADEMIC SCORECARD */}
       {activeTab === 'scorecard' && (
         <div className="scorecard-container">
           <Card variant="elevated" className="academic-scorecard">
@@ -365,7 +350,6 @@ export const DashboardPage: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>Khóa Học & Lớp Học Phù Hợp</CardTitle>
-              <CardSubtitle>Gợi ý tự động theo phổ điểm</CardSubtitle>
             </CardHeader>
             <CardBody style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(124, 58, 237, 0.08)', border: '1px solid rgba(124, 58, 237, 0.2)' }}>
@@ -386,78 +370,6 @@ export const DashboardPage: React.FC = () => {
                   <div className="skill-progress-bar" style={{ width: '80%', background: 'linear-gradient(90deg, #10b981, #059669)' }} />
                 </div>
               </div>
-            </CardBody>
-          </Card>
-        </div>
-      )}
-
-      {/* TAB 3: ATOMIC COMPONENTS PLAYGROUND */}
-      {activeTab === 'components' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <Card>
-            <CardHeader>
-              <CardTitle>1. Thư Viện Nút Bấm (Button Variants)</CardTitle>
-              <CardSubtitle>Chuẩn hiệu ứng Vision Liquid Glass & Cosmic Sunset Gradient</CardSubtitle>
-            </CardHeader>
-            <CardBody style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', alignItems: 'center' }}>
-              <Button variant="primary" iconLeft={<Sparkles size={16} />}>
-                Primary Gradient
-              </Button>
-              <Button variant="glass" iconLeft={<Layers size={16} />}>
-                Vision Liquid Glass
-              </Button>
-              <Button variant="outline">Secondary Outline</Button>
-              <Button variant="ghost">Ghost Button</Button>
-              <Button variant="danger">Danger Action</Button>
-              <Button variant="primary" isLoading={btnLoading} onClick={handleTestLoading}>
-                {btnLoading ? 'Đang Xử Lý...' : 'Bấm Thử Hiệu Ứng Loading'}
-              </Button>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>2. Huy Hiệu Trạng Thái (Badge & Pills)</CardTitle>
-              <CardSubtitle>Phân loại mức độ ưu tiên và tiến trình tuyển sinh</CardSubtitle>
-            </CardHeader>
-            <CardBody style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
-              <Badge variant="brand" dot>Cosmic Sunset Pill</Badge>
-              <Badge variant="success" dot>Đã Nhập Học (Success)</Badge>
-              <Badge variant="warning" dot>Đang Tư Vấn (Warning)</Badge>
-              <Badge variant="danger" dot>Ưu Tiên Cao (Danger)</Badge>
-              <Badge variant="info" dot>Đã Hẹn Test (Info)</Badge>
-              <Badge variant="neutral">Mặc Định (Neutral)</Badge>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>3. Ô Nhập Liệu Kính Mờ (Input Controls)</CardTitle>
-              <CardSubtitle>Bắt nét viền phát quang và kiểm soát thông báo lỗi</CardSubtitle>
-            </CardHeader>
-            <CardBody style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '18px' }}>
-              <Input
-                label="Họ và tên học viên"
-                placeholder="Nhập họ và tên..."
-                defaultValue="Nguyễn Thúy Hằng"
-              />
-              <Input
-                label="Số điện thoại liên hệ"
-                placeholder="09xx..."
-                leftIcon={<Phone size={15} />}
-                defaultValue="0982345671"
-              />
-              <Input
-                label="Ngày sinh"
-                placeholder="DD/MM/YYYY"
-                leftIcon={<Calendar size={15} />}
-                defaultValue="15/08/2005"
-              />
-              <Input
-                label="Email học viên (Kiểm thử báo lỗi)"
-                defaultValue="email_chua_dung_dinh_dang"
-                error="Vui lòng nhập đúng định dạng địa chỉ email (ví dụ: student@gmail.com)"
-              />
             </CardBody>
           </Card>
         </div>
@@ -517,7 +429,7 @@ export const DashboardPage: React.FC = () => {
               {/* Contact History Timeline */}
               <div>
                 <h4 style={{ fontSize: '13.5px', fontWeight: 700, marginBottom: '14px', color: 'var(--text-heading)' }}>
-                  Dòng Thời Gian Chăm Sóc (Contact History)
+                  Lịch sử chăm sóc
                 </h4>
                 <div className="drawer-timeline">
                   <div className="timeline-item">

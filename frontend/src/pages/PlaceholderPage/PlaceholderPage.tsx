@@ -5,11 +5,15 @@ import { useNavigate } from 'react-router-dom';
 
 interface PlaceholderPageProps {
   title: string;
-  subtitle: string;
-  taskTag: string;
+  subtitle?: string;
+  badgeText?: string;
 }
 
-export const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitle, taskTag }) => {
+export const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ 
+  title, 
+  subtitle, 
+  badgeText = 'Đang phát triển' 
+}) => {
   const navigate = useNavigate();
 
   return (
@@ -19,9 +23,9 @@ export const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitl
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <CardTitle>{title}</CardTitle>
-              <CardSubtitle>{subtitle}</CardSubtitle>
+              {subtitle && <CardSubtitle>{subtitle}</CardSubtitle>}
             </div>
-            <Badge variant="brand">{taskTag}</Badge>
+            <Badge variant="brand">{badgeText}</Badge>
           </div>
         </CardHeader>
         <CardBody style={{ textAlign: 'center', padding: '48px 24px' }}>
@@ -41,17 +45,17 @@ export const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, subtitl
             <Construction size={32} />
           </div>
           <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-heading)', marginBottom: '8px' }}>
-            Mô-đun đang trong lộ trình triển khai Sprint kế tiếp
+            Phân hệ đang được hoàn thiện
           </h3>
           <p style={{ fontSize: '14px', color: 'var(--text-muted)', maxWidth: '480px', margin: '0 auto 24px auto', lineHeight: 1.5 }}>
-            Hệ thống Routing và phân quyền đã kích hoạt thành công cho mô-đun này. Giao diện chi tiết sẽ được hoàn thiện theo đúng User Story của đồ án.
+            Tính năng này đang được đồng bộ dữ liệu và chuẩn bị ra mắt trong phiên bản sắp tới.
           </p>
           <Button
             variant="glass"
             iconLeft={<ArrowLeft size={16} />}
             onClick={() => navigate('/dashboard')}
           >
-            Quay lại Tổng quan Dashboard
+            Quay lại Bảng điều khiển
           </Button>
         </CardBody>
       </Card>
