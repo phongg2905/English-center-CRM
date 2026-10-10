@@ -1,4 +1,4 @@
-import { testDbConnection } from '../database/pool.js';
+import { pool, testDbConnection } from '../database/pool.js';
 import { PlacementTestService } from '../services/placement-test.service.js';
 import { LeadService } from '../services/lead.service.js';
 import { AuthService } from '../services/auth.service.js';
@@ -39,12 +39,13 @@ async function testPlacementTestModule(): Promise<void> {
 
     // 2. Tạo một Lead mới để chuẩn bị đặt lịch thi
     logger.info('\n2. Tạo Lead thử nghiệm vào phễu tuyển sinh:');
-    const testPhone = '0988776655';
+    const testPhone = `09${Math.floor(10000000 + Math.random() * 90000000)}`;
+    const testEmail = `vanthi.tran.${Date.now().toString().slice(-4)}@example.com`;
     let testLead = await LeadService.createLead(
       {
         fullName: 'Trần Văn Thi Thử',
         phoneNumber: testPhone,
-        email: 'vanthi.tran@example.com',
+        email: testEmail,
         interest: 'IELTS',
         sourceChannel: 'WEBSITE',
         notes: 'Cần test gấp để nhập học khóa tháng tới.',
@@ -166,15 +167,26 @@ async function testPlacementTestModule(): Promise<void> {
       logger.info(`      - Ngày: ${s.testDate} | Ca: ${s.timeSlot} | Phòng: ${s.room} | Đã đặt: ${s.totalBooked}/${s.maxCapacity} (Đầy: ${s.isFull})`);
     });
 
+    // 9. Dọn dẹp dữ liệu kiểm thử
+    if (testLead?.id) {
+      try {
+        await LeadService.deleteLead(testLead.id);
+        logger.info(`   🧹 Đã dọn dẹp hồ sơ Lead kiểm thử (ID=${testLead.id}) thành công.`);
+      } catch (cleanErr: any) {
+        logger.debug('Lỗi dọn dẹp lead test:', cleanErr.message);
+      }
+    }
+
     logger.info('\n========================================================================');
     logger.info('🎉 TẤT CẢ 8/8 KỊCH BẢN KIỂM THỬ PHÂN HỆ BE-04 ĐÃ ĐẠT CHUẨN 100%! 🎉');
     logger.info('========================================================================');
   } catch (error: any) {
-    logger.error('❌ Kiểm thử thất bại:', error.message);
-    if (error.details) {
-      logger.error('Chi tiết lỗi:', error.details);
-    }
+    console.error('❌ Kiểm thử thất bại:', error);
     process.exit(1);
+  } finally {
+    try {
+      await pool.end();
+    } catch {}
   }
 }
 
