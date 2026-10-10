@@ -9,6 +9,7 @@ import { DashboardPage } from '../pages/DashboardPage';
 import { PlacementTestPage } from '../pages/PlacementTestPage';
 import { LeadsPage } from '../pages/LeadsPage';
 import { StaffPage } from '../pages/StaffPage';
+import { ClassesPage } from '../pages/ClassesPage';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
 
 export const AppRoutes: React.FC = () => {
@@ -38,10 +39,7 @@ export const AppRoutes: React.FC = () => {
 
         <Route path="tests" element={<PlacementTestPage />} />
 
-        <Route
-          path="classes"
-          element={<PlaceholderPage title="Quản lý Lớp học & Thời khóa biểu" />}
-        />
+        <Route path="classes" element={<ClassesPage />} />
 
         <Route
           path="reports"
