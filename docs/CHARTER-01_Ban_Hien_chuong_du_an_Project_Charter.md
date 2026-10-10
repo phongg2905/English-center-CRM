@@ -225,24 +225,28 @@ Dự án áp dụng mô hình phát triển phần mềm linh hoạt **Scrum** t
 
 ---
 
-## 7. DỰ TOÁN NGÂN SÁCH & NGUỒN LỰC DỰ ÁN (ESTIMATED BUDGET & RESOURCE PLAN)
+## 7. NGUỒN LỰC VÀ HẠ TẦNG KỸ THUẬT (PROJECT RESOURCES & INFRASTRUCTURE)
 
-### 7.1. Dự toán Chi phí Nguồn nhân lực (Human Resources Effort)
-Dự án được triển khai bởi nhóm 3 kỹ sư sinh viên chuyên ngành với mức nỗ lực trung bình 25 giờ/tuần/thành viên trong vòng 8 tuần:
-* **Tổng thời lượng nỗ lực dự tính:** $3 \text{ thành viên} \times 25 \text{ giờ/tuần} \times 8 \text{ tuần} = 600 \text{ giờ công (Man-Hours)}$.
-* **Quy đổi định mức nội bộ:** Tương đương **3.75 Man-Months**.
+### 7.1. Kế hoạch phân bổ nhân lực (Human Resources Effort)
+Dự án được thực hiện bởi nhóm gồm 3 thành viên trong thời gian 8 tuần. Khối lượng công việc và thời gian được phân bổ đồng đều giữa các thành viên nhằm đảm bảo tính công bằng và tinh thần trách nhiệm tập thể:
+* **Định mức làm việc cá nhân:** Mỗi thành viên cam kết dành trung bình 25 giờ/tuần trong suốt 8 tuần (tương đương 200 giờ công mỗi người).
+* **Tổng thời gian nỗ lực toàn dự án:** $3 \text{ người} \times 25 \text{ giờ/tuần} \times 8 \text{ tuần} = \mathbf{600 \text{ giờ công (Man-Hours)}}$.
+* **Quy đổi định mức chuẩn PMI (160 giờ/người-tháng):** Tương đương **3.75 người-tháng (Man-Months)**, trung bình mỗi thành viên đóng góp 1.25 người-tháng.
+* **Phân bổ công việc đồng đều (mỗi thành viên 200 giờ - đóng góp 33.3%):**
+  * **phong phạm (Trưởng nhóm & Full-stack Dev):** 200 giờ – Quản trị tổng thể tiến độ, thiết kế kiến trúc hệ thống, phát triển Backend API cốt lõi, cơ sở dữ liệu và duyệt Pull Request.
+  * **Long Phạm (System Analyst & QA Lead):** 200 giờ – Khảo sát nghiệp vụ thực tế, mô hình hóa BPMN, viết đặc tả yêu cầu (SRS, Use Case) và thiết kế kịch bản kiểm thử tích hợp.
+  * **Minh Tâm (Technical & Frontend Lead):** 200 giờ – Thiết kế giao diện trên Figma, xây dựng hệ thống Design System, lập trình Frontend SPA và tích hợp API.
 
-### 7.2. Dự toán Chi phí Hạ tầng Kỹ thuật & Công cụ (Tools & Infrastructure Budget)
-Áp dụng chiến lược tối ưu hóa chi phí học thuật, tận dụng tối đa các gói giáo dục (Student Developer Pack) và dịch vụ Cloud cấp miễn phí / chi phí thấp:
+### 7.2. Hạ tầng và công cụ phát triển (Tools & Infrastructure)
+Là đồ án học phần phi thương mại phục vụ mục đích nghiên cứu và học tập, dự án không sử dụng ngân sách tài chính (chi phí tài chính 0 VNĐ). Toàn bộ hạ tầng kỹ thuật và công cụ quản trị được tối ưu hóa thông qua các nền tảng miễn phí và các gói tài trợ giáo dục dành riêng cho sinh viên:
 
-| Hạng mục chi phí | Đơn vị cung cấp | Định mức ngân sách dự kiến (VND) | Ghi chú & Nguồn tài trợ |
+| Hạng mục hạ tầng / Công cụ | Nền tảng sử dụng | Chi phí tài chính | Cơ chế tài trợ & Phương thức triển khai |
 | :--- | :--- | :---: | :--- |
-| **Máy chủ Cơ sở dữ liệu (PostgreSQL Cloud)** | Supabase / Neon / Render Postgres | 0 VND | Gói tài trợ Cloud sinh viên / Môi trường Local Docker |
-| **Hạ tầng Hosting Backend API & Frontend** | Render Cloud / Vercel Edge Network | 0 VND | Gói Free Tier tối ưu cho Web Application học phần |
-| **Công cụ Quản trị Dự án & Quản lý Mã nguồn** | GitHub Team, Trello Cloud Workspace | 0 VND | Tài khoản sinh viên GitHub Education Pack |
-| **Tài liệu, In ấn Đồ án & Phương tiện Báo cáo** | In ấn bìa cứng mạ vàng, Đĩa DVD lưu trữ | 500.000 VND | Kinh phí đóng góp từ quỹ thành viên nhóm 8 |
-| **Quỹ dự phòng rủi ro phát sinh (Contingency)** | Dự phòng sự cố đường truyền, phát sinh hosting | 500.000 VND | Quỹ dự phòng kiểm soát bởi Project Leader |
-| **TỔNG KINH PHÍ DỰ TRÙ** | | **1.000.000 VND** | **Tự chủ tài chính trong nhóm** |
+| **Máy chủ Cơ sở dữ liệu (PostgreSQL)** | Supabase Cloud / Docker Local | 0 VNĐ | Hạn mức Free Tier của Supabase & môi trường container cục bộ |
+| **Hạ tầng Web Hosting (Backend & Frontend)** | Render Cloud / Vercel Edge Network | 0 VNĐ | Gói sinh viên và Free Tier tối ưu cho Web Application |
+| **Quản trị Dự án & Quản lý Mã nguồn** | GitHub Team, Trello Cloud Workspace | 0 VNĐ | Gói tài trợ GitHub Student Developer Pack |
+| **Thiết kế Giao diện UI/UX & Prototype** | Figma Desktop & Web Editor | 0 VNĐ | Gói tài khoản Figma Education dành cho sinh viên CNTT |
+| **TỔNG KINH PHÍ TÀI CHÍNH DỰ KIẾN** | | **0 VNĐ** | **Tối ưu 100% tài nguyên học thuật sẵn có** |
 
 ---
 
