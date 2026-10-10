@@ -8,6 +8,8 @@ import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { PlacementTestPage } from '../pages/PlacementTestPage';
 import { LeadsPage } from '../pages/LeadsPage';
+import { ClassesPage } from '../pages/ClassesPage';
+import { StaffPage } from '../pages/StaffPage';
 import { ReportsPage } from '../pages/ReportsPage';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
 
@@ -38,16 +40,13 @@ export const AppRoutes: React.FC = () => {
 
         <Route path="tests" element={<PlacementTestPage />} />
 
-        <Route
-          path="classes"
-          element={<PlaceholderPage title="Quản lý Lớp học & Thời khóa biểu" />}
-        />
+        <Route path="classes" element={<ClassesPage />} />
 
         <Route path="reports" element={<ReportsPage />} />
 
         <Route
           path="staff"
-          element={<PlaceholderPage title="Đội ngũ Giảng viên & Nhân sự" />}
+          element={<StaffPage />}
         />
 
         <Route
