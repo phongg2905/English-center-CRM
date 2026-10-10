@@ -28,15 +28,15 @@ export const Header: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Compute breadcrumb title based on path
-  const getBreadcrumbTitle = (pathname: string) => {
-    if (pathname.includes('/leads')) return 'Tuyển sinh & Leads';
-    if (pathname.includes('/tests')) return 'Lịch thi & Xếp lớp';
-    if (pathname.includes('/classes')) return 'Quản lý Lớp học';
-    if (pathname.includes('/reports')) return 'Báo cáo Doanh thu';
-    if (pathname.includes('/staff')) return 'Đội ngũ Nhân sự';
-    if (pathname.includes('/settings')) return 'Cài đặt Hệ thống';
-    return 'Tổng quan';
+  // Compute page title based on path
+  const getPageTitle = (pathname: string) => {
+    if (pathname.includes('/leads')) return 'Leads';
+    if (pathname.includes('/tests')) return 'Lịch Thi & Xếp Lớp';
+    if (pathname.includes('/classes')) return 'Quản Lý Lớp Học';
+    if (pathname.includes('/reports')) return 'Báo Cáo Doanh Thu';
+    if (pathname.includes('/staff')) return 'Quản Lý Nhân Sự & Giảng Viên';
+    if (pathname.includes('/settings')) return 'Cài Đặt Hệ Thống';
+    return 'Tổng Quan';
   };
 
   const handleLogout = async () => {
@@ -47,11 +47,9 @@ export const Header: React.FC = () => {
 
   return (
     <header className="app-header">
-      {/* Dynamic Breadcrumbs */}
-      <div className="header-breadcrumbs">
-        <span className="breadcrumb-root">EduFlow</span>
-        <span className="breadcrumb-separator">/</span>
-        <span className="breadcrumb-current">{getBreadcrumbTitle(location.pathname)}</span>
+      {/* Page Title in Topbar */}
+      <div className="header-page-title">
+        <h1 className="header-main-title">{getPageTitle(location.pathname)}</h1>
       </div>
 
       {/* Actions: Search, Notifications, Profile */}
