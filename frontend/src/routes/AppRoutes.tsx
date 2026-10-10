@@ -8,6 +8,7 @@ import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { PlacementTestPage } from '../pages/PlacementTestPage';
 import { LeadsPage } from '../pages/LeadsPage';
+import { StaffPage } from '../pages/StaffPage';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
 
 export const AppRoutes: React.FC = () => {
@@ -49,7 +50,7 @@ export const AppRoutes: React.FC = () => {
 
         <Route
           path="staff"
-          element={<PlaceholderPage title="Đội ngũ Giảng viên & Nhân sự" />}
+          element={<StaffPage />}
         />
 
         <Route

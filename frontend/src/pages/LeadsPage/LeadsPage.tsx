@@ -521,16 +521,51 @@ export const LeadsPage: React.FC = () => {
 
   return (
     <div className="dashboard-page" style={{ padding: '0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {/* 1. Header Bar: Title, Subtitle, and Primary Actions (Behance Style) */}
-      <div className="leads-header-bar">
-        <div>
-          <h1 className="leads-header-title">Leads</h1>
-          <p className="leads-header-subtitle">
-            Quản lý phễu tuyển sinh & theo dõi trạng thái tư vấn khách hàng tiềm năng
-          </p>
+      {/* Unified Action & Filter Toolbar (Dual-Wing) */}
+      <div className="leads-filters-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
+        {/* Left Wing: Search & Filters */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', flex: 1, minWidth: '320px' }}>
+          {/* Search input with search icon */}
+          <div className="behance-search-container" style={{ minWidth: '260px' }}>
+            <Search size={15} style={{ position: 'absolute', left: '12px', color: '#94a3b8' }} />
+            <input
+              type="text"
+              placeholder="Tìm tên, SĐT, email, tư vấn viên..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="behance-search-input"
+            />
+          </div>
+
+          {/* Filter Sources */}
+          <select
+            value={selectedSource}
+            onChange={(e) => setSelectedSource(e.target.value)}
+            className="behance-select"
+          >
+            <option value="ALL">Tất cả nguồn tiếp cận</option>
+            <option value="FB_ADS">Facebook Ads</option>
+            <option value="WEBSITE">Website Trung Tâm</option>
+            <option value="HOTLINE">Hotline Tổng Đài</option>
+            <option value="WALK_IN">Đến Trực Tiếp (Walk-in)</option>
+            <option value="REFERRAL">Người quen giới thiệu</option>
+          </select>
+
+          {/* Filter Interests */}
+          <select
+            value={selectedInterest}
+            onChange={(e) => setSelectedInterest(e.target.value)}
+            className="behance-select"
+          >
+            <option value="ALL">Tất cả khóa học</option>
+            <option value="IELTS">Luyện thi IELTS</option>
+            <option value="TOEIC">Luyện thi TOEIC</option>
+            <option value="COMMUNICATION">Tiếng Anh Giao tiếp</option>
+          </select>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Right Wing: Primary Actions (Refresh, Export, Add Lead) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
           {/* Refresh button */}
           <button
             type="button"
@@ -587,49 +622,6 @@ export const LeadsPage: React.FC = () => {
           >
             Thêm Lead Mới
           </Button>
-        </div>
-      </div>
-
-      {/* 2. Behance-Style Filter Toolbar */}
-      <div className="leads-filters-bar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          {/* Filter Sources */}
-          <select
-            value={selectedSource}
-            onChange={(e) => setSelectedSource(e.target.value)}
-            className="behance-select"
-          >
-            <option value="ALL">Tất cả nguồn tiếp cận</option>
-            <option value="FB_ADS">Facebook Ads</option>
-            <option value="WEBSITE">Website Trung Tâm</option>
-            <option value="HOTLINE">Hotline Tổng Đài</option>
-            <option value="WALK_IN">Đến Trực Tiếp (Walk-in)</option>
-            <option value="REFERRAL">Người quen giới thiệu</option>
-          </select>
-
-          {/* Filter Interests */}
-          <select
-            value={selectedInterest}
-            onChange={(e) => setSelectedInterest(e.target.value)}
-            className="behance-select"
-          >
-            <option value="ALL">Tất cả khóa học</option>
-            <option value="IELTS">Luyện thi IELTS</option>
-            <option value="TOEIC">Luyện thi TOEIC</option>
-            <option value="COMMUNICATION">Tiếng Anh Giao tiếp</option>
-          </select>
-        </div>
-
-        {/* Search input with search icon */}
-        <div className="behance-search-container">
-          <Search size={15} style={{ position: 'absolute', left: '12px', color: '#94a3b8' }} />
-          <input
-            type="text"
-            placeholder="Tìm tên, SĐT, email, tư vấn viên..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="behance-search-input"
-          />
         </div>
       </div>
 

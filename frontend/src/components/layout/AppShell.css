@@ -372,6 +372,21 @@
   pointer-events: none;
 }
 
+/* Topbar Page Title */
+.header-page-title {
+  display: flex;
+  align-items: center;
+}
+
+.header-main-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-heading);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
 /* Breadcrumbs */
 .header-breadcrumbs {
   display: flex;

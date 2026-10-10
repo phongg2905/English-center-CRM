@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Calendar,
   Plus,
   RefreshCw,
   Search,
@@ -174,46 +173,14 @@ export const PlacementTestPage: React.FC = () => {
 
   return (
     <div className="placement-test-page">
-      {/* Page Header */}
-      <div className="pt-header">
-        <div className="pt-title-area">
-          <h1>
-            <Calendar size={26} color="var(--color-primary-royal)" />
-            Lịch Thi & Khảo Thí Đầu Vào
-          </h1>
-        </div>
-
-        <div className="pt-header-actions">
-          <button
-            type="button"
-            className="pt-btn-touch"
-            style={{ background: '#fff', border: 'var(--glass-border-subtle)', color: 'var(--text-body)' }}
-            onClick={() => loadData()}
-            title="Làm mới dữ liệu"
-          >
-            <RefreshCw size={15} className={isLoading ? 'spin-icon' : ''} />
-            Làm mới
-          </button>
-
-          <button
-            type="button"
-            className="pt-btn-touch pt-btn-present active"
-            style={{ padding: '8px 16px', fontSize: '13px', background: 'var(--brand-gradient)' }}
-            onClick={() => handleOpenBookingModal()}
-          >
-            <Plus size={16} />
-            Đặt Lịch Hẹn Test Mới
-          </button>
-        </div>
-      </div>
-
-      {/* Capacity Alert & Overview KPIs */}
+      {/* Capacity Alert (displays when shifts are full) */}
       <ShiftCapacityAlert slots={availabilitySlots} tests={tests} />
 
-      {/* Filter Bar */}
+      {/* Unified Action & Filter Toolbar (Dual-Wing) */}
       <div className="pt-filter-card">
-        {/* Quick Date Pills */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+        {/* Top Row: Date Pills (Left) + View Toggle & Action Buttons (Right) */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          {/* Left Wing: Quick Date Pills */}
           <div className="pt-date-pills">
             <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', alignSelf: 'center', marginRight: '6px' }}>
               Thời gian:
@@ -260,23 +227,46 @@ export const PlacementTestPage: React.FC = () => {
             </button>
           </div>
 
-          {/* View Toggle */}
-          <div className="pt-view-toggle">
+          {/* Right Wing: View Toggle & Action Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <div className="pt-view-toggle">
+              <button
+                type="button"
+                className={`pt-view-toggle-btn ${viewMode === 'calendar' ? 'active' : ''}`}
+                onClick={() => setViewMode('calendar')}
+              >
+                <LayoutGrid size={15} />
+                Lịch Tuần (Calendar)
+              </button>
+              <button
+                type="button"
+                className={`pt-view-toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
+                onClick={() => setViewMode('table')}
+              >
+                <List size={15} />
+                Danh Sách Điểm Danh
+              </button>
+            </div>
+
             <button
               type="button"
-              className={`pt-view-toggle-btn ${viewMode === 'calendar' ? 'active' : ''}`}
-              onClick={() => setViewMode('calendar')}
+              className="pt-btn-touch"
+              style={{ background: '#fff', border: 'var(--glass-border-subtle)', color: 'var(--text-body)', height: '36px', padding: '0 14px' }}
+              onClick={() => loadData()}
+              title="Làm mới dữ liệu"
             >
-              <LayoutGrid size={15} />
-              Lịch Tuần (Calendar)
+              <RefreshCw size={14} className={isLoading ? 'spin-icon' : ''} />
+              Làm mới
             </button>
+
             <button
               type="button"
-              className={`pt-view-toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
-              onClick={() => setViewMode('table')}
+              className="pt-btn-touch pt-btn-present active"
+              style={{ height: '36px', padding: '0 16px', fontSize: '13px', background: 'var(--brand-gradient)' }}
+              onClick={() => handleOpenBookingModal()}
             >
-              <List size={15} />
-              Danh Sách Điểm Danh
+              <Plus size={15} />
+              Đặt Lịch Hẹn Test Mới
             </button>
           </div>
         </div>

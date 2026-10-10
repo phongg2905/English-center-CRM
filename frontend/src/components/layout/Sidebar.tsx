@@ -61,7 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
         },
         {
           to: '/staff',
-          label: 'Đội ngũ giảng viên',
+          label: 'Nhân sự & Giảng viên',
           icon: <Briefcase size={19} />,
         },
         {
