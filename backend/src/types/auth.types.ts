@@ -1,4 +1,4 @@
-export type RoleCode = 'ADMIN' | 'SALES' | 'ACADEMIC';
+export type RoleCode = 'ADMIN' | 'SALES' | 'ACADEMIC' | 'TEACHER';
 
 export interface Role {
   id: number;
@@ -19,6 +19,9 @@ export interface User {
   roleId: number;
   avatarUrl?: string;
   isActive: boolean;
+  specialization?: string;
+  isNative?: boolean;
+  bio?: string;
   refreshToken?: string;
   createdAt: Date;
   updatedAt: Date;

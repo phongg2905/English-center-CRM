@@ -6,6 +6,7 @@ import placementTestRoutes from './placement-test.routes.js';
 import courseRoutes from './course.routes.js';
 import classRoutes from './class.routes.js';
 import enrollmentRoutes from './enrollment.routes.js';
+import staffRoutes from './staff.routes.js';
 import swaggerRoutes, { swaggerSpec } from '../docs/swagger.js';
 import { ApiResponse } from '../utils/response.js';
 
@@ -35,6 +36,16 @@ router.get('/', (req: Request, res: Response) => {
           roles: 'GET /api/auth/roles',
           adminOnly: 'GET /api/auth/admin-only',
           academicOnly: 'GET /api/auth/academic-only',
+        },
+        staff: {
+          list: 'GET /api/staff',
+          teachers: 'GET /api/staff/teachers',
+          detail: 'GET /api/staff/:id',
+          create: 'POST /api/staff',
+          update: 'PUT /api/staff/:id',
+          status: 'PATCH /api/staff/:id/status',
+          resetPassword: 'POST /api/staff/:id/reset-password',
+          delete: 'DELETE /api/staff/:id',
         },
         leads: {
           list: 'GET /api/leads',
@@ -96,6 +107,7 @@ router.get('/docs.json', (req: Request, res: Response) => {
 // Gắn các router phân hệ
 router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
+router.use('/staff', staffRoutes);
 router.use('/leads', leadRoutes);
 router.use('/placement-tests', placementTestRoutes);
 router.use('/courses', courseRoutes);
