@@ -12,6 +12,9 @@ import {
   Save,
   Lock,
   Edit2,
+  CreditCard,
+  ArrowRightLeft,
+  Printer,
 } from 'lucide-react';
 import { AcademicService } from '../../services/academic.service';
 import type {
@@ -29,6 +32,9 @@ interface ClassDetailDrawerProps {
   onClose: () => void;
   onUpdated: () => void;
   onEnrollClick?: (classId: number) => void;
+  onCollectPayment?: (enrollment: ClassEnrollmentItem) => void;
+  onTransferClass?: (enrollment: ClassEnrollmentItem) => void;
+  onPrintReceipt?: (enrollment: ClassEnrollmentItem) => void;
 }
 
 export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
@@ -37,7 +43,11 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
   onClose,
   onUpdated,
   onEnrollClick,
+  onCollectPayment,
+  onTransferClass,
+  onPrintReceipt,
 }) => {
+
   const [activeTab, setActiveTab] = useState<'GENERAL' | 'ROSTER'>('GENERAL');
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [enrollments, setEnrollments] = useState<ClassEnrollmentItem[]>([]);
@@ -613,15 +623,31 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                   <table className="roster-table">
                     <thead>
                       <tr>
+                        <th>Mã HV</th>
                         <th>Học Viên</th>
                         <th>Liên Hệ</th>
                         <th>Ngày Nhập Học</th>
-                        <th>Học Phí</th>
+                        <th style={{ textAlign: 'center' }}>Học Phí & Công Nợ</th>
+                        <th style={{ textAlign: 'right' }}>Thao Tác</th>
                       </tr>
                     </thead>
                     <tbody>
                       {enrollments.map((en) => (
                         <tr key={en.id}>
+                          <td>
+                            <span
+                              style={{
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                background: '#ede9fe',
+                                color: '#4f46e5',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                              }}
+                            >
+                              {en.studentCode}
+                            </span>
+                          </td>
                           <td>
                             <div style={{ fontWeight: 600, color: '#0f172a' }}>{en.fullName}</div>
                           </td>
@@ -637,23 +663,103 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                           <td>
                             <span style={{ fontSize: '12px', color: '#475569' }}>{formatDate(en.enrollmentDate)}</span>
                           </td>
-                          <td>
-                            <span className={`payment-pill ${en.paymentStatus.toLowerCase()}`}>
-                              {en.paymentStatus === 'FULLY_PAID'
-                                ? 'Đã nộp đủ'
-                                : en.paymentStatus === 'PARTIAL'
-                                ? 'Đóng cọc'
-                                : 'Chưa đóng'}
-                            </span>
-                            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px', fontWeight: 500 }}>
-                              {Number(en.paidAmount).toLocaleString('vi-VN')} đ
+                          {/* Học Phí - Single-Line Notion Pill with Hover Popover */}
+                          <td style={{ textAlign: 'center' }}>
+                            <div className="notion-finance-wrapper">
+                              <div
+                                className={`notion-finance-pill ${en.paymentStatus === 'FULLY_PAID' ? 'paid' : Number(en.balanceDue || 0) > 0 ? 'debt' : 'unpaid'}`}
+                                onClick={() => onCollectPayment && onCollectPayment(en)}
+                                title="Bấm để xem chi tiết hoặc thu học phí"
+                              >
+                                {en.paymentStatus === 'FULLY_PAID' ? (
+                                  <span>Đã nộp đủ</span>
+                                ) : Number(en.balanceDue || 0) > 0 ? (
+                                  <span>Còn nợ</span>
+                                ) : (
+                                  <span>Chưa nộp</span>
+                                )}
+                              </div>
+
+                              {/* Hover Popover Breakdown */}
+                              <div className="notion-finance-popover">
+                                <div className="notion-popover-title">Chi Tiết Học Phí & Công Nợ</div>
+                                <div className="notion-popover-row">
+                                  <span>Học phí niêm yết:</span>
+                                  <span>{Number(en.originalTuition || en.finalAmount || 0).toLocaleString('vi-VN')} đ</span>
+                                </div>
+                                {Number(en.discountAmount || 0) > 0 && (
+                                  <div className="notion-popover-row discount">
+                                    <span>Ưu đãi / Chiết khấu:</span>
+                                    <span>-{Number(en.discountAmount).toLocaleString('vi-VN')} đ</span>
+                                  </div>
+                                )}
+                                <div className="notion-popover-row highlight">
+                                  <span>Học phí cần thu:</span>
+                                  <span>{Number(en.finalAmount || 0).toLocaleString('vi-VN')} đ</span>
+                                </div>
+                                <div className="notion-popover-divider" />
+                                <div className="notion-popover-row">
+                                  <span>Đã thanh toán:</span>
+                                  <span>{Number(en.paidAmount || 0).toLocaleString('vi-VN')} đ</span>
+                                </div>
+                                <div className={`notion-popover-row ${Number(en.balanceDue || 0) > 0 ? 'debt' : 'paid-full'}`}>
+                                  <span>{Number(en.balanceDue || 0) > 0 ? 'Còn nợ học phí:' : 'Trạng thái:'}</span>
+                                  <span>
+                                    {Number(en.balanceDue || 0) > 0
+                                      ? `${Number(en.balanceDue).toLocaleString('vi-VN')} đ`
+                                      : 'Đã hoàn tất'}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
                           </td>
+
+                          {/* Thao Tác - 28px Icon Buttons with Tooltip */}
+                          <td style={{ textAlign: 'right' }}>
+                            <div className="table-actions-group">
+                              {onCollectPayment && (
+                                <button
+                                  type="button"
+                                  onClick={() => onCollectPayment(en)}
+                                  className={`table-action-icon-btn ${Number(en.balanceDue || 0) > 0 ? 'pay-debt' : 'pay-done'}`}
+                                  title={
+                                    Number(en.balanceDue || 0) > 0
+                                      ? `Ghi nhận thu phí (Còn nợ: ${Number(en.balanceDue).toLocaleString('vi-VN')} đ)`
+                                      : 'Xem lịch sử thanh toán học phí'
+                                  }
+                                >
+                                  <CreditCard size={13} />
+                                </button>
+                              )}
+                              {onTransferClass && (
+                                <button
+                                  type="button"
+                                  onClick={() => onTransferClass(en)}
+                                  className="table-action-icon-btn transfer"
+                                  title="Điều phối chuyển lớp học"
+                                >
+                                  <ArrowRightLeft size={13} />
+                                </button>
+                              )}
+                              {onPrintReceipt && (
+                                <button
+                                  type="button"
+                                  onClick={() => onPrintReceipt(en)}
+                                  className="table-action-icon-btn receipt"
+                                  title="Lịch sử biên lai & in phiếu thu"
+                                >
+                                  <Printer size={13} />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+
               )}
             </div>
           )}
