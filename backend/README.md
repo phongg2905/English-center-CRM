@@ -141,6 +141,17 @@ npm start
 | `GET` | `/api/auth/admin-only` | Bearer (`ADMIN`) | Khu vực kiểm thử chỉ dành riêng cho Quản trị viên |
 | `GET` | `/api/auth/academic-only`| Bearer (`ADMIN`, `ACADEMIC`) | Khu vực dành cho Giáo vụ và Quản trị viên |
 
+### 4.3. Phân hệ Báo cáo & Thống kê Tuyển sinh & Doanh thu (Analytics & Reporting - `[BE-06]`)
+| Method | Endpoint | Quyền hạn | Mô tả |
+| :---: | :--- | :---: | :--- |
+| `GET` | `/api/analytics/overview` | `ADMIN`, `SALES`, `ACADEMIC` | Tổng quan các chỉ số KPI điều hành cốt lõi |
+| `GET` | `/api/analytics/funnel` | `ADMIN`, `SALES`, `ACADEMIC` | Thống kê tỷ lệ chuyển đổi phễu tuyển sinh & lý do hủy Lead |
+| `GET` | `/api/analytics/revenue` | `ADMIN`, `ACADEMIC` | Báo cáo doanh thu thực thu theo tuần/tháng/quý & phương thức |
+| `GET` | `/api/analytics/sales-leaderboard` | `ADMIN`, `SALES`, `ACADEMIC` | Bảng xếp hạng hiệu suất tư vấn viên (Win rate, Doanh số) |
+| `GET` | `/api/analytics/channel-roi` | `ADMIN`, `SALES`, `ACADEMIC` | Thống kê hiệu quả và tỷ trọng doanh thu từng kênh Marketing |
+| `GET` | `/api/analytics/class-occupancy` | `ADMIN`, `ACADEMIC`, `SALES` | Thống kê tỷ lệ lấp đầy phòng học và danh sách lớp học |
+| `GET` | `/api/analytics/export` | `ADMIN`, `ACADEMIC`, `SALES` | Xuất dữ liệu thô phục vụ báo cáo định dạng JSON hoặc CSV |
+
 ---
 
 ## 5. Tài khoản dùng thử mặc định (Mock & Seed Data)
