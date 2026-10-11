@@ -14,11 +14,22 @@ import {
   RotateCcw,
   X,
 } from 'lucide-react';
+
 import { AcademicService } from '../../services/academic.service';
-import type { ClassItem, CourseItem, ScheduleDays } from '../../types/academic';
+import type {
+  ClassItem,
+  CourseItem,
+  ScheduleDays,
+  ClassEnrollmentItem,
+  PaymentReceipt,
+} from '../../types/academic';
 import { CreateClassModal } from './CreateClassModal';
 import { CreateCourseModal } from './CreateCourseModal';
 import { ClassDetailDrawer } from './ClassDetailDrawer';
+import { EnrollStudentWizardModal } from './EnrollStudentWizardModal';
+import { RecordPaymentModal } from './RecordPaymentModal';
+import { ReceiptPrintModal } from './ReceiptPrintModal';
+import { TransferClassModal } from './TransferClassModal';
 import { Button } from '../../components/ui';
 import './ClassesPage.css';
 
@@ -28,7 +39,7 @@ export const ClassesPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // View Mode: 'CLASSES' (Lưới lớp học & sĩ số) | 'COURSES' (Danh mục khóa học & lộ trình)
+  // View Mode: 'CLASSES' | 'COURSES'
   const [viewMode, setViewMode] = useState<'CLASSES' | 'COURSES'>('CLASSES');
 
   // Search & Filters
@@ -63,6 +74,14 @@ export const ClassesPage: React.FC = () => {
   const [isCreateCourseModalOpen, setIsCreateCourseModalOpen] = useState<boolean>(false);
   const [createInitialCourseId, setCreateInitialCourseId] = useState<number | undefined>(undefined);
 
+  // FE-05B Modals State
+  const [isEnrollWizardOpen, setIsEnrollWizardOpen] = useState<boolean>(false);
+  const [enrollWizardInitialClassId, setEnrollWizardInitialClassId] = useState<number | undefined>(undefined);
+  const [selectedEnrollmentForPayment, setSelectedEnrollmentForPayment] = useState<ClassEnrollmentItem | null>(null);
+  const [selectedEnrollmentForTransfer, setSelectedEnrollmentForTransfer] = useState<ClassEnrollmentItem | null>(null);
+  const [receiptForPrint, setReceiptForPrint] = useState<PaymentReceipt | null>(null);
+  const [enrollmentForPrint, setEnrollmentForPrint] = useState<ClassEnrollmentItem | null>(null);
+
   // Load Data
   const loadData = useCallback(async (showSilent = false) => {
     try {
@@ -94,6 +113,7 @@ export const ClassesPage: React.FC = () => {
     loadData();
   }, [loadData]);
 
+
   // Filtered Classes
   const filteredClasses = useMemo(() => {
     return classes.filter((c) => {
@@ -124,6 +144,7 @@ export const ClassesPage: React.FC = () => {
 
   // Export CSV Handler
   const handleExportCSV = () => {
+
     if (filteredClasses.length === 0) {
       alert('Không có lớp học nào thỏa điều kiện lọc để xuất.');
       return;
@@ -168,6 +189,7 @@ export const ClassesPage: React.FC = () => {
     link.click();
     document.body.removeChild(link);
   };
+
 
   const getScheduleLabel = (days: ScheduleDays) => {
     switch (days) {
@@ -293,36 +315,41 @@ export const ClassesPage: React.FC = () => {
                       </select>
                     </div>
 
-                    {/* Filter Lịch Học */}
-                    <div className="popover-filter-field">
-                      <label>Lịch học trong tuần</label>
-                      <select
-                        value={selectedScheduleFilter}
-                        onChange={(e) => setSelectedScheduleFilter(e.target.value)}
-                        className="popover-select"
-                      >
-                        <option value="ALL">Tất cả lịch học</option>
-                        <option value="MON_WED_FRI">Thứ 2 - 4 - 6</option>
-                        <option value="TUE_THU_SAT">Thứ 3 - 5 - 7</option>
-                        <option value="WEEKEND">Cuối tuần T7 - CN</option>
-                      </select>
-                    </div>
 
-                    {/* Filter Trạng Thái */}
-                    <div className="popover-filter-field">
-                      <label>Trạng thái tuyển sinh</label>
-                      <select
-                        value={selectedStatusFilter}
-                        onChange={(e) => setSelectedStatusFilter(e.target.value)}
-                        className="popover-select"
-                      >
-                        <option value="ALL">Tất cả trạng thái</option>
-                        <option value="OPEN">Đang tuyển sinh (OPEN)</option>
-                        <option value="IN_PROGRESS">Đang học (IN_PROGRESS)</option>
-                        <option value="FULL">Đã đầy lớp (FULL)</option>
-                        <option value="COMPLETED">Đã hoàn thành (COMPLETED)</option>
-                      </select>
-                    </div>
+                    {/* Filter Lịch Học (Khi ở tab Lớp học) */}
+                    {viewMode === 'CLASSES' && (
+                      <div className="popover-filter-field">
+                        <label>Lịch học trong tuần</label>
+                        <select
+                          value={selectedScheduleFilter}
+                          onChange={(e) => setSelectedScheduleFilter(e.target.value)}
+                          className="popover-select"
+                        >
+                          <option value="ALL">Tất cả lịch học</option>
+                          <option value="MON_WED_FRI">Thứ 2 - 4 - 6</option>
+                          <option value="TUE_THU_SAT">Thứ 3 - 5 - 7</option>
+                          <option value="WEEKEND">Cuối tuần T7 - CN</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Filter Trạng Thái Lớp */}
+                    {viewMode === 'CLASSES' && (
+                      <div className="popover-filter-field">
+                        <label>Trạng thái tuyển sinh</label>
+                        <select
+                          value={selectedStatusFilter}
+                          onChange={(e) => setSelectedStatusFilter(e.target.value)}
+                          className="popover-select"
+                        >
+                          <option value="ALL">Tất cả trạng thái</option>
+                          <option value="OPEN">Đang tuyển sinh (OPEN)</option>
+                          <option value="IN_PROGRESS">Đang học (IN_PROGRESS)</option>
+                          <option value="FULL">Đã đầy lớp (FULL)</option>
+                          <option value="COMPLETED">Đã hoàn thành (COMPLETED)</option>
+                        </select>
+                      </div>
+                    )}
                   </div>
 
                   <div className="filter-popover-footer">
@@ -361,7 +388,7 @@ export const ClassesPage: React.FC = () => {
             <span>Xuất file</span>
           </button>
 
-          {/* CTA: Mở Lớp Mới hoặc Tạo Khóa Học Mới tùy viewMode */}
+          {/* CTA Button */}
           {viewMode === 'CLASSES' ? (
             <Button
               variant="primary"
@@ -397,9 +424,10 @@ export const ClassesPage: React.FC = () => {
                 fontSize: '13px',
               }}
             >
-              Tạo Khóa Học Mới
+              Tạo Khóa Học
             </Button>
           )}
+
         </div>
       </div>
 
@@ -478,10 +506,6 @@ export const ClassesPage: React.FC = () => {
           <div className="classes-grid-container">
             {filteredClasses.map((cls) => {
               const isFullClass = cls.isFull || cls.currentEnrolled >= cls.maxCapacity;
-              const fillPercent = Math.min(
-                100,
-                Math.round((cls.currentEnrolled / cls.maxCapacity) * 100)
-              );
 
               return (
                 <div
@@ -531,38 +555,23 @@ export const ClassesPage: React.FC = () => {
                     </span>
                   </div>
 
-                  {/* Real-time Capacity Progress Bar (Minimal) */}
-                  <div className="class-capacity-minimal">
-                    <div className="capacity-text-row">
-                      <span className="capacity-fraction-text">
-                        Sĩ số: <strong>{cls.currentEnrolled}/{cls.maxCapacity}</strong> ({fillPercent}%)
-                      </span>
-                      <span
-                        className="capacity-remaining-text"
-                        style={{
-                          color: isFullClass
-                            ? '#dc2626'
-                            : cls.availableSeats <= 2
-                            ? '#d97706'
-                            : '#059669',
-                        }}
-                      >
-                        {isFullClass ? 'Khóa sổ' : `Còn ${cls.availableSeats} chỗ`}
-                      </span>
-                    </div>
-                    <div className="capacity-track">
-                      <div
-                        className="capacity-fill"
-                        style={{
-                          width: `${fillPercent}%`,
-                          backgroundColor: isFullClass
-                            ? '#ef4444'
-                            : fillPercent >= 80
-                            ? '#f59e0b'
-                            : '#10b981',
-                        }}
-                      />
-                    </div>
+                  {/* Real-time Capacity Info */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid #f1f5f9', fontSize: '12.5px' }}>
+                    <span style={{ color: '#64748b' }}>
+                      Sĩ số: <strong style={{ color: '#0f172a' }}>{cls.currentEnrolled}/{cls.maxCapacity}</strong>
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        background: isFullClass ? '#fee2e2' : cls.availableSeats <= 2 ? '#fef3c7' : '#dcfce7',
+                        color: isFullClass ? '#dc2626' : cls.availableSeats <= 2 ? '#b45309' : '#166534',
+                      }}
+                    >
+                      {isFullClass ? 'Đã đầy' : `Còn ${cls.availableSeats} chỗ`}
+                    </span>
                   </div>
                 </div>
               );
@@ -601,7 +610,7 @@ export const ClassesPage: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Course Footer: Active Classes Count & Quick Add Class */}
+                {/* Course Footer: Active Classes Count */}
                 <div className="course-footer-row">
                   <button
                     type="button"
@@ -614,20 +623,6 @@ export const ClassesPage: React.FC = () => {
                   >
                     <Users size={13} />
                     <span>{courseClasses.length} lớp học đang mở</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="course-quick-add-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCreateInitialCourseId(crs.id);
-                      setIsCreateModalOpen(true);
-                    }}
-                    title="Mở thêm lớp cho khóa học này"
-                  >
-                    <Plus size={13} />
-                    <span>Mở lớp</span>
                   </button>
                 </div>
               </div>
@@ -651,14 +646,65 @@ export const ClassesPage: React.FC = () => {
         onSuccess={() => loadData(true)}
       />
 
+      {/* 4c. ENROLL STUDENT WIZARD MODAL (FE-05B) */}
+      <EnrollStudentWizardModal
+        isOpen={isEnrollWizardOpen}
+        onClose={() => setIsEnrollWizardOpen(false)}
+        onSuccess={() => loadData(true)}
+        initialClassId={enrollWizardInitialClassId}
+        onPrintReceipt={(receipt, en) => {
+          setReceiptForPrint(receipt);
+          setEnrollmentForPrint(en);
+        }}
+      />
+
+      {/* 4d. RECORD PAYMENT MODAL (FE-05B) */}
+      <RecordPaymentModal
+        isOpen={!!selectedEnrollmentForPayment}
+        enrollment={selectedEnrollmentForPayment}
+        onClose={() => setSelectedEnrollmentForPayment(null)}
+        onSuccess={() => loadData(true)}
+        onPrintReceipt={(receipt, en) => {
+          setReceiptForPrint(receipt);
+          setEnrollmentForPrint(en);
+        }}
+      />
+
+      {/* 4e. RECEIPT PRINT MODAL (FE-05B) */}
+      <ReceiptPrintModal
+        isOpen={!!receiptForPrint && !!enrollmentForPrint}
+        receipt={receiptForPrint}
+        enrollment={enrollmentForPrint}
+        onClose={() => {
+          setReceiptForPrint(null);
+          setEnrollmentForPrint(null);
+        }}
+      />
+
+      {/* 4f. TRANSFER CLASS MODAL (FE-05B) */}
+      <TransferClassModal
+        isOpen={!!selectedEnrollmentForTransfer}
+        enrollment={selectedEnrollmentForTransfer}
+        onClose={() => setSelectedEnrollmentForTransfer(null)}
+        onSuccess={() => loadData(true)}
+      />
+
       {/* 5. CLASS DETAIL DRAWER */}
       <ClassDetailDrawer
         classItem={selectedClass}
         isOpen={!!selectedClass}
         onClose={() => setSelectedClass(null)}
         onUpdated={() => loadData(true)}
+        onEnrollClick={(classId) => {
+          setEnrollWizardInitialClassId(classId);
+          setIsEnrollWizardOpen(true);
+        }}
+        onCollectPayment={(en) => setSelectedEnrollmentForPayment(en)}
+        onTransferClass={(en) => setSelectedEnrollmentForTransfer(en)}
+        onPrintReceipt={(en) => setSelectedEnrollmentForPayment(en)}
       />
     </div>
   );
 };
 export default ClassesPage;
+

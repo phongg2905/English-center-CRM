@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Users,
   ClipboardCheck,
+  GraduationCap,
   BookOpen,
   BarChart3,
   Briefcase,
@@ -40,9 +41,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
         },
         {
           to: '/tests',
-          label: 'Test & Xếp lớp',
+          label: 'Khảo thí & Test',
           icon: <ClipboardCheck size={19} />,
           badge: '2',
+        },
+        {
+          to: '/students',
+          label: 'Học viên & Ghi danh',
+          icon: <GraduationCap size={19} />,
         },
         {
           to: '/classes',
@@ -51,6 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
         },
       ],
     },
+
     {
       title: 'BÁO CÁO & HỆ THỐNG',
       items: [

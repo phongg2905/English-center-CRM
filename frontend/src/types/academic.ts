@@ -133,3 +133,56 @@ export interface ClassAvailability {
   isFull: boolean;
   status: ClassStatus;
 }
+
+export type PaymentMethod = 'CASH' | 'BANK_TRANSFER';
+
+export interface PaymentReceipt {
+  id: number;
+  enrollmentId: number;
+  receiptCode: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  transactionReference?: string | null;
+  receiverId?: number;
+  receiverName?: string;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface RecordPaymentPayload {
+  amount: number;
+  paymentMethod: PaymentMethod;
+  transactionReference?: string;
+  notes?: string;
+}
+
+export interface TransferClassPayload {
+  newClassId: number;
+  reason?: string;
+}
+
+export interface EnrollStudentCandidateInfo {
+  fullName: string;
+  phoneNumber: string;
+  email?: string;
+  dateOfBirth?: string;
+  address?: string;
+}
+
+export interface EnrollStudentPayload {
+  leadId?: number;
+  studentId?: number;
+  classId: number;
+  discountAmount?: number;
+  notes?: string;
+  candidateInfo?: EnrollStudentCandidateInfo;
+}
+
+export interface EnrollmentFilterQuery {
+  classId?: number;
+  studentId?: number;
+  paymentStatus?: PaymentStatus | string;
+  status?: EnrollmentStatus | string;
+  search?: string;
+}

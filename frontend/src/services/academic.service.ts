@@ -8,6 +8,11 @@ import type {
   ClassEnrollmentItem,
   EnrollmentResult,
   ClassAvailability,
+  PaymentReceipt,
+  RecordPaymentPayload,
+  TransferClassPayload,
+  EnrollStudentPayload,
+  EnrollmentFilterQuery,
 } from '../types/academic';
 
 export type {
@@ -19,7 +24,13 @@ export type {
   ClassEnrollmentItem,
   EnrollmentResult,
   ClassAvailability,
+  PaymentReceipt,
+  RecordPaymentPayload,
+  TransferClassPayload,
+  EnrollStudentPayload,
+  EnrollmentFilterQuery,
 };
+
 
 export class AcademicService {
   /**
@@ -118,16 +129,57 @@ export class AcademicService {
   }
 
   /**
-   * Thao tác một chạm: Xếp học viên vào lớp học
+   * Lấy danh sách ghi danh theo bộ lọc (toàn hệ thống hoặc theo lớp)
    */
-  static async enrollStudent(data: {
-    leadId?: number;
-    studentId?: number;
-    classId: number;
-    discountAmount?: number;
-    notes?: string;
-  }): Promise<EnrollmentResult> {
+  static async getEnrollments(params?: EnrollmentFilterQuery): Promise<ClassEnrollmentItem[]> {
+    const res = await apiClient.get<any>('/enrollments', { params });
+    return res.data?.data || [];
+  }
+
+  /**
+   * Lấy thông tin chi tiết một hồ sơ ghi danh
+   */
+  static async getEnrollmentById(id: number): Promise<ClassEnrollmentItem> {
+    const res = await apiClient.get<any>(`/enrollments/${id}`);
+    return res.data?.data;
+  }
+
+  /**
+   * Thao tác Xếp học viên vào lớp học (sinh mã STU-xxx, kiểm tra khóa sĩ số UC-SYS-02)
+   */
+  static async enrollStudent(data: EnrollStudentPayload): Promise<ClassEnrollmentItem> {
     const res = await apiClient.post<any>('/enrollments', data);
     return res.data?.data;
   }
+
+  /**
+   * Ghi nhận thanh toán học phí & cấp biên lai (REC-xxx)
+   */
+  static async recordPayment(
+    enrollmentId: number,
+    payload: RecordPaymentPayload
+  ): Promise<{ receipt: PaymentReceipt; enrollment: ClassEnrollmentItem }> {
+    const res = await apiClient.post<any>(`/enrollments/${enrollmentId}/payments`, payload);
+    return res.data?.data;
+  }
+
+  /**
+   * Lấy danh sách biên lai thu học phí của hồ sơ ghi danh
+   */
+  static async getPaymentReceipts(enrollmentId: number): Promise<PaymentReceipt[]> {
+    const res = await apiClient.get<any>(`/enrollments/${enrollmentId}/receipts`);
+    return res.data?.data || [];
+  }
+
+  /**
+   * Chuyển lớp học cho học viên (kiểm tra sĩ số khả dụng lớp mới)
+   */
+  static async transferClass(
+    enrollmentId: number,
+    payload: TransferClassPayload
+  ): Promise<ClassEnrollmentItem> {
+    const res = await apiClient.post<any>(`/enrollments/${enrollmentId}/transfer`, payload);
+    return res.data?.data;
+  }
 }
+
