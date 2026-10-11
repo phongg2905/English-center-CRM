@@ -7,6 +7,7 @@ import courseRoutes from './course.routes.js';
 import classRoutes from './class.routes.js';
 import enrollmentRoutes from './enrollment.routes.js';
 import staffRoutes from './staff.routes.js';
+import analyticsRoutes from './analytics.routes.js';
 import swaggerRoutes, { swaggerSpec } from '../docs/swagger.js';
 import { ApiResponse } from '../utils/response.js';
 
@@ -92,6 +93,15 @@ router.get('/', (req: Request, res: Response) => {
           receipts: 'GET /api/enrollments/:id/receipts',
           transferClass: 'POST /api/enrollments/:id/transfer',
         },
+        analytics: {
+          overview: 'GET /api/analytics/overview',
+          funnel: 'GET /api/analytics/funnel',
+          revenue: 'GET /api/analytics/revenue',
+          salesLeaderboard: 'GET /api/analytics/sales-leaderboard',
+          channelRoi: 'GET /api/analytics/channel-roi',
+          classOccupancy: 'GET /api/analytics/class-occupancy',
+          export: 'GET /api/analytics/export?type=leads|revenue|sales-leaderboard&format=csv|json',
+        },
       },
     },
     'Chào mừng đến với API English Center CRM'
@@ -113,6 +123,7 @@ router.use('/placement-tests', placementTestRoutes);
 router.use('/courses', courseRoutes);
 router.use('/classes', classRoutes);
 router.use('/enrollments', enrollmentRoutes);
+router.use('/analytics', analyticsRoutes);
 router.use('/docs', swaggerRoutes);
 
 export default router;

@@ -22,6 +22,10 @@ Tài liệu hóa chi tiết phân hệ Authentication & RBAC (Task [BE-02]) và 
   ],
   tags: [
     {
+      name: 'Analytics & Reporting (UC-04)',
+      description: 'Báo cáo thống kê tuyển sinh, doanh thu thực thu, phễu chuyển đổi, bảng xếp hạng tư vấn viên và xuất file CSV/JSON (Task [BE-06])',
+    },
+    {
       name: 'Placement Tests (UC-02)',
       description: 'Quản lý ca thi, đặt lịch test, điểm danh thí sinh, nhập điểm 4 kỹ năng và thuật toán tự động đề xuất khóa học (UC-SYS-03)',
     },
@@ -793,6 +797,124 @@ Tài liệu hóa chi tiết phân hệ Authentication & RBAC (Task [BE-02]) và 
           200: { description: 'Nhập điểm và sinh đề xuất lộ trình thành công' },
           400: { description: 'Thang điểm không hợp lệ (phải từ 0.0 đến 9.0)' },
           404: { description: 'Không tìm thấy bài thi' },
+        },
+      },
+    },
+    '/api/analytics/overview': {
+      get: {
+        tags: ['Analytics & Reporting (UC-04)'],
+        summary: 'Tổng quan các chỉ số điều hành cốt lõi (KPI Overview Cards)',
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: { description: 'Lấy tổng quan chỉ số điều hành thành công' },
+          401: { description: 'Chưa xác thực Bearer token' },
+          403: { description: 'Không đủ quyền truy cập' },
+        },
+      },
+    },
+    '/api/analytics/funnel': {
+      get: {
+        tags: ['Analytics & Reporting (UC-04)'],
+        summary: 'Thống kê tỷ lệ chuyển đổi phễu tuyển sinh (Lead -> Test -> Enrolled) và lý do hủy Lead',
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: 'startDate', in: 'query', schema: { type: 'string', format: 'date', example: '2026-09-01' } },
+          { name: 'endDate', in: 'query', schema: { type: 'string', format: 'date', example: '2026-10-31' } },
+          { name: 'sourceChannel', in: 'query', schema: { type: 'string', enum: ['FB_ADS', 'WEBSITE', 'HOTLINE', 'WALK_IN', 'REFERRAL'] } },
+          { name: 'assignedSalesId', in: 'query', schema: { type: 'integer', example: 2 } },
+        ],
+        responses: {
+          200: { description: 'Lấy báo cáo phễu chuyển đổi thành công' },
+          400: { description: 'Tham số ngày không hợp lệ' },
+          401: { description: 'Chưa xác thực Bearer token' },
+        },
+      },
+    },
+    '/api/analytics/revenue': {
+      get: {
+        tags: ['Analytics & Reporting (UC-04)'],
+        summary: 'Báo cáo doanh thu thực thu theo tuần/tháng/quý/năm & phương thức thanh toán',
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: 'period', in: 'query', schema: { type: 'string', enum: ['day', 'week', 'month', 'quarter', 'year'], default: 'month' } },
+          { name: 'startDate', in: 'query', schema: { type: 'string', format: 'date', example: '2026-01-01' } },
+          { name: 'endDate', in: 'query', schema: { type: 'string', format: 'date', example: '2026-12-31' } },
+          { name: 'paymentMethod', in: 'query', schema: { type: 'string', enum: ['BANK_TRANSFER', 'CASH'] } },
+        ],
+        responses: {
+          200: { description: 'Lấy báo cáo doanh thu thành công' },
+          401: { description: 'Chưa xác thực Bearer token' },
+          403: { description: 'Chỉ ADMIN và ACADEMIC có quyền xem doanh thu' },
+        },
+      },
+    },
+    '/api/analytics/sales-leaderboard': {
+      get: {
+        tags: ['Analytics & Reporting (UC-04)'],
+        summary: 'Bảng xếp hạng hiệu suất tư vấn viên (Số lead chốt & doanh số đem về)',
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: 'startDate', in: 'query', schema: { type: 'string', format: 'date' } },
+          { name: 'endDate', in: 'query', schema: { type: 'string', format: 'date' } },
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 } },
+        ],
+        responses: {
+          200: { description: 'Lấy bảng xếp hạng tư vấn viên thành công' },
+          401: { description: 'Chưa xác thực Bearer token' },
+        },
+      },
+    },
+    '/api/analytics/channel-roi': {
+      get: {
+        tags: ['Analytics & Reporting (UC-04)'],
+        summary: 'Thống kê hiệu quả và tỷ trọng doanh thu từng kênh Marketing',
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: 'startDate', in: 'query', schema: { type: 'string', format: 'date' } },
+          { name: 'endDate', in: 'query', schema: { type: 'string', format: 'date' } },
+        ],
+        responses: {
+          200: { description: 'Lấy báo cáo hiệu quả kênh Marketing thành công' },
+          401: { description: 'Chưa xác thực Bearer token' },
+        },
+      },
+    },
+    '/api/analytics/class-occupancy': {
+      get: {
+        tags: ['Analytics & Reporting (UC-04)'],
+        summary: 'Thống kê tỷ lệ lấp đầy phòng học và danh sách lớp học',
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: 'courseId', in: 'query', schema: { type: 'integer' } },
+          { name: 'status', in: 'query', schema: { type: 'string', enum: ['PLANNING', 'OPEN', 'FULL', 'IN_PROGRESS', 'COMPLETED'] } },
+        ],
+        responses: {
+          200: { description: 'Lấy thống kê tỷ lệ lấp đầy phòng học thành công' },
+          401: { description: 'Chưa xác thực Bearer token' },
+        },
+      },
+    },
+    '/api/analytics/export': {
+      get: {
+        tags: ['Analytics & Reporting (UC-04)'],
+        summary: 'Hỗ trợ xuất dữ liệu thô báo cáo định dạng JSON hoặc CSV',
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: 'type', in: 'query', required: true, schema: { type: 'string', enum: ['leads', 'revenue', 'sales-leaderboard', 'channel-roi', 'occupancy'] } },
+          { name: 'format', in: 'query', schema: { type: 'string', enum: ['json', 'csv'], default: 'json' } },
+          { name: 'startDate', in: 'query', schema: { type: 'string', format: 'date' } },
+          { name: 'endDate', in: 'query', schema: { type: 'string', format: 'date' } },
+        ],
+        responses: {
+          200: {
+            description: 'Xuất dữ liệu thành công (file CSV hoặc payload JSON)',
+            content: {
+              'text/csv': { schema: { type: 'string' } },
+              'application/json': { schema: { type: 'object' } },
+            },
+          },
+          400: { description: 'Loại báo cáo hoặc định dạng không hợp lệ' },
+          401: { description: 'Chưa xác thực Bearer token' },
         },
       },
     },
