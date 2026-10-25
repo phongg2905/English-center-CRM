@@ -1,6 +1,6 @@
 /**
  * DỰ ÁN: ENGLISH CENTER CRM (EduFlow CRM)
- * MÀN HÌNH: BÁO CÁO & THỐNG KÊ QUẢN TRỊ (UC-04 / TASK [FE-06])
+ * MÀN HÌNH: BÁO CÁO & THỐNG KÊ QUẢN TRỊ
  * TÁC GIẢ: Long Phạm (@longphm11) - Frontend Developer
  */
 
@@ -24,7 +24,6 @@ import {
   Download,
   RefreshCw,
   Target,
-  BarChart3,
   Calendar,
   Layers,
   ChevronDown,
@@ -32,6 +31,7 @@ import {
   FileSpreadsheet,
   CheckCircle2,
 } from 'lucide-react';
+import { Skeleton, TableSkeleton } from '../../components/ui';
 import './ReportsPage.css';
 
 export const ReportsPage: React.FC = () => {
@@ -147,10 +147,6 @@ export const ReportsPage: React.FC = () => {
       {/* Header Bar */}
       <div className="reports-header-section">
         <div className="reports-header-text">
-          <div className="reports-badge">
-            <BarChart3 size={14} />
-            <span>Phân hệ Điều hành & Báo cáo [UC-04]</span>
-          </div>
           <h1 className="reports-title">Báo Cáo & Thống Kê Tuyển Sinh</h1>
           <p className="reports-subtitle">
             Theo dõi phễu chuyển đổi, doanh thu thực thu, hiệu suất tư vấn viên và tỷ lệ lấp đầy phòng học theo thời gian thực.
@@ -262,7 +258,7 @@ export const ReportsPage: React.FC = () => {
               <CircleDollarSign size={20} />
             </div>
           </div>
-          <div className="kpi-value">{overview ? formatVND(overview.totalRevenue) : '...'}</div>
+          <div className="kpi-value">{overview ? formatVND(overview.totalRevenue) : <Skeleton variant="rounded" width={140} height={26} />}</div>
           <div className="kpi-footer">
             <span className="kpi-delta positive">
               <TrendingUp size={13} /> {overview?.totalTransactions || 0} giao dịch
@@ -278,7 +274,7 @@ export const ReportsPage: React.FC = () => {
               <Target size={20} />
             </div>
           </div>
-          <div className="kpi-value">{overview?.totalLeads ?? '...'} Lead</div>
+          <div className="kpi-value">{overview ? `${overview.totalLeads} Lead` : <Skeleton variant="rounded" width={110} height={26} />}</div>
           <div className="kpi-footer">
             <span className="kpi-delta neutral">
               {overview?.newLeadsThisMonth ?? 0} mới tháng này
@@ -294,7 +290,7 @@ export const ReportsPage: React.FC = () => {
               <GraduationCap size={20} />
             </div>
           </div>
-          <div className="kpi-value">{overview?.totalEnrolled ?? '...'} Học viên</div>
+          <div className="kpi-value">{overview ? `${overview.totalEnrolled} Học viên` : <Skeleton variant="rounded" width={130} height={26} />}</div>
           <div className="kpi-footer">
             <span className="kpi-delta positive">
               Win Rate: {overview?.conversionRate ?? 0}%
@@ -310,7 +306,7 @@ export const ReportsPage: React.FC = () => {
               <Building size={20} />
             </div>
           </div>
-          <div className="kpi-value">{overview?.averageOccupancyRate ?? '...'}%</div>
+          <div className="kpi-value">{overview ? `${overview.averageOccupancyRate}%` : <Skeleton variant="rounded" width={90} height={26} />}</div>
           <div className="kpi-footer">
             <span className="kpi-delta neutral">
               {overview?.activeClassesCount ?? 0} lớp đang mở
@@ -363,8 +359,12 @@ export const ReportsPage: React.FC = () => {
         </button>
       </div>
 
-      {/* TAB CONTENT 1: FUNNEL */}
-      {activeTab === 'funnel' && (
+      {loading && !overview ? (
+        <TableSkeleton rows={5} />
+      ) : (
+        <>
+          {/* TAB CONTENT 1: FUNNEL */}
+          {activeTab === 'funnel' && (
         <div className="reports-tab-pane">
           <div className="funnel-layout-grid">
             {/* Left: Interactive Funnel Visualization */}
@@ -751,6 +751,8 @@ export const ReportsPage: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
+        </>
       )}
     </div>
   );

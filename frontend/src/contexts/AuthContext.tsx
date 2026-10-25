@@ -12,10 +12,44 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const isJwtExpired = (token: string | null): boolean => {
+  if (!token) return true;
+  try {
+    const payloadBase64 = token.split('.')[1];
+    if (!payloadBase64) return true;
+    const base64 = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const payload = JSON.parse(jsonPayload);
+    if (!payload.exp) return false;
+    return Date.now() >= payload.exp * 1000;
+  } catch {
+    return true;
+  }
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // 1. Listen for global auth:expired event from Axios interceptor
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      setUser(null);
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+    };
+
+    window.addEventListener('auth:expired', handleAuthExpired);
+    return () => window.removeEventListener('auth:expired', handleAuthExpired);
+  }, []);
+
+  // 2. Initial Auth verification
   useEffect(() => {
     const initializeAuth = async () => {
       const storedToken = localStorage.getItem('access_token');
@@ -24,7 +58,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (storedToken && storedUser) {
         try {
           setUser(JSON.parse(storedUser));
-          // Optionally fetch fresh profile in background
           const freshUser = await AuthService.getMe();
           setUser(freshUser);
           localStorage.setItem('user', JSON.stringify(freshUser));
@@ -41,6 +74,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
   }, []);
+
+  // 3. Periodic heartbeat & tab focus checker for token expiration
+  useEffect(() => {
+    const checkTokenExpiration = async () => {
+      const accessToken = localStorage.getItem('access_token');
+      const refreshToken = localStorage.getItem('refresh_token');
+
+      if (user && (!accessToken || !refreshToken)) {
+        setUser(null);
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login?expired=1';
+        }
+        return;
+      }
+
+      if (accessToken && isJwtExpired(accessToken)) {
+        if (refreshToken && isJwtExpired(refreshToken)) {
+          // Both access & refresh tokens expired -> auto logout
+          setUser(null);
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('user');
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login?expired=1';
+          }
+        } else {
+          // Access token expired, attempt seamless refresh via getMe()
+          try {
+            const freshUser = await AuthService.getMe();
+            setUser(freshUser);
+            localStorage.setItem('user', JSON.stringify(freshUser));
+          } catch {
+            // Handled in interceptor
+          }
+        }
+      }
+    };
+
+    const interval = setInterval(checkTokenExpiration, 30000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkTokenExpiration();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user]);
 
   const login = async (username: string, password: string): Promise<User> => {
     setIsLoading(true);

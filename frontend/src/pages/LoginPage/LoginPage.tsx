@@ -33,6 +33,14 @@ export const LoginPage: React.FC = () => {
     }
   }, [isAuthenticated, navigate, location]);
 
+  // Display notice if redirected due to expired session
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('expired') === '1') {
+      setErrorMsg('Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.');
+    }
+  }, [location.search]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !password) {

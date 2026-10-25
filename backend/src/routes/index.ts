@@ -8,6 +8,7 @@ import classRoutes from './class.routes.js';
 import enrollmentRoutes from './enrollment.routes.js';
 import staffRoutes from './staff.routes.js';
 import analyticsRoutes from './analytics.routes.js';
+import settingsRoutes from './settings.routes.js';
 import swaggerRoutes, { swaggerSpec } from '../docs/swagger.js';
 import { ApiResponse } from '../utils/response.js';
 
@@ -124,6 +125,7 @@ router.use('/courses', courseRoutes);
 router.use('/classes', classRoutes);
 router.use('/enrollments', enrollmentRoutes);
 router.use('/analytics', analyticsRoutes);
+router.use('/settings', settingsRoutes);
 router.use('/docs', swaggerRoutes);
 
 export default router;

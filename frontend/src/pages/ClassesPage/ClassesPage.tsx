@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 
 import { AcademicService } from '../../services/academic.service';
+import { SettingsService } from '../../services/settings.service';
 import type {
   ClassItem,
   CourseItem,
@@ -30,12 +31,13 @@ import { EnrollStudentWizardModal } from './EnrollStudentWizardModal';
 import { RecordPaymentModal } from './RecordPaymentModal';
 import { ReceiptPrintModal } from './ReceiptPrintModal';
 import { TransferClassModal } from './TransferClassModal';
-import { Button } from '../../components/ui';
+import { Button, TableSkeleton } from '../../components/ui';
 import './ClassesPage.css';
 
 export const ClassesPage: React.FC = () => {
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [courses, setCourses] = useState<CourseItem[]>([]);
+  const [occupancyWarningRate, setOccupancyWarningRate] = useState<number>(85);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,13 +90,17 @@ export const ClassesPage: React.FC = () => {
       if (!showSilent) setIsLoading(true);
       setError(null);
 
-      const [classList, courseList] = await Promise.all([
+      const [classList, courseList, sysSettings] = await Promise.all([
         AcademicService.getClasses(),
         AcademicService.getCourses(),
+        SettingsService.getSettings().catch(() => null),
       ]);
 
       setClasses(classList);
       setCourses(courseList);
+      if (sysSettings?.occupancyWarningRate) {
+        setOccupancyWarningRate(sysSettings.occupancyWarningRate);
+      }
 
       // If a class is currently opened in drawer, update its instance
       setSelectedClass((prev) => {
@@ -447,28 +453,7 @@ export const ClassesPage: React.FC = () => {
           </Button>
         </div>
       ) : isLoading ? (
-        <div
-          style={{
-            padding: '80px 20px',
-            textAlign: 'center',
-            background: '#ffffff',
-            borderRadius: '18px',
-            border: '1px solid #f1f5f9',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-          }}
-        >
-          <RefreshCw
-            size={36}
-            className="animate-spin"
-            style={{ color: '#2563eb', margin: '0 auto 12px auto' }}
-          />
-          <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#1e293b' }}>
-            Đang Tải Danh Mục Lớp Học & Khóa Học...
-          </h4>
-          <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: '#64748b' }}>
-            Đang đồng bộ dữ liệu thời gian thực từ máy chủ EduFlow
-          </p>
-        </div>
+        <TableSkeleton rows={5} />
       ) : viewMode === 'CLASSES' ? (
         /* ========================================================
            VIEW MODE 1: LỚP HỌC & GIÁM SÁT SĨ SỐ (PINTEREST GRID)
@@ -506,11 +491,13 @@ export const ClassesPage: React.FC = () => {
           <div className="classes-grid-container">
             {filteredClasses.map((cls) => {
               const isFullClass = cls.isFull || cls.currentEnrolled >= cls.maxCapacity;
+              const occupancyRate = cls.maxCapacity > 0 ? (cls.currentEnrolled / cls.maxCapacity) * 100 : 0;
+              const isNearFull = !isFullClass && occupancyRate >= occupancyWarningRate;
 
               return (
                 <div
                   key={cls.id}
-                  className={`class-card ${isFullClass ? 'is-full-alert' : ''}`}
+                  className={`class-card ${isFullClass ? 'is-full-alert' : isNearFull ? 'is-near-full-alert' : ''}`}
                   onClick={() => setSelectedClass(cls)}
                 >
                   {/* Card Header: Class Title & Status Badge */}
@@ -530,6 +517,14 @@ export const ClassesPage: React.FC = () => {
                     {isFullClass ? (
                       <span className="class-status-badge full">
                         <Lock size={11} /> ĐÃ ĐẦY
+                      </span>
+                    ) : isNearFull ? (
+                      <span
+                        className="class-status-badge"
+                        style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a' }}
+                        title={`Sĩ số đạt ${Math.round(occupancyRate)}%, chạm ngưỡng cảnh báo phòng học ${occupancyWarningRate}%`}
+                      >
+                        ⚠️ Sắp đầy ({Math.round(occupancyRate)}%)
                       </span>
                     ) : (
                       <span

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { School, BookOpen, Clock, MapPin, Award, Search } from 'lucide-react';
 import type { TeacherItem } from '../../types/staff';
+import { CardGridSkeleton } from '../../components/ui';
 
 interface TeacherRosterGridProps {
   teachers: TeacherItem[];
@@ -34,11 +35,7 @@ export const TeacherRosterGrid: React.FC<TeacherRosterGridProps> = ({ teachers, 
   });
 
   if (isLoading) {
-    return (
-      <div className="staff-table-card" style={{ padding: '48px 24px', textAlign: 'center' }}>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Đang tải danh sách giảng viên...</p>
-      </div>
-    );
+    return <CardGridSkeleton count={6} />;
   }
 
   return (

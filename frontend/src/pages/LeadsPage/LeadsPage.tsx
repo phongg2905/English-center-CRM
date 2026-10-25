@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../../components/ui';
+import { Button, KanbanSkeleton } from '../../components/ui';
 import {
   Phone,
   Mail,
@@ -633,6 +633,8 @@ export const LeadsPage: React.FC = () => {
             Thử lại
           </Button>
         </div>
+      ) : isLoading ? (
+        <KanbanSkeleton columns={5} cardsPerColumn={3} />
       ) : (
           <div className={`kanban-board-container ${draggingLead ? 'is-dragging-active' : ''}`}>
             {filteredColumns.map((col) => {

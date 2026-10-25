@@ -27,7 +27,7 @@ import {
   ReceiptPrintModal,
   TransferClassModal,
 } from '../ClassesPage';
-import { Button } from '../../components/ui';
+import { Button, TableSkeleton } from '../../components/ui';
 import './StudentsPage.css';
 
 export const StudentsPage: React.FC = () => {
@@ -437,10 +437,7 @@ export const StudentsPage: React.FC = () => {
 
       {/* 3. ROSTER DATA TABLE */}
       {isLoading ? (
-        <div className="students-loading-box">
-          <RefreshCw size={24} className="animate-spin" style={{ color: '#4f46e5', margin: '0 auto 10px auto' }} />
-          <p>Đang tải danh sách hồ sơ học viên & học phí...</p>
-        </div>
+        <TableSkeleton rows={6} />
       ) : filteredEnrollments.length === 0 ? (
         <div className="students-empty-state">
           <div className="empty-state-icon-box">
