@@ -371,3 +371,34 @@ LEFT JOIN payment_receipts pr ON e.id = pr.enrollment_id
 JOIN roles r ON u.role_id = r.id
 WHERE r.role_code = 'SALES'
 GROUP BY u.id, u.full_name;
+
+-- ==============================================================================
+-- 11. BẢNG CÀI ĐẶT HỆ THỐNG (SYSTEM SETTINGS)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS system_settings (
+    id INT PRIMARY KEY DEFAULT 1,
+    center_name VARCHAR(255) NOT NULL DEFAULT 'EduFlow English Academy',
+    slogan VARCHAR(500) DEFAULT 'Tiên phong đào tạo tiếng Anh chuẩn quốc tế Cambridge & IELTS',
+    center_code VARCHAR(50) DEFAULT 'EF-HN-01',
+    hotline VARCHAR(50) DEFAULT '1900 6868',
+    email VARCHAR(255) DEFAULT 'contact@eduflow.edu.vn',
+    address TEXT DEFAULT 'Tầng 5, Tòa nhà EduTower, 144 Xuân Thủy, Cầu Giấy, Hà Nội',
+    website VARCHAR(255) DEFAULT 'https://eduflow.edu.vn',
+    working_hours VARCHAR(100) DEFAULT '08:00 - 21:30 (Thứ 2 - Chủ Nhật)',
+    logo_url TEXT,
+    ielts_min_score VARCHAR(10) DEFAULT '4.5',
+    toeic_min_score VARCHAR(10) DEFAULT '450',
+    sla_lead_minutes INT DEFAULT 30,
+    max_class_capacity INT DEFAULT 20,
+    occupancy_warning_rate INT DEFAULT 85,
+    auto_assign_leads BOOLEAN DEFAULT TRUE,
+    auto_send_placement_result BOOLEAN DEFAULT TRUE,
+    session_timeout_hours INT DEFAULT 8,
+    require_two_factor_for_admin BOOLEAN DEFAULT TRUE,
+    auto_backup_daily BOOLEAN DEFAULT TRUE,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT single_row_check CHECK (id = 1)
+);
+
+INSERT INTO system_settings (id) VALUES (1)
+ON CONFLICT (id) DO NOTHING;

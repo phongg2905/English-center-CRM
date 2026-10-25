@@ -3,6 +3,7 @@ import { env } from '../config/environment.js';
 import { logger } from '../utils/logger.js';
 
 const { Pool } = pg;
+// Supabase Cloud PostgreSQL Connection Pool
 
 const poolConfig: pg.PoolConfig = env.db.connectionString
   ? {

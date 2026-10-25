@@ -45,7 +45,7 @@ export const PlaceholderPage: React.FC<PlaceholderPageProps> = ({
             <Construction size={32} />
           </div>
           <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-heading)', marginBottom: '8px' }}>
-            Phân hệ đang được hoàn thiện
+            Tính năng đang được hoàn thiện
           </h3>
           <p style={{ fontSize: '14px', color: 'var(--text-muted)', maxWidth: '480px', margin: '0 auto 24px auto', lineHeight: 1.5 }}>
             Tính năng này đang được đồng bộ dữ liệu và chuẩn bị ra mắt trong phiên bản sắp tới.

@@ -53,18 +53,6 @@
   gap: 18px;
 }
 
-.reports-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  background: rgba(99, 102, 241, 0.1);
-  color: #6366f1;
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
 
 .reports-title {
   font-size: 26px;

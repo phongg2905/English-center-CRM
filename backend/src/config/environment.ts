@@ -2,15 +2,18 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 
-// Load environment variables from .env file (supports running from root or backend directory)
+const currentDir = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
+
+// Load environment variables from backend/.env accurately
 const possibleEnvPaths = [
-  path.resolve(process.cwd(), '.env'),
+  path.resolve(currentDir, '../../.env'),
   path.resolve(process.cwd(), 'backend', '.env'),
+  path.resolve(process.cwd(), '.env'),
 ];
 
 for (const p of possibleEnvPaths) {
   if (fs.existsSync(p)) {
-    dotenv.config({ path: p });
+    dotenv.config({ path: p, override: true });
     break;
   }
 }

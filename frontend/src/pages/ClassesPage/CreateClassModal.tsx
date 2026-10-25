@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, BookOpen, AlertCircle } from 'lucide-react';
 import { AcademicService } from '../../services/academic.service';
 import { StaffService } from '../../services/staff.service';
+import { SettingsService } from '../../services/settings.service';
 import type { CourseItem, CreateClassPayload, ScheduleDays } from '../../types/academic';
 import type { TeacherItem } from '../../types/staff';
 import { Button } from '../../components/ui';
@@ -32,7 +33,8 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({
   const [startDate, setStartDate] = useState<string>(
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
-  const [maxCapacity, setMaxCapacity] = useState<number>(15);
+  const [maxCapacity, setMaxCapacity] = useState<number>(20);
+  const [systemMaxCapacity, setSystemMaxCapacity] = useState<number>(20);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -43,12 +45,18 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({
 
     const loadMeta = async () => {
       try {
-        const [cList, tList] = await Promise.all([
+        const [cList, tList, sysSettings] = await Promise.all([
           AcademicService.getCourses(),
           StaffService.getTeachers().catch(() => []),
+          SettingsService.getSettings().catch(() => null),
         ]);
         setCourses(cList);
         setTeachers(tList);
+
+        if (sysSettings?.maxClassCapacity) {
+          setMaxCapacity(sysSettings.maxClassCapacity);
+          setSystemMaxCapacity(sysSettings.maxClassCapacity);
+        }
 
         const defaultCourse = initialCourseId
           ? cList.find((c) => c.id === initialCourseId) || cList[0]
@@ -261,6 +269,11 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({
                       học viên (Hệ thống sẽ tự khóa khi đủ)
                     </span>
                   </div>
+                  {maxCapacity > systemMaxCapacity && (
+                    <span style={{ fontSize: '11.5px', color: '#b45309', display: 'block', marginTop: '5px', fontWeight: 600 }}>
+                      ⚠️ Lưu ý: Sức chứa này vượt quá giới hạn khuyến nghị ({systemMaxCapacity} học viên) trong Cài đặt hệ thống.
+                    </span>
+                  )}
                 </div>
               </div>
 

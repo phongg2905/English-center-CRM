@@ -40,6 +40,21 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
+const triggerLogout = () => {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('user');
+  window.dispatchEvent(
+    new CustomEvent('auth:expired', {
+      detail: { message: 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.' },
+    })
+  );
+  const publicRoutes = ['/login', '/register', '/forgot-password'];
+  if (!publicRoutes.some((route) => window.location.pathname.startsWith(route))) {
+    window.location.href = '/login?expired=1';
+  }
+};
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -50,8 +65,13 @@ apiClient.interceptors.response.use(
     }
 
     // Handle 401 Unauthorized
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (error.response.status === 401) {
       if (originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/refresh')) {
+        return Promise.reject(error);
+      }
+
+      if (originalRequest._retry) {
+        triggerLogout();
         return Promise.reject(error);
       }
 
@@ -74,9 +94,7 @@ apiClient.interceptors.response.use(
       const refreshToken = localStorage.getItem('refresh_token');
       if (!refreshToken) {
         isRefreshing = false;
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+        triggerLogout();
         return Promise.reject(error);
       }
 
@@ -85,22 +103,29 @@ apiClient.interceptors.response.use(
           refreshToken,
         });
 
-        const newAccessToken = response.data?.data?.accessToken;
+        // Backend response format: data.tokens.accessToken OR data.accessToken
+        const newAccessToken =
+          response.data?.data?.tokens?.accessToken || response.data?.data?.accessToken;
+        const newRefreshToken =
+          response.data?.data?.tokens?.refreshToken || response.data?.data?.refreshToken;
+
         if (newAccessToken) {
           localStorage.setItem('access_token', newAccessToken);
+          if (newRefreshToken) {
+            localStorage.setItem('refresh_token', newRefreshToken);
+          }
           apiClient.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
           processQueue(null, newAccessToken);
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           }
           return apiClient(originalRequest);
+        } else {
+          throw new Error('Mã access token mới không hợp lệ');
         }
       } catch (refreshErr) {
         processQueue(refreshErr, null);
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+        triggerLogout();
         return Promise.reject(refreshErr);
       } finally {
         isRefreshing = false;

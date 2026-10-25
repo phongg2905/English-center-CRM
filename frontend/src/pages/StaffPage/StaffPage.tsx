@@ -22,6 +22,7 @@ import { CreateEditStaffDrawer } from './CreateEditStaffDrawer';
 import { ResetPasswordModal } from './ResetPasswordModal';
 import { DeactivateStaffModal } from './DeactivateStaffModal';
 import { StaffDetailModal } from './StaffDetailModal';
+import { TableSkeleton } from '../../components/ui';
 import './StaffPage.css';
 
 export const StaffPage: React.FC = () => {
@@ -371,17 +372,21 @@ export const StaffPage: React.FC = () => {
 
       {/* Main Content Area */}
       {activeTab === 'staff' ? (
-        <StaffTable
-          staffs={staffs}
-          pagination={pagination}
-          onPageChange={(p) => setCurrentPage(p)}
-          onViewDetail={handleOpenDetailModal}
-          onEdit={handleOpenEditDrawer}
-          onResetPassword={handleOpenResetModal}
-          onToggleStatus={handleOpenToggleStatusModal}
-          onDelete={handleDeleteStaff}
-          currentUserId={currentUserId}
-        />
+        isLoading ? (
+          <TableSkeleton rows={6} />
+        ) : (
+          <StaffTable
+            staffs={staffs}
+            pagination={pagination}
+            onPageChange={(p) => setCurrentPage(p)}
+            onViewDetail={handleOpenDetailModal}
+            onEdit={handleOpenEditDrawer}
+            onResetPassword={handleOpenResetModal}
+            onToggleStatus={handleOpenToggleStatusModal}
+            onDelete={handleDeleteStaff}
+            currentUserId={currentUserId}
+          />
+        )
       ) : (
         <TeacherRosterGrid teachers={teachers} isLoading={isLoading} />
       )}

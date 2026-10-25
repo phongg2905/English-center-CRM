@@ -19,6 +19,7 @@ import { ShiftCapacityAlert } from './ShiftCapacityAlert';
 import { QuickBookModal } from './QuickBookModal';
 import { ShiftRosterModal } from './ShiftRosterModal';
 import { formatLocalDate, getMondayOfWeek } from '../../utils/date';
+import { TableSkeleton, CalendarSkeleton } from '../../components/ui';
 import './PlacementTestPage.css';
 
 export const PlacementTestPage: React.FC = () => {
@@ -335,28 +336,36 @@ export const PlacementTestPage: React.FC = () => {
 
       {/* Main Content Area: Calendar Mode */}
       {viewMode === 'calendar' && (
-        <PlacementTestCalendar
-          currentWeekStart={currentWeekStart}
-          onPrevWeek={handlePrevWeek}
-          onNextWeek={handleNextWeek}
-          onToday={handleToday}
-          availabilitySlots={availabilitySlots}
-          tests={tests}
-          selectedShift={selectedShift}
-          onSelectShift={setSelectedShift}
-          onQuickBookSlot={(date, slot, room) => handleOpenBookingModal(date, slot, room)}
-        />
+        isLoading ? (
+          <CalendarSkeleton />
+        ) : (
+          <PlacementTestCalendar
+            currentWeekStart={currentWeekStart}
+            onPrevWeek={handlePrevWeek}
+            onNextWeek={handleNextWeek}
+            onToday={handleToday}
+            availabilitySlots={availabilitySlots}
+            tests={tests}
+            selectedShift={selectedShift}
+            onSelectShift={setSelectedShift}
+            onQuickBookSlot={(date, slot, room) => handleOpenBookingModal(date, slot, room)}
+          />
+        )
       )}
 
       {/* Main Content Area: Table Mode */}
       {viewMode === 'table' && (
-        <CandidateRosterTable
-          tests={filteredCandidates}
-          onAttendanceChanged={() => loadData(true)}
-          selectedShiftInfo={selectedShift}
-          onClearShiftFilter={() => setSelectedShift(null)}
-          onAddCandidateToShift={(shift) => handleOpenBookingModal(shift.date, shift.timeSlot, shift.room, true)}
-        />
+        isLoading ? (
+          <TableSkeleton rows={5} />
+        ) : (
+          <CandidateRosterTable
+            tests={filteredCandidates}
+            onAttendanceChanged={() => loadData(true)}
+            selectedShiftInfo={selectedShift}
+            onClearShiftFilter={() => setSelectedShift(null)}
+            onAddCandidateToShift={(shift) => handleOpenBookingModal(shift.date, shift.timeSlot, shift.room, true)}
+          />
+        )
       )}
 
       {/* Shift Roster Modal Window (Bật lên khi bấm vào ca thi trên lịch) */}

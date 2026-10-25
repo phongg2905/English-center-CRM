@@ -12,7 +12,7 @@ import { ClassesPage } from '../pages/ClassesPage';
 import { StudentsPage } from '../pages/StudentsPage';
 import { StaffPage } from '../pages/StaffPage';
 import { ReportsPage } from '../pages/ReportsPage';
-import { PlaceholderPage } from '../pages/PlaceholderPage';
+import { SettingsPage } from '../pages/SettingsPage';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -54,7 +54,7 @@ export const AppRoutes: React.FC = () => {
 
         <Route
           path="settings"
-          element={<PlaceholderPage title="Cài đặt Hệ thống" />}
+          element={<SettingsPage />}
         />
       </Route>
 
