@@ -1,0 +1,185 @@
+/* ==========================================================================
+   403 RESTRICTED ACCESS (ACCESS DENIED) PAGE STYLES
+   Minimalist Liquid Glass, Exact Reference Layout
+   ========================================================================== */
+
+.access-denied-container {
+  position: relative;
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-canvas, #f6f8fc);
+  overflow-x: hidden;
+  padding: 32px 20px;
+  box-sizing: border-box;
+}
+
+/* Subtle, diluted liquid glass ambient backgrounds */
+.access-denied-bg-glow-1 {
+  position: absolute;
+  top: -10%;
+  left: -5%;
+  width: 55vw;
+  height: 55vh;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.04) 0%, rgba(124, 58, 237, 0) 70%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.access-denied-bg-glow-2 {
+  position: absolute;
+  bottom: -10%;
+  right: -5%;
+  width: 55vw;
+  height: 55vh;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.035) 0%, rgba(236, 72, 153, 0) 70%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Content Container centered exactly like the reference design */
+.access-denied-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 760px;
+  width: 100%;
+}
+
+/* Illustration Box */
+.access-denied-illustration-wrapper {
+  width: 100%;
+  max-width: 640px;
+  margin-bottom: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.access-denied-illustration {
+  width: 100%;
+  height: auto;
+  max-height: 350px;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 32px rgba(15, 23, 42, 0.05));
+  transition: transform 0.4s ease;
+}
+
+.access-denied-illustration:hover {
+  transform: translateY(-4px) scale(1.01);
+}
+
+/* Typography matching the reference design */
+.access-denied-title {
+  font-family: var(--font-family-base, 'Quicksand', sans-serif);
+  font-size: 34px;
+  font-weight: 800;
+  color: #1e1b4b;
+  margin: 0 0 14px 0;
+  letter-spacing: -0.02em;
+}
+
+.access-denied-subtitle {
+  font-family: var(--font-family-base, 'Quicksand', sans-serif);
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: #5a667d;
+  max-width: 480px;
+  margin: 0 0 32px 0;
+}
+
+.access-denied-subtitle p {
+  margin: 2px 0;
+}
+
+/* CTA Pill Button (Exact Cyan Glow from reference image) */
+.access-denied-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.access-denied-btn-go-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 44px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--font-family-base, 'Quicksand', sans-serif);
+  color: #ffffff;
+  background: linear-gradient(135deg, #18c5e6 0%, #16b4d7 100%);
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  box-shadow: 0 12px 26px -4px rgba(22, 180, 215, 0.45);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  text-decoration: none;
+}
+
+.access-denied-btn-go-back:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px -4px rgba(22, 180, 215, 0.6);
+  filter: brightness(1.04);
+}
+
+.access-denied-btn-go-back:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 18px -4px rgba(22, 180, 215, 0.4);
+}
+
+/* Subtle Secondary link to Dashboard */
+.access-denied-link-dashboard {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #64748b;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.access-denied-link-dashboard:hover {
+  color: var(--color-primary-royal, #7c3aed);
+  background: rgba(124, 58, 237, 0.05);
+}
+
+
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .access-denied-illustration-wrapper {
+    max-width: 340px;
+    margin-bottom: 20px;
+  }
+
+  .access-denied-title {
+    font-size: 26px;
+  }
+
+  .access-denied-subtitle {
+    font-size: 14px;
+    padding: 0 12px;
+  }
+
+  .access-denied-btn-go-back {
+    width: 100%;
+    max-width: 260px;
+  }
+}

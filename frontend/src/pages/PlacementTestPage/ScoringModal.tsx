@@ -16,10 +16,13 @@ import {
   Clock,
   MapPin,
   UserCheck,
+  Lock,
 } from 'lucide-react';
 import { PlacementTestService } from '../../services/placement-test.service';
 import { AcademicService, type ClassItem } from '../../services/academic.service';
 import { ScorecardPrintModal } from './ScorecardPrintModal';
+import { useAuth } from '../../hooks/useAuth';
+import { hasRequiredRole, ACTION_PERMISSIONS } from '../../config/rbac.config';
 import type { PlacementTestWithDetails, CourseRecommendation } from '../../types/placement-test';
 
 interface ScoringModalProps {
@@ -35,6 +38,9 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
   test,
   onScoreSaved,
 }) => {
+  const { user } = useAuth();
+  const canScore = hasRequiredRole(user?.role, ACTION_PERMISSIONS.TEST_SCORE);
+
   const [listening, setListening] = useState<number>(5.0);
   const [reading, setReading] = useState<number>(5.0);
   const [writing, setWriting] = useState<number>(5.0);
@@ -296,6 +302,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                       max="9"
                       step="0.5"
                       value={listening}
+                      disabled={!canScore}
                       onChange={(e) => setListening(parseFloat(e.target.value))}
                       className="pt-range-slider listening"
                     />
@@ -305,6 +312,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                       max="9"
                       step="0.5"
                       value={listening}
+                      disabled={!canScore}
                       onChange={(e) => {
                         const val = Math.max(0, Math.min(9, parseFloat(e.target.value) || 0));
                         setListening(val);
@@ -329,6 +337,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                       max="9"
                       step="0.5"
                       value={reading}
+                      disabled={!canScore}
                       onChange={(e) => setReading(parseFloat(e.target.value))}
                       className="pt-range-slider reading"
                     />
@@ -338,6 +347,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                       max="9"
                       step="0.5"
                       value={reading}
+                      disabled={!canScore}
                       onChange={(e) => {
                         const val = Math.max(0, Math.min(9, parseFloat(e.target.value) || 0));
                         setReading(val);
@@ -362,6 +372,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                       max="9"
                       step="0.5"
                       value={writing}
+                      disabled={!canScore}
                       onChange={(e) => setWriting(parseFloat(e.target.value))}
                       className="pt-range-slider writing"
                     />
@@ -371,6 +382,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                       max="9"
                       step="0.5"
                       value={writing}
+                      disabled={!canScore}
                       onChange={(e) => {
                         const val = Math.max(0, Math.min(9, parseFloat(e.target.value) || 0));
                         setWriting(val);
@@ -395,6 +407,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                       max="9"
                       step="0.5"
                       value={speaking}
+                      disabled={!canScore}
                       onChange={(e) => setSpeaking(parseFloat(e.target.value))}
                       className="pt-range-slider speaking"
                     />
@@ -404,6 +417,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                       max="9"
                       step="0.5"
                       value={speaking}
+                      disabled={!canScore}
                       onChange={(e) => {
                         const val = Math.max(0, Math.min(9, parseFloat(e.target.value) || 0));
                         setSpeaking(val);
@@ -421,8 +435,9 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                   <textarea
                     rows={3}
                     className="pt-form-control"
-                    placeholder="Ghi chú điểm mạnh, điểm yếu cần khắc phục của thí sinh..."
+                    placeholder={canScore ? "Ghi chú điểm mạnh, điểm yếu cần khắc phục của thí sinh..." : "Chưa có nhận xét."}
                     value={feedback}
+                    disabled={!canScore}
                     onChange={(e) => setFeedback(e.target.value)}
                     style={{ width: '100%', fontSize: '13px', padding: '8px 12px' }}
                   />
@@ -544,30 +559,48 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                 style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '7px 16px', fontSize: '13px' }}
                 onClick={onClose}
               >
-                Hủy / Đóng
+                Đóng
               </button>
 
-              <button
-                type="button"
-                className="pt-btn-primary"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '7px 18px',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  borderRadius: '8px',
-                  background: 'var(--brand-gradient)',
-                  color: '#fff',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-                onClick={handleSaveScore}
-                disabled={isSubmitting}
-              >
-                <Save size={15} /> {isSubmitting ? 'Đang lưu...' : 'Lưu Điểm Khảo Thí'}
-              </button>
+              {canScore ? (
+                <button
+                  type="button"
+                  className="pt-btn-primary"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '7px 18px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    borderRadius: '8px',
+                    background: 'var(--brand-gradient)',
+                    color: '#fff',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                  onClick={handleSaveScore}
+                  disabled={isSubmitting}
+                >
+                  <Save size={15} /> {isSubmitting ? 'Đang lưu...' : 'Lưu Điểm Khảo Thí'}
+                </button>
+              ) : (
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    color: '#64748b',
+                    background: '#f1f5f9',
+                    borderRadius: '8px',
+                    border: '1px dashed #cbd5e1',
+                  }}
+                >
+                  <Lock size={13} color="#64748b" /> Chỉ xem (Giáo vụ có quyền lưu điểm)
+                </div>
+              )}
             </div>
           </div>
         </div>

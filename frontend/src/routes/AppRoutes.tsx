@@ -13,6 +13,8 @@ import { StudentsPage } from '../pages/StudentsPage';
 import { StaffPage } from '../pages/StaffPage';
 import { ReportsPage } from '../pages/ReportsPage';
 import { SettingsPage } from '../pages/SettingsPage';
+import { AccessDeniedPage } from '../pages/AccessDeniedPage';
+import { ROUTE_PERMISSIONS } from '../config/rbac.config';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -21,6 +23,7 @@ export const AppRoutes: React.FC = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/403" element={<AccessDeniedPage />} />
 
       {/* Protected Routes inside AppShell */}
       <Route
@@ -33,28 +36,109 @@ export const AppRoutes: React.FC = () => {
       >
         {/* Index redirects to /dashboard */}
         <Route index element={<Navigate to="/dashboard" replace />} />
-        
-        {/* Core modules */}
-        <Route path="dashboard" element={<DashboardPage />} />
-        
-        <Route path="leads" element={<LeadsPage />} />
 
-        <Route path="tests" element={<PlacementTestPage />} />
-
-        <Route path="students" element={<StudentsPage />} />
-
-        <Route path="classes" element={<ClassesPage />} />
-
-        <Route path="reports" element={<ReportsPage />} />
-
+        {/* 1. Tổng quan điều hành (All Authenticated Staff) */}
         <Route
-          path="staff"
-          element={<StaffPage />}
+          path="dashboard"
+          element={
+            <ProtectedRoute
+              allowedRoles={ROUTE_PERMISSIONS.dashboard}
+              moduleName="Tổng quan"
+            >
+              <DashboardPage />
+            </ProtectedRoute>
+          }
         />
 
+        {/* 2. Tuyển sinh & Leads (ADMIN, SALES, ACADEMIC) */}
+        <Route
+          path="leads"
+          element={
+            <ProtectedRoute
+              allowedRoles={ROUTE_PERMISSIONS.leads}
+              moduleName="Tuyển sinh & Leads"
+            >
+              <LeadsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 3. Khảo thí & Placement Test (ADMIN, SALES, ACADEMIC, TEACHER) */}
+        <Route
+          path="tests"
+          element={
+            <ProtectedRoute
+              allowedRoles={ROUTE_PERMISSIONS.tests}
+              moduleName="Khảo thí & Lịch thi"
+            >
+              <PlacementTestPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 4. Học viên & Ghi danh (ADMIN, SALES, ACADEMIC, TEACHER) */}
+        <Route
+          path="students"
+          element={
+            <ProtectedRoute
+              allowedRoles={ROUTE_PERMISSIONS.students}
+              moduleName="Học viên & Ghi danh"
+            >
+              <StudentsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 5. Quản lý Lớp học & Khóa học (ADMIN, SALES, ACADEMIC, TEACHER) */}
+        <Route
+          path="classes"
+          element={
+            <ProtectedRoute
+              allowedRoles={ROUTE_PERMISSIONS.classes}
+              moduleName="Quản lý Lớp học"
+            >
+              <ClassesPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 6. Báo cáo & Thống kê doanh thu (ADMIN, SALES, ACADEMIC) */}
+        <Route
+          path="reports"
+          element={
+            <ProtectedRoute
+              allowedRoles={ROUTE_PERMISSIONS.reports}
+              moduleName="Báo cáo & Thống kê"
+            >
+              <ReportsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 7. Nhân sự & Giảng viên (ADMIN Only) */}
+        <Route
+          path="staff"
+          element={
+            <ProtectedRoute
+              allowedRoles={ROUTE_PERMISSIONS.staff}
+              moduleName="Quản lý Nhân sự"
+            >
+              <StaffPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 8. Cài đặt hệ thống (ADMIN Only) */}
         <Route
           path="settings"
-          element={<SettingsPage />}
+          element={
+            <ProtectedRoute
+              allowedRoles={ROUTE_PERMISSIONS.settings}
+              moduleName="Cài đặt hệ thống"
+            >
+              <SettingsPage />
+            </ProtectedRoute>
+          }
         />
       </Route>
 

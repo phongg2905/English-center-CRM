@@ -32,9 +32,13 @@ import { RecordPaymentModal } from './RecordPaymentModal';
 import { ReceiptPrintModal } from './ReceiptPrintModal';
 import { TransferClassModal } from './TransferClassModal';
 import { Button, TableSkeleton } from '../../components/ui';
+import { useAuth } from '../../hooks/useAuth';
+import { hasRequiredRole, ACTION_PERMISSIONS } from '../../config/rbac.config';
 import './ClassesPage.css';
 
 export const ClassesPage: React.FC = () => {
+  const { user } = useAuth();
+  const canManageClassesAndCourses = hasRequiredRole(user?.role, ACTION_PERMISSIONS.CLASS_CREATE);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [courses, setCourses] = useState<CourseItem[]>([]);
   const [occupancyWarningRate, setOccupancyWarningRate] = useState<number>(85);
@@ -394,44 +398,46 @@ export const ClassesPage: React.FC = () => {
             <span>Xuất file</span>
           </button>
 
-          {/* CTA Button */}
-          {viewMode === 'CLASSES' ? (
-            <Button
-              variant="primary"
-              size="md"
-              iconLeft={<Plus size={15} />}
-              onClick={() => {
-                setCreateInitialCourseId(undefined);
-                setIsCreateModalOpen(true);
-              }}
-              style={{
-                background: '#2563eb',
-                boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
-                fontWeight: 600,
-                padding: '7px 14px',
-                borderRadius: '10px',
-                fontSize: '13px',
-              }}
-            >
-              Mở Lớp Mới
-            </Button>
-          ) : (
-            <Button
-              variant="primary"
-              size="md"
-              iconLeft={<Plus size={15} />}
-              onClick={() => setIsCreateCourseModalOpen(true)}
-              style={{
-                background: '#16a34a',
-                boxShadow: '0 2px 8px rgba(22, 163, 74, 0.25)',
-                fontWeight: 600,
-                padding: '7px 14px',
-                borderRadius: '10px',
-                fontSize: '13px',
-              }}
-            >
-              Tạo Khóa Học
-            </Button>
+          {/* CTA Button - Chỉ hiển thị cho Admin & Giáo vụ */}
+          {canManageClassesAndCourses && (
+            viewMode === 'CLASSES' ? (
+              <Button
+                variant="primary"
+                size="md"
+                iconLeft={<Plus size={15} />}
+                onClick={() => {
+                  setCreateInitialCourseId(undefined);
+                  setIsCreateModalOpen(true);
+                }}
+                style={{
+                  background: '#2563eb',
+                  boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
+                  fontWeight: 600,
+                  padding: '7px 14px',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                }}
+              >
+                Mở Lớp Mới
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                size="md"
+                iconLeft={<Plus size={15} />}
+                onClick={() => setIsCreateCourseModalOpen(true)}
+                style={{
+                  background: '#16a34a',
+                  boxShadow: '0 2px 8px rgba(22, 163, 74, 0.25)',
+                  fontWeight: 600,
+                  padding: '7px 14px',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                }}
+              >
+                Tạo Khóa Học
+              </Button>
+            )
           )}
 
         </div>

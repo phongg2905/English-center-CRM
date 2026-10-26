@@ -32,9 +32,14 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { Skeleton, TableSkeleton } from '../../components/ui';
+import { useAuth } from '../../hooks/useAuth';
+import { hasRequiredRole, ACTION_PERMISSIONS } from '../../config/rbac.config';
 import './ReportsPage.css';
 
 export const ReportsPage: React.FC = () => {
+  const { user } = useAuth();
+  const canViewRevenue = hasRequiredRole(user?.role, ACTION_PERMISSIONS.REVENUE_REPORT);
+  const canExport = hasRequiredRole(user?.role, ACTION_PERMISSIONS.EXPORT_REPORT);
   // Tabs: 'funnel' | 'revenue' | 'leaderboard' | 'channels' | 'occupancy'
   const [activeTab, setActiveTab] = useState<'funnel' | 'revenue' | 'leaderboard' | 'channels' | 'occupancy'>('funnel');
 
@@ -82,7 +87,9 @@ export const ReportsPage: React.FC = () => {
       const [ovData, fnData, rvData, lbData, chData, cpData] = await Promise.all([
         AnalyticsService.getOverview().catch(() => null),
         AnalyticsService.getFunnel(range).catch(() => null),
-        AnalyticsService.getRevenue({ ...range, period: revenuePeriod }).catch(() => null),
+        canViewRevenue
+          ? AnalyticsService.getRevenue({ ...range, period: revenuePeriod }).catch(() => null)
+          : Promise.resolve(null),
         AnalyticsService.getLeaderboard(range).catch(() => []),
         AnalyticsService.getChannelROI(range).catch(() => []),
         AnalyticsService.getClassOccupancy().catch(() => null),
@@ -106,6 +113,13 @@ export const ReportsPage: React.FC = () => {
   useEffect(() => {
     loadAllAnalytics();
   }, [dateFilter, revenuePeriod]);
+
+  // Tự động chuyển khỏi tab doanh thu nếu vai trò hiện tại không được phép
+  useEffect(() => {
+    if (!canViewRevenue && activeTab === 'revenue') {
+      setActiveTab('funnel');
+    }
+  }, [canViewRevenue, activeTab]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -193,59 +207,63 @@ export const ReportsPage: React.FC = () => {
             <RefreshCw size={16} />
           </button>
 
-          {/* Export Dropdown (FR-DASH-05) */}
-          <div className="reports-export-dropdown-wrapper">
-            <button
-              className="reports-btn primary"
-              onClick={() => setExportOpen(!exportOpen)}
-              disabled={isExporting}
-            >
-              <Download size={16} />
-              <span>{isExporting ? 'Đang xuất file...' : 'Xuất Excel / CSV'}</span>
-              <ChevronDown size={14} />
-            </button>
+          {/* Export Dropdown (FR-DASH-05) - Chỉ hiển thị cho Admin & Academic */}
+          {canExport && (
+            <div className="reports-export-dropdown-wrapper">
+              <button
+                className="reports-btn primary"
+                onClick={() => setExportOpen(!exportOpen)}
+                disabled={isExporting}
+              >
+                <Download size={16} />
+                <span>{isExporting ? 'Đang xuất file...' : 'Xuất Excel / CSV'}</span>
+                <ChevronDown size={14} />
+              </button>
 
-            {exportOpen && (
-              <div className="reports-export-menu">
-                <div className="export-menu-header">Chọn mẫu dữ liệu xuất:</div>
-                <button className="export-menu-item" onClick={() => handleExport('leads')}>
-                  <FileSpreadsheet size={15} color="#3b82f6" />
-                  <div>
-                    <div className="item-title">Danh sách Khách hàng (Leads)</div>
-                    <div className="item-sub">Toàn bộ pipeline, kênh nguồn và lý do hủy</div>
-                  </div>
-                </button>
-                <button className="export-menu-item" onClick={() => handleExport('revenue')}>
-                  <FileSpreadsheet size={15} color="#10b981" />
-                  <div>
-                    <div className="item-title">Báo cáo Doanh thu (Receipts)</div>
-                    <div className="item-sub">Chi tiết biên lai thu, số tiền, ngày thu</div>
-                  </div>
-                </button>
-                <button className="export-menu-item" onClick={() => handleExport('sales-leaderboard')}>
-                  <FileSpreadsheet size={15} color="#f59e0b" />
-                  <div>
-                    <div className="item-title">Bảng xếp hạng Tư vấn viên</div>
-                    <div className="item-sub">Số đơn chốt, Win rate % và tổng doanh số</div>
-                  </div>
-                </button>
-                <button className="export-menu-item" onClick={() => handleExport('channel-roi')}>
-                  <FileSpreadsheet size={15} color="#8b5cf6" />
-                  <div>
-                    <div className="item-title">Hiệu quả Kênh Marketing (ROI)</div>
-                    <div className="item-sub">Tỷ trọng lead, chuyển đổi và doanh thu kênh</div>
-                  </div>
-                </button>
-                <button className="export-menu-item" onClick={() => handleExport('occupancy')}>
-                  <FileSpreadsheet size={15} color="#ec4899" />
-                  <div>
-                    <div className="item-title">Tỷ lệ Lấp đầy Phòng học</div>
-                    <div className="item-sub">Sĩ số tối đa, hiện tại và tỷ lệ lấp đầy</div>
-                  </div>
-                </button>
-              </div>
-            )}
-          </div>
+              {exportOpen && (
+                <div className="reports-export-menu">
+                  <div className="export-menu-header">Chọn mẫu dữ liệu xuất:</div>
+                  <button className="export-menu-item" onClick={() => handleExport('leads')}>
+                    <FileSpreadsheet size={15} color="#3b82f6" />
+                    <div>
+                      <div className="item-title">Danh sách Khách hàng (Leads)</div>
+                      <div className="item-sub">Toàn bộ pipeline, kênh nguồn và lý do hủy</div>
+                    </div>
+                  </button>
+                  {canViewRevenue && (
+                    <button className="export-menu-item" onClick={() => handleExport('revenue')}>
+                      <FileSpreadsheet size={15} color="#10b981" />
+                      <div>
+                        <div className="item-title">Báo cáo Doanh thu (Receipts)</div>
+                        <div className="item-sub">Chi tiết biên lai thu, số tiền, ngày thu</div>
+                      </div>
+                    </button>
+                  )}
+                  <button className="export-menu-item" onClick={() => handleExport('sales-leaderboard')}>
+                    <FileSpreadsheet size={15} color="#f59e0b" />
+                    <div>
+                      <div className="item-title">Bảng xếp hạng Tư vấn viên</div>
+                      <div className="item-sub">Số đơn chốt, Win rate % và tổng doanh số</div>
+                    </div>
+                  </button>
+                  <button className="export-menu-item" onClick={() => handleExport('channel-roi')}>
+                    <FileSpreadsheet size={15} color="#8b5cf6" />
+                    <div>
+                      <div className="item-title">Hiệu quả Kênh Marketing (ROI)</div>
+                      <div className="item-sub">Tỷ trọng lead, chuyển đổi và doanh thu kênh</div>
+                    </div>
+                  </button>
+                  <button className="export-menu-item" onClick={() => handleExport('occupancy')}>
+                    <FileSpreadsheet size={15} color="#ec4899" />
+                    <div>
+                      <div className="item-title">Tỷ lệ Lấp đầy Phòng học</div>
+                      <div className="item-sub">Sĩ số tối đa, hiện tại và tỷ lệ lấp đầy</div>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -326,13 +344,15 @@ export const ReportsPage: React.FC = () => {
           <span>Phễu Tuyển Sinh (Funnel)</span>
         </button>
 
-        <button
-          className={`tab-btn ${activeTab === 'revenue' ? 'active' : ''}`}
-          onClick={() => setActiveTab('revenue')}
-        >
-          <CircleDollarSign size={16} />
-          <span>Báo Cáo Doanh Thu</span>
-        </button>
+        {canViewRevenue && (
+          <button
+            className={`tab-btn ${activeTab === 'revenue' ? 'active' : ''}`}
+            onClick={() => setActiveTab('revenue')}
+          >
+            <CircleDollarSign size={16} />
+            <span>Báo Cáo Doanh Thu</span>
+          </button>
+        )}
 
         <button
           className={`tab-btn ${activeTab === 'leaderboard' ? 'active' : ''}`}
