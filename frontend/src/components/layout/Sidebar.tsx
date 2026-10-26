@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -14,77 +14,122 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { EduFlowLogo } from '../common/EduFlowLogo';
+import { ROUTE_PERMISSIONS, hasRequiredRole } from '../../config/rbac.config';
+import type { UserRole } from '../../types/auth';
 
 interface SidebarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
 }
 
+interface NavItem {
+  to: string;
+  label: string;
+  icon: React.ReactNode;
+  badge?: string;
+  roles?: (UserRole | string)[];
+}
+
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
+
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const navGroups = [
-    {
-      title: 'VẬN HÀNH TRUNG TÂM',
-      items: [
-        {
-          to: '/dashboard',
-          label: 'Tổng quan',
-          icon: <LayoutDashboard size={19} />,
-        },
-        {
-          to: '/leads',
-          label: 'Tuyển sinh & Leads',
-          icon: <Users size={19} />,
-          badge: '3',
-        },
-        {
-          to: '/tests',
-          label: 'Khảo thí & Test',
-          icon: <ClipboardCheck size={19} />,
-          badge: '2',
-        },
-        {
-          to: '/students',
-          label: 'Học viên & Ghi danh',
-          icon: <GraduationCap size={19} />,
-        },
-        {
-          to: '/classes',
-          label: 'Quản lý Lớp học',
-          icon: <BookOpen size={19} />,
-        },
-      ],
-    },
+  const navGroups: NavGroup[] = useMemo(
+    () => [
+      {
+        title: 'VẬN HÀNH TRUNG TÂM',
+        items: [
+          {
+            to: '/dashboard',
+            label: 'Tổng quan',
+            icon: <LayoutDashboard size={19} />,
+            roles: ROUTE_PERMISSIONS.dashboard,
+          },
+          {
+            to: '/leads',
+            label: 'Tuyển sinh & Leads',
+            icon: <Users size={19} />,
+            badge: '3',
+            roles: ROUTE_PERMISSIONS.leads,
+          },
+          {
+            to: '/tests',
+            label: 'Khảo thí & Test',
+            icon: <ClipboardCheck size={19} />,
+            badge: '2',
+            roles: ROUTE_PERMISSIONS.tests,
+          },
+          {
+            to: '/students',
+            label: 'Học viên & Ghi danh',
+            icon: <GraduationCap size={19} />,
+            roles: ROUTE_PERMISSIONS.students,
+          },
+          {
+            to: '/classes',
+            label: 'Quản lý Lớp học',
+            icon: <BookOpen size={19} />,
+            roles: ROUTE_PERMISSIONS.classes,
+          },
+        ],
+      },
+      {
+        title: 'BÁO CÁO & HỆ THỐNG',
+        items: [
+          {
+            to: '/reports',
+            label: 'Báo cáo doanh thu',
+            icon: <BarChart3 size={19} />,
+            roles: ROUTE_PERMISSIONS.reports,
+          },
+          {
+            to: '/staff',
+            label: 'Nhân sự & Giảng viên',
+            icon: <Briefcase size={19} />,
+            roles: ROUTE_PERMISSIONS.staff,
+          },
+          {
+            to: '/settings',
+            label: 'Cài đặt hệ thống',
+            icon: <Settings size={19} />,
+            roles: ROUTE_PERMISSIONS.settings,
+          },
+        ],
+      },
+    ],
+    []
+  );
 
-    {
-      title: 'BÁO CÁO & HỆ THỐNG',
-      items: [
-        {
-          to: '/reports',
-          label: 'Báo cáo doanh thu',
-          icon: <BarChart3 size={19} />,
-        },
-        {
-          to: '/staff',
-          label: 'Nhân sự & Giảng viên',
-          icon: <Briefcase size={19} />,
-        },
-        {
-          to: '/settings',
-          label: 'Cài đặt hệ thống',
-          icon: <Settings size={19} />,
-        },
-      ],
-    },
-  ];
+  // Lọc động các mục menu theo vai trò người dùng hiện tại
+  const filteredGroups = useMemo(() => {
+    return navGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) =>
+          hasRequiredRole(user?.role, item.roles)
+        ),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [navGroups, user?.role]);
 
   const getInitials = (name?: string) => {
     if (!name) return 'EF';
     const parts = name.trim().split(' ');
     if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  const handleUserCardClick = () => {
+    if (hasRequiredRole(user?.role, ROUTE_PERMISSIONS.settings)) {
+      navigate('/settings');
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   return (
@@ -106,7 +151,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
 
       {/* Navigation Groups */}
       <div className="sidebar-nav-container">
-        {navGroups.map((group, groupIdx) => (
+        {filteredGroups.map((group, groupIdx) => (
           <div key={groupIdx}>
             <div className="sidebar-nav-section-title">
               {collapsed ? '•••' : group.title}
@@ -136,10 +181,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
 
       {/* Footer / User info & collapse trigger */}
       <div className="sidebar-footer">
-        <div 
-          className="sidebar-user-card" 
-          title="Xem thông tin tài khoản & cài đặt"
-          onClick={() => navigate('/settings')}
+        <div
+          className="sidebar-user-card"
+          title={
+            hasRequiredRole(user?.role, ROUTE_PERMISSIONS.settings)
+              ? 'Xem thông tin tài khoản & cài đặt'
+              : 'Thông tin tài khoản'
+          }
+          onClick={handleUserCardClick}
           role="button"
           tabIndex={0}
         >

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Check, X, Clock, AlertCircle, Phone, Mail, RotateCcw, Trash2, UserPlus, Award } from 'lucide-react';
 import { PlacementTestService } from '../../services/placement-test.service';
 import { ScoringModal } from './ScoringModal';
+import { useAuth } from '../../hooks/useAuth';
+import { hasRequiredRole, ACTION_PERMISSIONS } from '../../config/rbac.config';
 import type { PlacementTestWithDetails, AttendanceStatus } from '../../types/placement-test';
 
 interface CandidateRosterTableProps {
@@ -23,6 +25,10 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
   onClearShiftFilter,
   onAddCandidateToShift,
 }) => {
+  const { user } = useAuth();
+  const canScore = hasRequiredRole(user?.role, ACTION_PERMISSIONS.TEST_SCORE);
+  const canCancelShift = hasRequiredRole(user?.role, ACTION_PERMISSIONS.TEST_CANCEL_SHIFT);
+
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [scoringTest, setScoringTest] = useState<PlacementTestWithDetails | null>(null);
@@ -191,28 +197,30 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
               </button>
             )}
 
-            <button
-              type="button"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '7px 14px',
-                fontSize: '13px',
-                fontWeight: 600,
-                borderRadius: '8px',
-                background: '#fef2f2',
-                color: '#dc2626',
-                border: '1px solid #fecaca',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-              onClick={handleDeleteShift}
-              disabled={isDeletingShift}
-              title="Hủy và xóa toàn bộ ca thi này"
-            >
-              <Trash2 size={15} /> {isDeletingShift ? 'Đang xóa...' : 'Hủy / Xóa Ca Thi'}
-            </button>
+            {canCancelShift && (
+              <button
+                type="button"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '7px 14px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  borderRadius: '8px',
+                  background: '#fef2f2',
+                  color: '#dc2626',
+                  border: '1px solid #fecaca',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                onClick={handleDeleteShift}
+                disabled={isDeletingShift}
+                title="Hủy và xóa toàn bộ ca thi này"
+              >
+                <Trash2 size={15} /> {isDeletingShift ? 'Đang xóa...' : 'Hủy / Xóa Ca Thi'}
+              </button>
+            )}
           </div>
         )}
 
@@ -322,10 +330,10 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
                             onClick={() => setScoringTest(item)}
                             title="Xem lại điểm / Xuất phiếu điểm PDF"
                           >
-                            <Award size={12} /> Xem / Sửa
+                            <Award size={12} /> {canScore ? 'Xem / Sửa' : 'Xem / In phiếu'}
                           </button>
                         </div>
-                      ) : (
+                      ) : canScore ? (
                         <button
                           type="button"
                           className="pt-btn-touch"
@@ -348,6 +356,24 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
                         >
                           <Award size={13} color="#4f46e5" /> Chấm điểm
                         </button>
+                      ) : (
+                        <span
+                          style={{
+                            padding: '3px 8px',
+                            fontSize: '11px',
+                            color: '#64748b',
+                            background: '#f1f5f9',
+                            borderRadius: '6px',
+                            border: '1px dashed #cbd5e1',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            whiteSpace: 'nowrap',
+                          }}
+                          title="Chỉ Giáo vụ hoặc Quản lý được nhập điểm bài thi"
+                        >
+                          <Clock size={11} /> Chờ giáo vụ
+                        </span>
                       )}
                     </td>
 
