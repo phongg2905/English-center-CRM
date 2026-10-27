@@ -1,5 +1,19 @@
-import React, { useState } from 'react';
-import { Check, X, Clock, AlertCircle, Phone, Mail, RotateCcw, Trash2, UserPlus, Award } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { PaginationBar } from '../../components/ui';
+import {
+  Check,
+  X,
+  Clock,
+  AlertCircle,
+  Phone,
+  Mail,
+  RotateCcw,
+  Trash2,
+  UserPlus,
+  Award,
+  GraduationCap,
+} from 'lucide-react';
 import { PlacementTestService } from '../../services/placement-test.service';
 import { ScoringModal } from './ScoringModal';
 import { useAuth } from '../../hooks/useAuth';
@@ -25,15 +39,28 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
   onClearShiftFilter,
   onAddCandidateToShift,
 }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const canScore = hasRequiredRole(user?.role, ACTION_PERMISSIONS.TEST_SCORE);
   const canCancelShift = hasRequiredRole(user?.role, ACTION_PERMISSIONS.TEST_CANCEL_SHIFT);
+  const canEnroll = hasRequiredRole(user?.role, ACTION_PERMISSIONS.ENROLL_STUDENT);
 
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [scoringTest, setScoringTest] = useState<PlacementTestWithDetails | null>(null);
   const [isDeletingShift, setIsDeletingShift] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; isError?: boolean } | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(8);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedShiftInfo?.date, selectedShiftInfo?.timeSlot, selectedShiftInfo?.room, tests.length]);
+
+  const paginatedTests = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return tests.slice(start, start + pageSize);
+  }, [tests, currentPage, pageSize]);
 
   const handleUpdateAttendance = async (testId: number, newStatus: AttendanceStatus) => {
     try {
@@ -92,11 +119,11 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
     const count = tests.length;
     const confirmed = window.confirm(
       `CẢNH BÁO: Bạn có chắc chắn muốn HỦY & XÓA TOÀN BỘ ca thi này không?\n\n` +
-      `• Ngày thi: ${selectedShiftInfo.date}\n` +
-      `• Khung giờ: ${selectedShiftInfo.timeSlot}\n` +
-      (selectedShiftInfo.room ? `• Phòng: ${selectedShiftInfo.room}\n` : '') +
-      `• Tổng số thí sinh hiện tại: ${count} người\n\n` +
-      `Tất cả dữ liệu lịch thi của các thí sinh trong ca này sẽ bị xóa và phòng thi sẽ trở về trạng thái trống.`
+        `• Ngày thi: ${selectedShiftInfo.date}\n` +
+        `• Khung giờ: ${selectedShiftInfo.timeSlot}\n` +
+        (selectedShiftInfo.room ? `• Phòng: ${selectedShiftInfo.room}\n` : '') +
+        `• Tổng số thí sinh hiện tại: ${count} người\n\n` +
+        `Tất cả dữ liệu lịch thi của các thí sinh trong ca này sẽ bị xóa và phòng thi sẽ trở về trạng thái trống.`
     );
     if (!confirmed) return;
 
@@ -124,36 +151,99 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
   const getTestTypeBadge = (type: string) => {
     switch (type) {
       case 'IELTS':
-        return <span style={{ padding: '3px 8px', borderRadius: '6px', background: 'rgba(124, 58, 237, 0.1)', color: '#7c3aed', fontWeight: 700, fontSize: '11px', border: '1px solid rgba(124, 58, 237, 0.25)' }}>IELTS</span>;
+        return (
+          <span
+            style={{
+              padding: '3px 8px',
+              borderRadius: '6px',
+              background: 'rgba(124, 58, 237, 0.1)',
+              color: '#7c3aed',
+              fontWeight: 700,
+              fontSize: '11px',
+              border: '1px solid rgba(124, 58, 237, 0.25)',
+            }}
+          >
+            IELTS
+          </span>
+        );
       case 'TOEIC':
-        return <span style={{ padding: '3px 8px', borderRadius: '6px', background: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', fontWeight: 700, fontSize: '11px', border: '1px solid rgba(59, 130, 246, 0.25)' }}>TOEIC</span>;
+        return (
+          <span
+            style={{
+              padding: '3px 8px',
+              borderRadius: '6px',
+              background: 'rgba(59, 130, 246, 0.1)',
+              color: '#2563eb',
+              fontWeight: 700,
+              fontSize: '11px',
+              border: '1px solid rgba(59, 130, 246, 0.25)',
+            }}
+          >
+            TOEIC
+          </span>
+        );
       default:
-        return <span style={{ padding: '3px 8px', borderRadius: '6px', background: 'rgba(249, 115, 22, 0.1)', color: '#ea580c', fontWeight: 700, fontSize: '11px', border: '1px solid rgba(249, 115, 22, 0.25)' }}>CAMBRIDGE</span>;
+        return (
+          <span
+            style={{
+              padding: '3px 8px',
+              borderRadius: '6px',
+              background: 'rgba(249, 115, 22, 0.1)',
+              color: '#ea580c',
+              fontWeight: 700,
+              fontSize: '11px',
+              border: '1px solid rgba(249, 115, 22, 0.25)',
+            }}
+          >
+            CAMBRIDGE
+          </span>
+        );
     }
   };
 
   const getStatusBadge = (status: AttendanceStatus) => {
     switch (status) {
       case 'PRESENT':
-        return <span className="pt-status-badge present"><Check size={13} /> Có mặt</span>;
+        return (
+          <span className="pt-status-badge present">
+            <Check size={13} /> Có mặt
+          </span>
+        );
       case 'ABSENT':
-        return <span className="pt-status-badge absent"><X size={13} /> Vắng mặt</span>;
+        return (
+          <span className="pt-status-badge absent">
+            <X size={13} /> Vắng mặt
+          </span>
+        );
       case 'CANCELLED':
-        return <span className="pt-status-badge cancelled"><AlertCircle size={13} /> Đã hủy</span>;
+        return (
+          <span className="pt-status-badge cancelled">
+            <AlertCircle size={13} /> Đã hủy
+          </span>
+        );
       case 'SCHEDULED':
       default:
-        return <span className="pt-status-badge scheduled"><Clock size={13} /> Đã lên lịch</span>;
+        return (
+          <span className="pt-status-badge scheduled">
+            <Clock size={13} /> Đã lên lịch
+          </span>
+        );
     }
   };
 
   return (
     <div id="candidate-roster-section" className="pt-roster-card">
       {/* Header */}
-      <div className="pt-roster-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+      <div
+        className="pt-roster-header"
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}
+      >
         <div className="pt-roster-title">
           <h3>
             {selectedShiftInfo
-              ? `Ca thi: ${selectedShiftInfo.date} • ${selectedShiftInfo.timeSlot} ${selectedShiftInfo.room ? `(${selectedShiftInfo.room})` : ''}`
+              ? `Ca thi: ${selectedShiftInfo.date} • ${selectedShiftInfo.timeSlot} ${
+                  selectedShiftInfo.room ? `(${selectedShiftInfo.room})` : ''
+                }`
               : 'Danh Sách Thí Sinh'}
           </h3>
           <span className="pt-roster-count">{tests.length} Thí sinh</span>
@@ -256,7 +346,7 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
                 </td>
               </tr>
             ) : (
-              tests.map((item) => {
+              paginatedTests.map((item) => {
                 const isUpdating = updatingId === item.id;
                 return (
                   <tr key={item.id} style={{ opacity: isUpdating ? 0.6 : 1 }}>
@@ -305,9 +395,16 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
                     {/* Điểm & Gợi ý khóa học */}
                     <td>
                       {item.overallScore !== null ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                           <div>
-                            <span style={{ fontWeight: 800, color: 'var(--color-primary-royal)', fontSize: '13.5px', whiteSpace: 'nowrap' }}>
+                            <span
+                              style={{
+                                fontWeight: 800,
+                                color: 'var(--color-primary-royal)',
+                                fontSize: '13.5px',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
                               Band {item.overallScore}
                             </span>
                             {item.suggestedCourseName && (
@@ -332,6 +429,25 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
                           >
                             <Award size={12} /> {canScore ? 'Xem / Sửa' : 'Xem / In phiếu'}
                           </button>
+                          {canEnroll && (
+                            <button
+                              type="button"
+                              className="pt-btn-touch"
+                              style={{
+                                padding: '3px 8px',
+                                fontSize: '11px',
+                                background: '#ecfdf5',
+                                color: '#047857',
+                                border: '1px solid #a7f3d0',
+                                borderRadius: '6px',
+                                fontWeight: 700,
+                              }}
+                              onClick={() => navigate(`/students?enrollLeadId=${item.leadId}`)}
+                              title="Chốt Ghi danh & Xếp lớp cho thí sinh này"
+                            >
+                              <GraduationCap size={12} /> Xếp lớp
+                            </button>
+                          )}
                         </div>
                       ) : canScore ? (
                         <button
@@ -440,6 +556,18 @@ export const CandidateRosterTable: React.FC<CandidateRosterTableProps> = ({
             )}
           </tbody>
         </table>
+        <PaginationBar
+          currentPage={currentPage}
+          totalItems={tests.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          }}
+          pageSizeOptions={[8, 15, 30]}
+          itemLabel="thí sinh"
+        />
       </div>
 
       {scoringTest && (

@@ -3,11 +3,19 @@ import { createPortal } from 'react-dom';
 import { X, UserPlus, AlertCircle, ArrowRight, Check } from 'lucide-react';
 import { Button } from '../../components/ui';
 import { LeadService } from '../../services/lead.service';
+import { StaffService } from '../../services/staff.service';
+import { useAuth } from '../../hooks/useAuth';
 import type {
   LeadInterest,
   LeadSourceChannel,
   LeadPipelineStage,
 } from '../../types/lead';
+
+interface ConsultantOption {
+  id: number;
+  fullName: string;
+  email?: string;
+}
 
 interface CreateLeadModalProps {
   isOpen: boolean;
@@ -16,6 +24,13 @@ interface CreateLeadModalProps {
   onSuccess: () => Promise<void>;
   onSelectLeadById: (leadId: number) => void;
 }
+
+const QUICK_LEAD_NOTES = [
+  'Cần thi IELTS 6.5 trong 4 tháng tới để xét tốt nghiệp',
+  'Mất gốc tiếng Anh, muốn học từ nền tảng',
+  'Chỉ rảnh khung giờ tối Thứ 2 - 4 - 6 (sau 18h)',
+  'Muốn đăng ký thi thử đầu vào cuối tuần này',
+];
 
 export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
   isOpen,
@@ -29,6 +44,9 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
   const [email, setEmail] = useState<string>('');
   const [interest, setInterest] = useState<LeadInterest>('IELTS');
   const [sourceChannel, setSourceChannel] = useState<LeadSourceChannel>('FB_ADS');
+  const { user } = useAuth();
+  const [assignedSalesId, setAssignedSalesId] = useState<string>('AUTO');
+  const [consultants, setConsultants] = useState<ConsultantOption[]>([]);
   const [notes, setNotes] = useState<string>('');
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -44,10 +62,30 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
       setEmail('');
       setInterest('IELTS');
       setSourceChannel('FB_ADS');
+      setAssignedSalesId('AUTO');
       setNotes('');
       setFormError(null);
       setConflictLeadId(null);
       setConflictMessage(null);
+
+      StaffService.getConsultants()
+        .then((res) => {
+          const list = (res || []).map((s) => ({
+            id: s.id,
+            fullName: s.id === user?.id ? `${s.fullName} (Tôi phụ trách)` : s.fullName,
+            email: s.email,
+          }));
+          if (list.length > 0) {
+            setConsultants(list);
+          } else if (user?.id) {
+            setConsultants([{ id: user.id, fullName: `${user.fullName} (Tôi phụ trách)`, email: user.email }]);
+          }
+        })
+        .catch(() => {
+          if (user?.id) {
+            setConsultants([{ id: user.id, fullName: `${user.fullName} (Tôi phụ trách)`, email: user.email }]);
+          }
+        });
     }
   }, [isOpen, initialStage]);
 
@@ -93,6 +131,7 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
         email: email.trim() || null,
         interest,
         sourceChannel,
+        assignedSalesId: assignedSalesId !== 'AUTO' ? Number(assignedSalesId) : undefined,
         notes: notes.trim() || null,
       });
 
@@ -244,7 +283,7 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
                     marginBottom: '5px',
                   }}
                 >
-                  Số điện thoại <span style={{ color: '#ef4444' }}>*</span>
+                  Số điện thoại (10 số) <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
                   type="tel"
@@ -331,6 +370,34 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
               </div>
             </div>
 
+            {/* Phân công tư vấn viên phụ trách */}
+            <div>
+              <label
+                style={{
+                  fontSize: '12.5px',
+                  fontWeight: 600,
+                  color: '#334155',
+                  display: 'block',
+                  marginBottom: '5px',
+                }}
+              >
+                Tư vấn viên phụ trách (Sales)
+              </label>
+              <select
+                value={assignedSalesId}
+                onChange={(e) => setAssignedSalesId(e.target.value)}
+                className="behance-select"
+                style={{ width: '100%', padding: '9px 12px' }}
+              >
+                <option value="AUTO">⚡ Tự động phân bổ đều (Round-Robin)</option>
+                {consultants.map((c) => (
+                  <option key={c.id} value={String(c.id)}>
+                    👤 {c.fullName} ({c.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Ghi chú ban đầu */}
             <div>
               <label
@@ -348,9 +415,29 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="VD: Cần thi IELTS 6.5 trước tháng 12 để ra trường, rảnh tối 2-4-6..."
-                rows={3}
+                rows={2}
                 className="drawer-textarea"
               />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                {QUICK_LEAD_NOTES.map((sample) => (
+                  <button
+                    key={sample}
+                    type="button"
+                    onClick={() => setNotes((prev) => (prev ? `${prev}. ${sample}` : sample))}
+                    style={{
+                      fontSize: '11px',
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                      border: '1px solid #e2e8f0',
+                      background: '#f8fafc',
+                      color: '#475569',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    + {sample}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

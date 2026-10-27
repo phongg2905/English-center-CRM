@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Button, KanbanSkeleton } from '../../components/ui';
+import { Button, KanbanSkeleton, PaginationBar } from '../../components/ui';
 import {
   Phone,
   Mail,
@@ -31,9 +31,17 @@ import {
   GraduationCap,
   UserX,
   Sparkles,
+  LayoutGrid,
+  List,
+  Award,
+  UserCheck,
 } from 'lucide-react';
 import { CreateLeadModal } from './CreateLeadModal';
 import { LeadService } from '../../services/lead.service';
+import { StaffService } from '../../services/staff.service';
+import { PlacementTestService } from '../../services/placement-test.service';
+import { useAuth } from '../../hooks/useAuth';
+import { hasRequiredRole, ACTION_PERMISSIONS } from '../../config/rbac.config';
 import type {
   LeadWithDetails,
   LeadPipelineStage,
@@ -44,6 +52,7 @@ import type {
   InteractionType,
   PotentialLevel,
 } from '../../types/lead';
+import type { PlacementTestWithDetails } from '../../types/placement-test';
 import '../../App.css';
 
 interface KanbanColConfig {
@@ -128,44 +137,71 @@ function formatLeadTime(dateInput: string | Date | undefined): string {
 
 export const LeadsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canCreateLead = hasRequiredRole(user?.role, ACTION_PERMISSIONS.LEAD_CREATE);
+  const canEditLead = hasRequiredRole(user?.role, ACTION_PERMISSIONS.LEAD_EDIT);
+  const canEnrollStudent = hasRequiredRole(user?.role, ACTION_PERMISSIONS.ENROLL_STUDENT);
 
   // Data states
-  const [kanbanData, setKanbanData] = useState<KanbanBoardResponse>({
-    NEW: [],
-    CONTACTING: [],
-    TEST_SCHEDULED: [],
-    ENROLLED: [],
-    LOST: [],
-    counts: {
-      NEW: 0,
-      CONTACTING: 0,
-      TEST_SCHEDULED: 0,
-      ENROLLED: 0,
-      LOST: 0,
-    },
+  const [kanbanData, setKanbanData] = useState<KanbanBoardResponse>(() => {
+    return (
+      LeadService.peekKanban() || {
+        NEW: [],
+        CONTACTING: [],
+        TEST_SCHEDULED: [],
+        ENROLLED: [],
+        LOST: [],
+        counts: {
+          NEW: 0,
+          CONTACTING: 0,
+          TEST_SCHEDULED: 0,
+          ENROLLED: 0,
+          LOST: 0,
+        },
+      }
+    );
   });
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [consultants, setConsultants] = useState<Array<{ id: number; fullName: string }>>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(() => !LeadService.peekKanban());
   const [error, setError] = useState<string | null>(null);
 
-  // Filters (Behance Style)
+  // Global Filters & View Mode
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedStageFilter, setSelectedStageFilter] = useState<'ALL' | LeadPipelineStage>('ALL');
   const [selectedSource, setSelectedSource] = useState<string>('ALL');
   const [selectedInterest, setSelectedInterest] = useState<string>('ALL');
+  const [selectedConsultant, setSelectedConsultant] = useState<string>('ALL');
+  const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
 
-  // Selected lead for Pinterest-style Tabbed Profile Drawer
+  // Per-Status Search Queries inside each Kanban column
+  const [columnSearches, setColumnSearches] = useState<Record<LeadPipelineStage, string>>({
+    NEW: '',
+    CONTACTING: '',
+    TEST_SCHEDULED: '',
+    ENROLLED: '',
+    LOST: '',
+  });
+
+  // Pagination for Table View
+  const [tablePage, setTablePage] = useState<number>(1);
+  const [tablePageSize, setTablePageSize] = useState<number>(10);
+
+  // Selected lead for Tabbed Profile Window
   const [selectedLead, setSelectedLead] = useState<LeadWithDetails | null>(null);
   const [activeDrawerTab, setActiveDrawerTab] = useState<'OVERVIEW' | 'TIMELINE' | 'TESTS'>('OVERVIEW');
   const [timelineLogs, setTimelineLogs] = useState<InteractionLog[]>([]);
+  const [leadPlacementTests, setLeadPlacementTests] = useState<PlacementTestWithDetails[]>([]);
   const [isTimelineLoading, setIsTimelineLoading] = useState<boolean>(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  // Editable Lead states for Tab 1 & Drawer Save
+  // Editable Lead states for Tab 1 & Window Save
   const [editFullName, setEditFullName] = useState<string>('');
   const [editPhone, setEditPhone] = useState<string>('');
   const [editEmail, setEditEmail] = useState<string>('');
   const [editInterest, setEditInterest] = useState<LeadInterest>('IELTS');
   const [editSourceChannel, setEditSourceChannel] = useState<LeadSourceChannel>('FB_ADS');
   const [editStage, setEditStage] = useState<LeadPipelineStage>('NEW');
+  const [editAssignedSalesId, setEditAssignedSalesId] = useState<string>('');
   const [editLostReason, setEditLostReason] = useState<string>('');
   const [editNotes, setEditNotes] = useState<string>('');
   const [isSavingLead, setIsSavingLead] = useState<boolean>(false);
@@ -197,6 +233,11 @@ export const LeadsPage: React.FC = () => {
     window.addEventListener('dragend', handleGlobalDragEnd);
     return () => window.removeEventListener('dragend', handleGlobalDragEnd);
   }, []);
+
+  // Reset table page when filters change
+  useEffect(() => {
+    setTablePage(1);
+  }, [searchQuery, selectedStageFilter, selectedSource, selectedInterest, selectedConsultant]);
 
   // Lock body scroll when drawer is open
   useEffect(() => {
@@ -230,11 +271,17 @@ export const LeadsPage: React.FC = () => {
   // Load real data from Backend API
   const loadData = useCallback(async (silent = false) => {
     try {
-      if (!silent) setIsLoading(true);
+      if (!silent && !LeadService.peekKanban()) setIsLoading(true);
       setError(null);
 
-      const kanbanRes = await LeadService.getKanban();
+      const [kanbanRes, consultantsRes] = await Promise.all([
+        LeadService.getKanban(undefined, { forceRefresh: silent }),
+        StaffService.getConsultants().catch(() => []),
+      ]);
       setKanbanData(kanbanRes);
+      if (Array.isArray(consultantsRes) && consultantsRes.length > 0) {
+        setConsultants(consultantsRes.map((c) => ({ id: c.id, fullName: c.fullName })));
+      }
     } catch (err: any) {
       console.error('Lỗi khi tải dữ liệu Leads:', err);
       setError(
@@ -251,7 +298,7 @@ export const LeadsPage: React.FC = () => {
     loadData();
   }, [loadData]);
 
-  // Fetch timeline when a lead is selected in drawer
+  // Fetch timeline & placement tests when a lead is selected in window
   const handleSelectLead = async (lead: LeadWithDetails) => {
     setSelectedLead(lead);
     setEditFullName(lead.fullName || '');
@@ -260,6 +307,7 @@ export const LeadsPage: React.FC = () => {
     setEditInterest(lead.interest);
     setEditSourceChannel(lead.sourceChannel);
     setEditStage(lead.pipelineStage);
+    setEditAssignedSalesId(lead.assignedSalesId ? String(lead.assignedSalesId) : '');
     setEditLostReason(lead.lostReason || '');
     setEditNotes(lead.notes || '');
     setSaveLeadSuccess(null);
@@ -268,13 +316,23 @@ export const LeadsPage: React.FC = () => {
     setActiveDrawerTab('OVERVIEW');
     setIsTimelineLoading(true);
     setTimelineLogs([]);
+    setLeadPlacementTests([]);
     setLogContent('');
     setLogFollowUp('');
     setLogSuccessMsg(null);
 
     try {
-      const logs = await LeadService.getTimeline(lead.id);
+      const [logs, testsRes] = await Promise.all([
+        LeadService.getTimeline(lead.id).catch(() => []),
+        PlacementTestService.getTests({ limit: 100 }).catch(() => ({ tests: [] })),
+      ]);
       setTimelineLogs(logs);
+      const allTests = Array.isArray(testsRes)
+        ? testsRes
+        : Array.isArray(testsRes?.tests)
+        ? testsRes.tests
+        : [];
+      setLeadPlacementTests(allTests.filter((t) => t.leadId === lead.id));
     } catch (err) {
       console.warn('Không thể tải lịch sử chăm sóc của Lead:', err);
     } finally {
@@ -282,7 +340,7 @@ export const LeadsPage: React.FC = () => {
     }
   };
 
-  // Save edited lead details from drawer
+  // Save edited lead details from window
   const handleSaveLead = async () => {
     if (!selectedLead) return;
     if (!editFullName.trim()) {
@@ -310,12 +368,13 @@ export const LeadsPage: React.FC = () => {
         interest: editInterest,
         sourceChannel: editSourceChannel,
         pipelineStage: editStage,
+        assignedSalesId: editAssignedSalesId ? Number(editAssignedSalesId) : null,
         lostReason: editStage === 'LOST' ? editLostReason.trim() : null,
         notes: editNotes.trim() || null,
       });
 
       setSelectedLead(updated);
-      setSaveLeadSuccess('Đã lưu thông tin Lead thành công!');
+      setSaveLeadSuccess('Đã lưu thông tin & phân công Lead thành công!');
       setTimeout(() => setSaveLeadSuccess(null), 3500);
 
       // Refresh kanban board data
@@ -374,6 +433,8 @@ export const LeadsPage: React.FC = () => {
     e.preventDefault();
     setDragOverColumn(null);
     setDraggingLead(null);
+
+    if (!canEditLead) return;
 
     try {
       const raw = e.dataTransfer.getData('application/json');
@@ -491,141 +552,402 @@ export const LeadsPage: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  // Filtered Kanban columns
+  // Extract unique consultants from both API and loaded leads
+  const consultantOptions = useMemo(() => {
+    const map = new Map<number, string>();
+    consultants.forEach((c) => map.set(c.id, c.fullName));
+    const allLeads = [
+      ...kanbanData.NEW,
+      ...kanbanData.CONTACTING,
+      ...kanbanData.TEST_SCHEDULED,
+      ...kanbanData.ENROLLED,
+      ...kanbanData.LOST,
+    ];
+    allLeads.forEach((l) => {
+      if (l.assignedSalesId && l.assignedSalesName) {
+        map.set(l.assignedSalesId, l.assignedSalesName);
+      }
+    });
+    return Array.from(map.entries()).map(([id, fullName]) => ({ id, fullName }));
+  }, [consultants, kanbanData]);
+
+  // Filtered Kanban columns (supports both Global Search AND Per-Status Column Search)
   const filteredColumns = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    const filterFn = (lead: LeadWithDetails) => {
-      const matchSearch =
-        !q ||
-        lead.fullName.toLowerCase().includes(q) ||
-        lead.phoneNumber.includes(q) ||
-        (lead.email && lead.email.toLowerCase().includes(q)) ||
-        (lead.assignedSalesName && lead.assignedSalesName.toLowerCase().includes(q));
+    const qGlobal = searchQuery.toLowerCase().trim();
 
-      const matchInterest = selectedInterest === 'ALL' || lead.interest === selectedInterest;
-      const matchSource = selectedSource === 'ALL' || lead.sourceChannel === selectedSource;
-
-      return matchSearch && matchInterest && matchSource;
-    };
-
-    return KANBAN_COLUMNS.map((col) => {
+    return KANBAN_COLUMNS.filter(
+      (col) => selectedStageFilter === 'ALL' || col.id === selectedStageFilter
+    ).map((col) => {
       const colLeads = kanbanData[col.id] || [];
-      const filtered = colLeads.filter(filterFn);
+      const qCol = (columnSearches[col.id] || '').toLowerCase().trim();
+
+      const filtered = colLeads.filter((lead) => {
+        const matchGlobal =
+          !qGlobal ||
+          lead.fullName.toLowerCase().includes(qGlobal) ||
+          lead.phoneNumber.includes(qGlobal) ||
+          (lead.email && lead.email.toLowerCase().includes(qGlobal)) ||
+          (lead.assignedSalesName && lead.assignedSalesName.toLowerCase().includes(qGlobal)) ||
+          (lead.notes && lead.notes.toLowerCase().includes(qGlobal));
+
+        const matchColSearch =
+          !qCol ||
+          lead.fullName.toLowerCase().includes(qCol) ||
+          lead.phoneNumber.includes(qCol) ||
+          (lead.email && lead.email.toLowerCase().includes(qCol)) ||
+          (lead.assignedSalesName && lead.assignedSalesName.toLowerCase().includes(qCol)) ||
+          (lead.notes && lead.notes.toLowerCase().includes(qCol));
+
+        const matchInterest = selectedInterest === 'ALL' || lead.interest === selectedInterest;
+        const matchSource = selectedSource === 'ALL' || lead.sourceChannel === selectedSource;
+        const matchConsultant =
+          selectedConsultant === 'ALL'
+            ? true
+            : selectedConsultant === 'UNASSIGNED'
+            ? !lead.assignedSalesId
+            : String(lead.assignedSalesId) === selectedConsultant;
+
+        return matchGlobal && matchColSearch && matchInterest && matchSource && matchConsultant;
+      });
+
       return {
         ...col,
+        totalRawCount: colLeads.length,
         count: filtered.length,
         leads: filtered,
       };
     });
-  }, [kanbanData, searchQuery, selectedInterest, selectedSource]);
+  }, [
+    kanbanData,
+    searchQuery,
+    columnSearches,
+    selectedStageFilter,
+    selectedInterest,
+    selectedSource,
+    selectedConsultant,
+  ]);
+
+  // Flat filtered list for Table View
+  const allFilteredLeads = useMemo(() => {
+    return filteredColumns.flatMap((c) => c.leads);
+  }, [filteredColumns]);
+
+  const paginatedTableLeads = useMemo(() => {
+    const start = (tablePage - 1) * tablePageSize;
+    return allFilteredLeads.slice(start, start + tablePageSize);
+  }, [allFilteredLeads, tablePage, tablePageSize]);
+
+  const totalLeadsCount = useMemo(() => {
+    return (
+      (kanbanData.NEW?.length || 0) +
+      (kanbanData.CONTACTING?.length || 0) +
+      (kanbanData.TEST_SCHEDULED?.length || 0) +
+      (kanbanData.ENROLLED?.length || 0) +
+      (kanbanData.LOST?.length || 0)
+    );
+  }, [kanbanData]);
 
   return (
-    <div className="dashboard-page" style={{ padding: '0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {/* Unified Action & Filter Toolbar (Dual-Wing) */}
-      <div className="leads-filters-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
-        {/* Left Wing: Search & Filters */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', flex: 1, minWidth: '320px' }}>
-          {/* Search input with search icon */}
-          <div className="behance-search-container" style={{ minWidth: '260px' }}>
-            <Search size={15} style={{ position: 'absolute', left: '12px', color: '#94a3b8' }} />
-            <input
-              type="text"
-              placeholder="Tìm tên, SĐT, email, tư vấn viên..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="behance-search-input"
-            />
+    <div className="dashboard-page" style={{ padding: '0', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      {/* 1. Unified Action & Filter Toolbar */}
+      <div
+        className="leads-filters-bar"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+          background: '#ffffff',
+          padding: '14px 18px',
+          borderRadius: '16px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 2px 10px rgba(15, 23, 42, 0.03)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+          {/* Left Wing: Search & Dropdown Filters */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', flex: 1, minWidth: '300px' }}>
+            {/* Global Search input */}
+            <div className="behance-search-container" style={{ minWidth: '250px', position: 'relative' }}>
+              <Search size={15} style={{ position: 'absolute', left: '12px', color: '#94a3b8' }} />
+              <input
+                type="text"
+                placeholder="Tìm tên, SĐT, email, ghi chú..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="behance-search-input"
+                style={{ paddingRight: searchQuery ? '30px' : '12px' }}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  title="Xóa từ khóa"
+                  style={{
+                    position: 'absolute',
+                    right: '8px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#94a3b8',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Filter Sources */}
+            <select
+              value={selectedSource}
+              onChange={(e) => setSelectedSource(e.target.value)}
+              className="behance-select"
+            >
+              <option value="ALL">Tất cả nguồn tiếp cận</option>
+              <option value="FB_ADS">Facebook Ads</option>
+              <option value="WEBSITE">Website Trung Tâm</option>
+              <option value="HOTLINE">Hotline Tổng Đài</option>
+              <option value="WALK_IN">Đến Trực Tiếp (Walk-in)</option>
+              <option value="REFERRAL">Người quen giới thiệu</option>
+            </select>
+
+            {/* Filter Interests */}
+            <select
+              value={selectedInterest}
+              onChange={(e) => setSelectedInterest(e.target.value)}
+              className="behance-select"
+            >
+              <option value="ALL">Tất cả khóa học</option>
+              <option value="IELTS">Luyện thi IELTS</option>
+              <option value="TOEIC">Luyện thi TOEIC</option>
+              <option value="COMMUNICATION">Tiếng Anh Giao tiếp</option>
+            </select>
+
+            {/* Filter Consultant */}
+            <select
+              value={selectedConsultant}
+              onChange={(e) => setSelectedConsultant(e.target.value)}
+              className="behance-select"
+            >
+              <option value="ALL">Tất cả tư vấn viên</option>
+              <option value="UNASSIGNED">Chưa phân công</option>
+              {consultantOptions.map((c) => (
+                <option key={c.id} value={String(c.id)}>
+                  TVV: {c.fullName}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Filter Sources */}
-          <select
-            value={selectedSource}
-            onChange={(e) => setSelectedSource(e.target.value)}
-            className="behance-select"
-          >
-            <option value="ALL">Tất cả nguồn tiếp cận</option>
-            <option value="FB_ADS">Facebook Ads</option>
-            <option value="WEBSITE">Website Trung Tâm</option>
-            <option value="HOTLINE">Hotline Tổng Đài</option>
-            <option value="WALK_IN">Đến Trực Tiếp (Walk-in)</option>
-            <option value="REFERRAL">Người quen giới thiệu</option>
-          </select>
+          {/* Right Wing: View Switcher & Primary Actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
+            {/* View Mode Toggle: Kanban vs Table */}
+            <div
+              style={{
+                display: 'inline-flex',
+                background: '#f1f5f9',
+                padding: '3px',
+                borderRadius: '10px',
+                border: '1px solid #e2e8f0',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setViewMode('kanban')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '6px 11px',
+                  borderRadius: '8px',
+                  fontSize: '12.5px',
+                  fontWeight: 700,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: viewMode === 'kanban' ? '#ffffff' : 'transparent',
+                  color: viewMode === 'kanban' ? '#2563eb' : '#64748b',
+                  boxShadow: viewMode === 'kanban' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                }}
+              >
+                <LayoutGrid size={14} />
+                <span>Kanban</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('table')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '6px 11px',
+                  borderRadius: '8px',
+                  fontSize: '12.5px',
+                  fontWeight: 700,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: viewMode === 'table' ? '#ffffff' : 'transparent',
+                  color: viewMode === 'table' ? '#2563eb' : '#64748b',
+                  boxShadow: viewMode === 'table' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                }}
+              >
+                <List size={14} />
+                <span>Danh sách</span>
+              </button>
+            </div>
 
-          {/* Filter Interests */}
-          <select
-            value={selectedInterest}
-            onChange={(e) => setSelectedInterest(e.target.value)}
-            className="behance-select"
-          >
-            <option value="ALL">Tất cả khóa học</option>
-            <option value="IELTS">Luyện thi IELTS</option>
-            <option value="TOEIC">Luyện thi TOEIC</option>
-            <option value="COMMUNICATION">Tiếng Anh Giao tiếp</option>
-          </select>
+            {/* Refresh button */}
+            <button
+              type="button"
+              onClick={() => {
+                LeadService.invalidateCache();
+                loadData(true);
+              }}
+              disabled={isLoading}
+              title="Làm mới dữ liệu từ server"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                border: '1px solid #e2e8f0',
+                background: '#ffffff',
+                cursor: 'pointer',
+                color: '#475569',
+              }}
+            >
+              <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
+            </button>
+
+            {/* Export CSV button */}
+            <Button
+              variant="glass"
+              size="md"
+              iconLeft={<Download size={15} />}
+              onClick={handleExportCSV}
+              style={{
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                fontWeight: 600,
+                color: '#334155',
+              }}
+            >
+              Xuất CSV
+            </Button>
+
+            {/* Add Lead button */}
+            {canCreateLead && (
+              <Button
+                variant="primary"
+                size="md"
+                iconLeft={<Plus size={16} />}
+                onClick={() => {
+                  setCreateModalInitialStage('NEW');
+                  setIsCreateModalOpen(true);
+                }}
+                style={{
+                  background: '#2563eb',
+                  boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
+                  fontWeight: 600,
+                }}
+              >
+                Thêm Lead Mới
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Right Wing: Primary Actions (Refresh, Export, Add Lead) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-          {/* Refresh button */}
+        {/* Row 2: Customer Status Filter Pills (Lọc nhanh theo từng trạng thái khách hàng) */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            flexWrap: 'wrap',
+            paddingTop: '10px',
+            borderTop: '1px dashed #e2e8f0',
+          }}
+        >
+          <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', marginRight: '4px' }}>
+            Trạng thái khách hàng:
+          </span>
           <button
             type="button"
-            onClick={() => loadData()}
-            disabled={isLoading}
-            title="Làm mới dữ liệu từ server"
+            onClick={() => setSelectedStageFilter('ALL')}
             style={{
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              width: '38px',
-              height: '38px',
-              borderRadius: '10px',
-              border: '1px solid #e2e8f0',
-              background: '#ffffff',
+              gap: '6px',
+              padding: '5px 12px',
+              borderRadius: '999px',
+              fontSize: '12px',
+              fontWeight: 700,
               cursor: 'pointer',
-              color: '#475569',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+              border: selectedStageFilter === 'ALL' ? '1.5px solid #2563eb' : '1px solid #e2e8f0',
+              background: selectedStageFilter === 'ALL' ? '#eff6ff' : '#f8fafc',
+              color: selectedStageFilter === 'ALL' ? '#2563eb' : '#475569',
+              transition: 'all 0.15s ease',
             }}
           >
-            <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+            <span>Tất cả trạng thái</span>
+            <span
+              style={{
+                padding: '1px 7px',
+                borderRadius: '999px',
+                fontSize: '11px',
+                background: selectedStageFilter === 'ALL' ? '#2563eb' : '#e2e8f0',
+                color: selectedStageFilter === 'ALL' ? '#ffffff' : '#475569',
+              }}
+            >
+              {totalLeadsCount}
+            </span>
           </button>
 
-          {/* Export CSV button */}
-          <Button
-            variant="glass"
-            size="md"
-            iconLeft={<Download size={16} />}
-            onClick={handleExportCSV}
-            style={{
-              background: '#ffffff',
-              border: '1px solid #e2e8f0',
-              fontWeight: 600,
-              color: '#334155',
-            }}
-          >
-            Xuất Dữ Liệu
-          </Button>
-
-          {/* Add Lead button (Behance royal blue) */}
-          <Button
-            variant="primary"
-            size="md"
-            iconLeft={<Plus size={16} />}
-            onClick={() => {
-              setCreateModalInitialStage('NEW');
-              setIsCreateModalOpen(true);
-            }}
-            style={{
-              background: '#2563eb',
-              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
-              fontWeight: 600,
-            }}
-          >
-            Thêm Lead Mới
-          </Button>
+          {KANBAN_COLUMNS.map((col) => {
+            const isSelected = selectedStageFilter === col.id;
+            const rawCount = (kanbanData[col.id] || []).length;
+            return (
+              <button
+                key={col.id}
+                type="button"
+                onClick={() => setSelectedStageFilter(isSelected ? 'ALL' : col.id)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '5px 12px',
+                  borderRadius: '999px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  border: isSelected ? `1.5px solid ${col.color}` : '1px solid #e2e8f0',
+                  background: isSelected ? col.bgColor : '#ffffff',
+                  color: isSelected ? col.color : '#475569',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <span style={{ display: 'inline-flex', color: col.color }}>{col.icon}</span>
+                <span>{col.title}</span>
+                <span
+                  style={{
+                    padding: '1px 7px',
+                    borderRadius: '999px',
+                    fontSize: '11px',
+                    background: isSelected ? col.color : '#f1f5f9',
+                    color: isSelected ? '#ffffff' : col.color,
+                  }}
+                >
+                  {rawCount}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* 3. Main Kanban Board (Real Data Fetching & Drag-and-Drop) */}
+      {/* 2. Main Content: Kanban View vs Paginated Table View */}
       {error ? (
         <div style={{ padding: '32px', textAlign: 'center', background: '#fff', borderRadius: '16px', border: '1px solid #fee2e2' }}>
           <p style={{ color: '#dc2626', fontWeight: 600 }}>{error}</p>
@@ -635,50 +957,63 @@ export const LeadsPage: React.FC = () => {
         </div>
       ) : isLoading ? (
         <KanbanSkeleton columns={5} cardsPerColumn={3} />
-      ) : (
-          <div className={`kanban-board-container ${draggingLead ? 'is-dragging-active' : ''}`}>
-            {filteredColumns.map((col) => {
-              const isOver = dragOverColumn === col.id && (!draggingLead || draggingLead.stage !== col.id);
-              return (
+      ) : viewMode === 'kanban' ? (
+        <div
+          className={`kanban-board-container ${draggingLead ? 'is-dragging-active' : ''}`}
+          style={
+            filteredColumns.length === 1
+              ? { gridTemplateColumns: 'minmax(360px, 680px)' }
+              : undefined
+          }
+        >
+          {filteredColumns.map((col) => {
+            const isOver = dragOverColumn === col.id && (!draggingLead || draggingLead.stage !== col.id);
+            const colSearchVal = columnSearches[col.id] || '';
+
+            return (
+              <div
+                key={col.id}
+                className="kanban-column"
+                style={{
+                  background: isOver ? `${col.color}0d` : col.columnBg,
+                  border: isOver ? `2px dashed ${col.borderColor}` : '1px solid #e2e8f0',
+                  boxShadow: isOver ? `0 0 16px ${col.dotGlow}` : undefined,
+                }}
+                onDragEnter={(e) => {
+                  e.preventDefault();
+                  if (draggingLead && draggingLead.stage !== col.id) {
+                    if (dragOverColumn !== col.id) setDragOverColumn(col.id);
+                  }
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  if (draggingLead && draggingLead.stage !== col.id) {
+                    if (dragOverColumn !== col.id) setDragOverColumn(col.id);
+                  } else if (!draggingLead) {
+                    if (dragOverColumn !== col.id) setDragOverColumn(col.id);
+                  }
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  const related = e.relatedTarget as Node | null;
+                  if (!e.currentTarget.contains(related)) {
+                    if (dragOverColumn === col.id) setDragOverColumn(null);
+                  }
+                }}
+                onDrop={(e) => handleDrop(e, col.id)}
+              >
+                {/* Column Header: Stage Icon + Title + Count Badge + [+] Quick Add */}
                 <div
-                  key={col.id}
-                  className="kanban-column"
+                  className="kanban-column-header"
                   style={{
-                    background: isOver ? `${col.color}0d` : col.columnBg,
-                    border: isOver ? `2px dashed ${col.borderColor}` : '1px solid #e2e8f0',
-                    boxShadow: isOver ? `0 0 16px ${col.dotGlow}` : undefined,
+                    borderTop: `3.5px solid ${col.borderColor}`,
+                    flexDirection: 'column',
+                    alignItems: 'stretch',
+                    gap: '8px',
                   }}
-                  onDragEnter={(e) => {
-                    e.preventDefault();
-                    if (draggingLead && draggingLead.stage !== col.id) {
-                      if (dragOverColumn !== col.id) setDragOverColumn(col.id);
-                    }
-                  }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                    if (draggingLead && draggingLead.stage !== col.id) {
-                      if (dragOverColumn !== col.id) setDragOverColumn(col.id);
-                    } else if (!draggingLead) {
-                      if (dragOverColumn !== col.id) setDragOverColumn(col.id);
-                    }
-                  }}
-                  onDragLeave={(e) => {
-                    e.preventDefault();
-                    const related = e.relatedTarget as Node | null;
-                    if (!e.currentTarget.contains(related)) {
-                      if (dragOverColumn === col.id) setDragOverColumn(null);
-                    }
-                  }}
-                  onDrop={(e) => handleDrop(e, col.id)}
                 >
-                  {/* Column Header: Stage Icon + Title + Count Badge + [+] Quick Add */}
-                  <div
-                    className="kanban-column-header"
-                    style={{
-                      borderTop: `3.5px solid ${col.borderColor}`,
-                    }}
-                  >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div className="kanban-column-title">
                       <span
                         className="column-stage-icon"
@@ -703,7 +1038,7 @@ export const LeadsPage: React.FC = () => {
                       >
                         {col.count} Leads
                       </span>
-                      {col.id === 'NEW' && (
+                      {col.id === 'NEW' && canCreateLead && (
                         <button
                           type="button"
                           onClick={() => {
@@ -719,45 +1054,101 @@ export const LeadsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Card List */}
-                  <div className="kanban-card-list">
-                    {/* Drag Over Drop Placeholder */}
-                    {isOver && (
-                      <div
-                        className="kanban-drop-placeholder"
+                  {/* Per-Status Search Bar inside each column */}
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <Search
+                      size={13}
+                      style={{ position: 'absolute', left: '9px', color: '#94a3b8', pointerEvents: 'none' }}
+                    />
+                    <input
+                      type="text"
+                      value={colSearchVal}
+                      onChange={(e) =>
+                        setColumnSearches((prev) => ({
+                          ...prev,
+                          [col.id]: e.target.value,
+                        }))
+                      }
+                      placeholder={`Tìm trong ${col.title}...`}
+                      style={{
+                        width: '100%',
+                        padding: '5px 26px 5px 28px',
+                        fontSize: '11.5px',
+                        borderRadius: '8px',
+                        border: colSearchVal ? `1px solid ${col.color}` : '1px solid #e2e8f0',
+                        background: '#ffffff',
+                        color: '#1e293b',
+                        outline: 'none',
+                      }}
+                    />
+                    {colSearchVal && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setColumnSearches((prev) => ({
+                            ...prev,
+                            [col.id]: '',
+                          }))
+                        }
+                        title="Xóa tìm kiếm cột này"
                         style={{
-                          border: `1.5px dashed ${col.borderColor}`,
-                          color: col.color,
-                          background: col.bgColor,
+                          position: 'absolute',
+                          right: '6px',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#64748b',
+                          padding: 0,
+                          display: 'flex',
+                          alignItems: 'center',
                         }}
                       >
-                        <Sparkles size={14} />
-                        <span>Thả thẻ vào "{col.title}"</span>
-                      </div>
+                        <X size={12} />
+                      </button>
                     )}
+                  </div>
+                </div>
 
-                    {col.leads.map((lead) => {
-                      const isThisCardDragging = draggingLead?.id === lead.id;
-                      return (
-                        <div
-                          key={lead.id}
-                          className={`lead-card ${isThisCardDragging ? 'is-dragging' : ''}`}
-                          draggable
-                          onDragStart={(e) => {
-                            setDraggingLead({ id: lead.id, stage: lead.pipelineStage });
-                            e.dataTransfer.setData(
-                              'application/json',
-                              JSON.stringify({ leadId: lead.id, fromStage: lead.pipelineStage })
-                            );
-                            e.dataTransfer.effectAllowed = 'move';
-                          }}
-                          onDragEnd={() => {
-                            setDraggingLead(null);
-                            setDragOverColumn(null);
-                          }}
-                          onClick={() => handleSelectLead(lead)}
-                        >
-                        {/* Top Row: Avatar + Name + Time + Action Menu */}
+                {/* Card List */}
+                <div className="kanban-card-list">
+                  {/* Drag Over Drop Placeholder */}
+                  {isOver && (
+                    <div
+                      className="kanban-drop-placeholder"
+                      style={{
+                        border: `1.5px dashed ${col.borderColor}`,
+                        color: col.color,
+                        background: col.bgColor,
+                      }}
+                    >
+                      <Sparkles size={14} />
+                      <span>Thả thẻ vào "{col.title}"</span>
+                    </div>
+                  )}
+
+                  {col.leads.map((lead) => {
+                    const isThisCardDragging = draggingLead?.id === lead.id;
+                    return (
+                      <div
+                        key={lead.id}
+                        className={`lead-card ${isThisCardDragging ? 'is-dragging' : ''}`}
+                        draggable={canEditLead}
+                        onDragStart={(e) => {
+                          if (!canEditLead) return;
+                          setDraggingLead({ id: lead.id, stage: lead.pipelineStage });
+                          e.dataTransfer.setData(
+                            'application/json',
+                            JSON.stringify({ leadId: lead.id, fromStage: lead.pipelineStage })
+                          );
+                          e.dataTransfer.effectAllowed = 'move';
+                        }}
+                        onDragEnd={() => {
+                          setDraggingLead(null);
+                          setDragOverColumn(null);
+                        }}
+                        onClick={() => handleSelectLead(lead)}
+                      >
+                        {/* Top Row: Avatar + Name + Time */}
                         <div className="lead-card-header">
                           <div className="lead-student-info">
                             <div className="lead-avatar-sm">
@@ -837,48 +1228,217 @@ export const LeadsPage: React.FC = () => {
                     );
                   })}
 
-                    {/* Empty State */}
-                    {col.leads.length === 0 && !isOver && (
-                      <div className="kanban-empty-state">
-                        <div
-                          className="empty-state-icon-box"
-                          style={{ color: col.color, background: col.bgColor }}
-                        >
-                          {col.icon}
-                        </div>
-                        <div className="empty-state-title">Chưa có Lead</div>
-                        <div className="empty-state-desc">
-                          {col.id === 'NEW'
-                            ? 'Chưa có Lead mới. Bấm "+" để tiếp nhận ngay'
-                            : 'Kéo thả thẻ vào đây để chuyển sang giai đoạn này'}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Column Footer: Quick Add Button (Chỉ áp dụng cho cột Mới tiếp nhận) */}
-                  {col.id === 'NEW' && (
-                    <div className="kanban-column-footer">
-                      <button
-                        type="button"
-                        className="column-quick-add-btn"
-                        onClick={() => {
-                          setCreateModalInitialStage('NEW');
-                          setIsCreateModalOpen(true);
-                        }}
+                  {/* Empty State */}
+                  {col.leads.length === 0 && !isOver && (
+                    <div className="kanban-empty-state">
+                      <div
+                        className="empty-state-icon-box"
+                        style={{ color: col.color, background: col.bgColor }}
                       >
-                        <Plus size={13} />
-                        <span>Thêm Lead mới...</span>
-                      </button>
+                        {col.icon}
+                      </div>
+                      <div className="empty-state-title">
+                        {colSearchVal ? 'Không tìm thấy kết quả' : 'Chưa có Lead'}
+                      </div>
+                      <div className="empty-state-desc">
+                        {colSearchVal
+                          ? `Không có khách hàng nào khớp với "${colSearchVal}" trong cột này.`
+                          : col.id === 'NEW'
+                          ? 'Chưa có Lead mới. Bấm "+" để tiếp nhận ngay'
+                          : 'Kéo thả thẻ vào đây để chuyển sang giai đoạn này'}
+                      </div>
                     </div>
                   )}
                 </div>
-              );
-            })}
+
+                {/* Column Footer: Quick Add Button */}
+                {col.id === 'NEW' && canCreateLead && (
+                  <div className="kanban-column-footer">
+                    <button
+                      type="button"
+                      className="column-quick-add-btn"
+                      onClick={() => {
+                        setCreateModalInitialStage('NEW');
+                        setIsCreateModalOpen(true);
+                      }}
+                    >
+                      <Plus size={13} />
+                      <span>Thêm Lead mới...</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* TABLE VIEW MODE WITH PAGINATION */
+        <div
+          style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            border: '1px solid #e2e8f0',
+            overflow: 'hidden',
+            boxShadow: '0 2px 10px rgba(15, 23, 42, 0.03)',
+          }}
+        >
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: '#475569' }}>Khách hàng / Học viên</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: '#475569' }}>Liên hệ</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: '#475569' }}>Nhu cầu & Nguồn</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: '#475569' }}>Trạng thái khách hàng</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: '#475569' }}>Tư vấn viên</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: '#475569' }}>Tiếp nhận</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: '#475569', textAlign: 'right' }}>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedTableLeads.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ padding: '36px', textAlign: 'center', color: '#64748b' }}>
+                      Không tìm thấy khách hàng nào khớp với bộ lọc hiện tại.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedTableLeads.map((lead) => {
+                    const colCfg = KANBAN_COLUMNS.find((c) => c.id === lead.pipelineStage) || KANBAN_COLUMNS[0];
+                    return (
+                      <tr
+                        key={lead.id}
+                        onClick={() => handleSelectLead(lead)}
+                        style={{
+                          borderBottom: '1px solid #f1f5f9',
+                          cursor: 'pointer',
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <td style={{ padding: '12px 16px' }}>
+                          <div style={{ fontWeight: 700, color: '#0f172a' }}>{lead.fullName}</div>
+                          <div style={{ fontSize: '11.5px', color: '#64748b' }}>Mã: #{lead.id}</div>
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <div style={{ fontWeight: 600, color: '#2563eb' }}>{lead.phoneNumber}</div>
+                          <div style={{ fontSize: '11.5px', color: '#64748b' }}>{lead.email || '—'}</div>
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <span
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              background: '#eff6ff',
+                              color: '#2563eb',
+                              marginRight: '6px',
+                            }}
+                          >
+                            {lead.interest}
+                          </span>
+                          <span
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              background: '#f1f5f9',
+                              color: '#475569',
+                            }}
+                          >
+                            {lead.sourceChannel}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              padding: '4px 10px',
+                              borderRadius: '999px',
+                              fontSize: '11.5px',
+                              fontWeight: 700,
+                              background: colCfg.bgColor,
+                              color: colCfg.color,
+                            }}
+                          >
+                            {colCfg.icon}
+                            <span>{colCfg.title}</span>
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 16px', fontWeight: 600, color: '#334155' }}>
+                          {lead.assignedSalesName || 'Chưa phân công'}
+                        </td>
+                        <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '12px' }}>
+                          {formatLeadTime(lead.createdAt)}
+                        </td>
+                        <td
+                          style={{ padding: '12px 16px', textAlign: 'right' }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div style={{ display: 'inline-flex', gap: '6px' }}>
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/tests?bookLeadId=${lead.id}`)}
+                              style={{
+                                padding: '5px 10px',
+                                borderRadius: '8px',
+                                fontSize: '11.5px',
+                                fontWeight: 600,
+                                border: '1px solid #ddd6fe',
+                                background: '#f5f3ff',
+                                color: '#6d28d9',
+                                cursor: 'pointer',
+                              }}
+                              title="Đặt lịch thi đầu vào cho khách hàng này"
+                            >
+                              Hẹn Test
+                            </button>
+                            {canEnrollStudent && (
+                              <button
+                                type="button"
+                                onClick={() => navigate(`/students?enrollLeadId=${lead.id}`)}
+                                style={{
+                                  padding: '5px 10px',
+                                  borderRadius: '8px',
+                                  fontSize: '11.5px',
+                                  fontWeight: 600,
+                                  border: '1px solid #a7f3d0',
+                                  background: '#ecfdf5',
+                                  color: '#047857',
+                                  cursor: 'pointer',
+                                }}
+                                title="Ghi danh & Xếp lớp cho khách hàng này"
+                              >
+                                Ghi danh
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
+
+          <PaginationBar
+            currentPage={tablePage}
+            totalItems={allFilteredLeads.length}
+            pageSize={tablePageSize}
+            onPageChange={setTablePage}
+            onPageSizeChange={setTablePageSize}
+            itemLabel="khách hàng"
+          />
+        </div>
       )}
 
-      {/* 4. SLIDE-OVER DRAWER (PINTEREST TABBED PROFILE STYLE) */}
+      {/* 4. LEAD DETAIL WINDOW */}
       {selectedLead &&
         createPortal(
           <div className="drawer-backdrop" onClick={() => setSelectedLead(null)}>
@@ -981,18 +1541,34 @@ export const LeadsPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
+                      const targetId = selectedLead.id;
                       setSelectedLead(null);
-                      navigate('/tests');
+                      navigate(`/tests?bookLeadId=${targetId}`);
                     }}
                     className="drawer-quick-btn"
                   >
                     <Calendar size={15} />
                     <span>Đặt Lịch Thi</span>
                   </button>
+                  {canEnrollStudent && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const targetId = selectedLead.id;
+                        setSelectedLead(null);
+                        navigate(`/students?enrollLeadId=${targetId}`);
+                      }}
+                      className="drawer-quick-btn"
+                      style={{ color: '#059669', borderColor: '#a7f3d0', background: '#ecfdf5' }}
+                    >
+                      <UserCheck size={15} />
+                      <span>Ghi Danh</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
-              {/* Navigation Tabs (Pinterest Style) */}
+              {/* Navigation Tabs */}
               <div className="drawer-tabs-nav">
                 <button
                   type="button"
@@ -1017,7 +1593,10 @@ export const LeadsPage: React.FC = () => {
                   className={`drawer-tab-item ${activeDrawerTab === 'TESTS' ? 'active' : ''}`}
                 >
                   <BookOpen size={14} />
-                  <span>Lịch thi Test</span>
+                  <span>Lịch thi & Kết quả Test</span>
+                  {leadPlacementTests.length > 0 && (
+                    <span className="badge-count">{leadPlacementTests.length}</span>
+                  )}
                 </button>
               </div>
 
@@ -1035,6 +1614,7 @@ export const LeadsPage: React.FC = () => {
                       <div>
                         <select
                           value={editStage}
+                          disabled={!canEditLead}
                           onChange={(e) => setEditStage(e.target.value as LeadPipelineStage)}
                           className="behance-select"
                           style={{ width: '100%', padding: '9px 12px', fontWeight: 600 }}
@@ -1061,6 +1641,7 @@ export const LeadsPage: React.FC = () => {
                           </label>
                           <input
                             type="text"
+                            disabled={!canEditLead}
                             value={editLostReason}
                             onChange={(e) => setEditLostReason(e.target.value)}
                             placeholder="VD: Học phí cao, không phù hợp lịch học, đã học trung tâm khác..."
@@ -1075,7 +1656,7 @@ export const LeadsPage: React.FC = () => {
                     <div className="drawer-section-card">
                       <h4 className="drawer-section-title">
                         <User size={15} style={{ color: '#2563eb' }} />
-                        <span>Thông Tin Học Viên & Nhu Cầu</span>
+                        <span>Thông Tin Học Viên & Phân Công Tư Vấn</span>
                       </h4>
 
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1094,6 +1675,7 @@ export const LeadsPage: React.FC = () => {
                           </label>
                           <input
                             type="text"
+                            disabled={!canEditLead}
                             value={editFullName}
                             onChange={(e) => setEditFullName(e.target.value)}
                             className="drawer-input"
@@ -1144,6 +1726,7 @@ export const LeadsPage: React.FC = () => {
                             </div>
                             <input
                               type="tel"
+                              disabled={!canEditLead}
                               value={editPhone}
                               onChange={(e) => setEditPhone(e.target.value)}
                               className="drawer-input"
@@ -1192,6 +1775,7 @@ export const LeadsPage: React.FC = () => {
                             </div>
                             <input
                               type="email"
+                              disabled={!canEditLead}
                               value={editEmail}
                               onChange={(e) => setEditEmail(e.target.value)}
                               className="drawer-input"
@@ -1215,6 +1799,7 @@ export const LeadsPage: React.FC = () => {
                               Khóa học quan tâm
                             </label>
                             <select
+                              disabled={!canEditLead}
                               value={editInterest}
                               onChange={(e) => setEditInterest(e.target.value as LeadInterest)}
                               className="behance-select"
@@ -1239,6 +1824,7 @@ export const LeadsPage: React.FC = () => {
                               Kênh tiếp nhận
                             </label>
                             <select
+                              disabled={!canEditLead}
                               value={editSourceChannel}
                               onChange={(e) => setEditSourceChannel(e.target.value as LeadSourceChannel)}
                               className="behance-select"
@@ -1253,7 +1839,7 @@ export const LeadsPage: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Phân công & Lần liên hệ gần nhất */}
+                        {/* Phân công Chuyên viên tư vấn (FR-LEAD-03) & Lần liên hệ gần nhất */}
                         <div
                           style={{
                             display: 'grid',
@@ -1265,18 +1851,37 @@ export const LeadsPage: React.FC = () => {
                           }}
                         >
                           <div>
-                            <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block' }}>
-                              Chuyên viên tư vấn:
-                            </span>
-                            <span style={{ fontSize: '12.5px', fontWeight: 600, color: '#1e293b' }}>
-                              {selectedLead.assignedSalesName || 'Chưa phân công'}
-                            </span>
+                            <label
+                              style={{
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                color: '#475569',
+                                display: 'block',
+                                marginBottom: '4px',
+                              }}
+                            >
+                              Chuyên viên tư vấn phụ trách
+                            </label>
+                            <select
+                              disabled={!canEditLead}
+                              value={editAssignedSalesId}
+                              onChange={(e) => setEditAssignedSalesId(e.target.value)}
+                              className="behance-select"
+                              style={{ width: '100%', padding: '8px 12px' }}
+                            >
+                              <option value="">-- Chưa phân công --</option>
+                              {consultantOptions.map((c) => (
+                                <option key={c.id} value={String(c.id)}>
+                                  {c.fullName}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                           <div>
-                            <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>
                               Tương tác gần nhất:
                             </span>
-                            <span style={{ fontSize: '12.5px', fontWeight: 600, color: '#1e293b' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>
                               {selectedLead.lastContactedAt
                                 ? formatLeadTime(selectedLead.lastContactedAt)
                                 : 'Chưa có tương tác'}
@@ -1293,6 +1898,7 @@ export const LeadsPage: React.FC = () => {
                         <span>Ghi Chú Nhu Cầu & Nguyện Vọng</span>
                       </h4>
                       <textarea
+                        disabled={!canEditLead}
                         value={editNotes}
                         onChange={(e) => setEditNotes(e.target.value)}
                         placeholder="Nhập ghi chú chi tiết về nhu cầu học viên, mục tiêu band điểm, thời gian rảnh..."
@@ -1307,130 +1913,132 @@ export const LeadsPage: React.FC = () => {
                 {activeDrawerTab === 'TIMELINE' && (
                   <>
                     {/* Quick Log Form */}
-                    <form onSubmit={handleQuickLog} className="quick-log-box">
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
-                          Ghi Nhận Cuộc Gọi / Tư Vấn Mới
-                        </span>
-                        {logSuccessMsg && (
-                          <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 600 }}>
-                            {logSuccessMsg}
+                    {canEditLead && (
+                      <form onSubmit={handleQuickLog} className="quick-log-box">
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
+                            Ghi Nhận Cuộc Gọi / Tư Vấn Mới
                           </span>
-                        )}
-                      </div>
-
-                      {/* Log Type Selector */}
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <button
-                          type="button"
-                          onClick={() => setLogType('PHONE_CALL')}
-                          className={`potential-chip ${logType === 'PHONE_CALL' ? 'active-warm' : ''}`}
-                        >
-                          📞 Gọi Điện
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setLogType('DIRECT_MEETING')}
-                          className={`potential-chip ${logType === 'DIRECT_MEETING' ? 'active-cold' : ''}`}
-                        >
-                          🏢 Gặp Trực Tiếp
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setLogType('SMS')}
-                          className={`potential-chip ${logType === 'SMS' ? 'active-warm' : ''}`}
-                        >
-                          💬 Nhắn Tin / Zalo
-                        </button>
-                      </div>
-
-                      {/* Potential Level */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>Lead Temperature:</span>
-                        <button
-                          type="button"
-                          onClick={() => setLogPotential('HOT')}
-                          className={`potential-chip ${logPotential === 'HOT' ? 'active-hot' : ''}`}
-                        >
-                          <Flame size={13} style={{ color: logPotential === 'HOT' ? '#dc2626' : '#94a3b8' }} />
-                          <span>HOT</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setLogPotential('WARM')}
-                          className={`potential-chip ${logPotential === 'WARM' ? 'active-warm' : ''}`}
-                        >
-                          <SunMedium size={13} style={{ color: logPotential === 'WARM' ? '#d97706' : '#94a3b8' }} />
-                          <span>WARM</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setLogPotential('COLD')}
-                          className={`potential-chip ${logPotential === 'COLD' ? 'active-cold' : ''}`}
-                        >
-                          <Snowflake size={13} style={{ color: logPotential === 'COLD' ? '#0284c7' : '#94a3b8' }} />
-                          <span>COLD</span>
-                        </button>
-                      </div>
-
-                      {/* Content Textarea */}
-                      <textarea
-                        rows={3}
-                        placeholder="Nhập nội dung tư vấn, phản hồi của học viên..."
-                        value={logContent}
-                        onChange={(e) => setLogContent(e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '10px 12px',
-                          borderRadius: '10px',
-                          border: '1px solid #cbd5e1',
-                          fontSize: '13px',
-                          background: '#ffffff',
-                          boxSizing: 'border-box',
-                          outline: 'none',
-                          resize: 'vertical',
-                        }}
-                        required
-                      />
-
-                      {/* Follow-up date & Submit */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: '10px',
-                          flexWrap: 'wrap',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '11.5px', color: '#64748b' }}>Hẹn liên hệ lại:</span>
-                          <input
-                            type="datetime-local"
-                            value={logFollowUp}
-                            onChange={(e) => setLogFollowUp(e.target.value)}
-                            style={{
-                              padding: '5px 8px',
-                              borderRadius: '8px',
-                              border: '1px solid #cbd5e1',
-                              fontSize: '12px',
-                              background: '#ffffff',
-                            }}
-                          />
+                          {logSuccessMsg && (
+                            <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 600 }}>
+                              {logSuccessMsg}
+                            </span>
+                          )}
                         </div>
 
-                        <Button
-                          type="submit"
-                          variant="primary"
-                          size="sm"
-                          disabled={isSubmittingLog || !logContent.trim()}
-                          iconLeft={<Send size={14} />}
-                          style={{ background: '#2563eb' }}
+                        {/* Log Type Selector */}
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            onClick={() => setLogType('PHONE_CALL')}
+                            className={`potential-chip ${logType === 'PHONE_CALL' ? 'active-warm' : ''}`}
+                          >
+                            📞 Gọi Điện
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setLogType('DIRECT_MEETING')}
+                            className={`potential-chip ${logType === 'DIRECT_MEETING' ? 'active-cold' : ''}`}
+                          >
+                            🏢 Gặp Trực Tiếp
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setLogType('SMS')}
+                            className={`potential-chip ${logType === 'SMS' ? 'active-warm' : ''}`}
+                          >
+                            💬 Nhắn Tin / Zalo
+                          </button>
+                        </div>
+
+                        {/* Potential Level */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>Lead Temperature:</span>
+                          <button
+                            type="button"
+                            onClick={() => setLogPotential('HOT')}
+                            className={`potential-chip ${logPotential === 'HOT' ? 'active-hot' : ''}`}
+                          >
+                            <Flame size={13} style={{ color: logPotential === 'HOT' ? '#dc2626' : '#94a3b8' }} />
+                            <span>HOT</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setLogPotential('WARM')}
+                            className={`potential-chip ${logPotential === 'WARM' ? 'active-warm' : ''}`}
+                          >
+                            <SunMedium size={13} style={{ color: logPotential === 'WARM' ? '#d97706' : '#94a3b8' }} />
+                            <span>WARM</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setLogPotential('COLD')}
+                            className={`potential-chip ${logPotential === 'COLD' ? 'active-cold' : ''}`}
+                          >
+                            <Snowflake size={13} style={{ color: logPotential === 'COLD' ? '#0284c7' : '#94a3b8' }} />
+                            <span>COLD</span>
+                          </button>
+                        </div>
+
+                        {/* Content Textarea */}
+                        <textarea
+                          rows={3}
+                          placeholder="Nhập nội dung tư vấn, phản hồi của học viên..."
+                          value={logContent}
+                          onChange={(e) => setLogContent(e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            borderRadius: '10px',
+                            border: '1px solid #cbd5e1',
+                            fontSize: '13px',
+                            background: '#ffffff',
+                            boxSizing: 'border-box',
+                            outline: 'none',
+                            resize: 'vertical',
+                          }}
+                          required
+                        />
+
+                        {/* Follow-up date & Submit */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '10px',
+                            flexWrap: 'wrap',
+                          }}
                         >
-                          {isSubmittingLog ? 'Đang lưu...' : 'Lưu Nhật Ký'}
-                        </Button>
-                      </div>
-                    </form>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '11.5px', color: '#64748b' }}>Hẹn liên hệ lại:</span>
+                            <input
+                              type="datetime-local"
+                              value={logFollowUp}
+                              onChange={(e) => setLogFollowUp(e.target.value)}
+                              style={{
+                                padding: '5px 8px',
+                                borderRadius: '8px',
+                                border: '1px solid #cbd5e1',
+                                fontSize: '12px',
+                                background: '#ffffff',
+                              }}
+                            />
+                          </div>
+
+                          <Button
+                            type="submit"
+                            variant="primary"
+                            size="sm"
+                            disabled={isSubmittingLog || !logContent.trim()}
+                            iconLeft={<Send size={14} />}
+                            style={{ background: '#2563eb' }}
+                          >
+                            {isSubmittingLog ? 'Đang lưu...' : 'Lưu Nhật Ký'}
+                          </Button>
+                        </div>
+                      </form>
+                    )}
 
                     {/* Timeline List */}
                     <div style={{ marginTop: '8px' }}>
@@ -1517,81 +2125,177 @@ export const LeadsPage: React.FC = () => {
                   </>
                 )}
 
-                {/* TAB 3: LỊCH THI TEST & HỌC VỤ */}
+                {/* TAB 3: LỊCH THI TEST & HỌC VỤ (KẾT QUẢ THỰC TẾ + HANDOFF SANG XẾP LỚP) */}
                 {activeDrawerTab === 'TESTS' && (
                   <div className="drawer-section-card" style={{ gap: '16px' }}>
-                    <div style={{ textAlign: 'center', padding: '16px 8px' }}>
-                      <div
-                        style={{
-                          width: '54px',
-                          height: '54px',
-                          borderRadius: '50%',
-                          background: '#eff6ff',
-                          color: '#2563eb',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginBottom: '12px',
-                        }}
-                      >
-                        <Calendar size={28} />
-                      </div>
-                      <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0' }}>
-                        Kiểm Tra Trình Độ Đầu Vào (Placement Test)
-                      </h4>
-                      <p
-                        style={{
-                          fontSize: '12.5px',
-                          color: '#64748b',
-                          margin: '0 auto',
-                          maxWidth: '360px',
-                          lineHeight: '1.5',
-                        }}
-                      >
-                        Đánh giá năng lực tiếng Anh ({selectedLead.interest}) 4 kỹ năng của học viên để định hướng vào
-                        lớp học phù hợp nhất.
-                      </p>
-                    </div>
+                    {leadPlacementTests.length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                          Hồ Sơ Ca Thi & Kết Quả Placement Test ({leadPlacementTests.length})
+                        </h4>
+                        {leadPlacementTests.map((pt) => (
+                          <div
+                            key={pt.id}
+                            style={{
+                              padding: '14px',
+                              borderRadius: '12px',
+                              border: '1px solid #e2e8f0',
+                              background: '#f8fafc',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '8px',
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div>
+                                <strong style={{ fontSize: '13.5px', color: '#0f172a' }}>
+                                  Ca thi: {pt.testDate} • {pt.timeSlot}
+                                </strong>
+                                <div style={{ fontSize: '12px', color: '#64748b' }}>
+                                  Phòng: {pt.room || 'Phòng Lab'} • Bài thi: <strong>{pt.testType}</strong>
+                                </div>
+                              </div>
+                              <span
+                                style={{
+                                  padding: '3px 9px',
+                                  borderRadius: '999px',
+                                  fontSize: '11.5px',
+                                  fontWeight: 700,
+                                  background:
+                                    pt.attendanceStatus === 'PRESENT'
+                                      ? '#dcfce7'
+                                      : pt.attendanceStatus === 'ABSENT'
+                                      ? '#fee2e2'
+                                      : '#e0e7ff',
+                                  color:
+                                    pt.attendanceStatus === 'PRESENT'
+                                      ? '#15803d'
+                                      : pt.attendanceStatus === 'ABSENT'
+                                      ? '#b91c1c'
+                                      : '#4338ca',
+                                }}
+                              >
+                                {pt.attendanceStatus === 'PRESENT'
+                                  ? 'Đã dự thi'
+                                  : pt.attendanceStatus === 'ABSENT'
+                                  ? 'Vắng mặt'
+                                  : 'Đã lên lịch'}
+                              </span>
+                            </div>
 
-                    <div
-                      style={{
-                        background: '#f8fafc',
-                        padding: '14px',
-                        borderRadius: '12px',
-                        border: '1px solid #e2e8f0',
-                      }}
-                    >
-                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
-                        Quy trình kiểm tra xếp lớp:
+                            {pt.overallScore !== null ? (
+                              <div
+                                style={{
+                                  padding: '10px 12px',
+                                  borderRadius: '10px',
+                                  background: '#ffffff',
+                                  border: '1px solid #dbeafe',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  flexWrap: 'wrap',
+                                  gap: '8px',
+                                }}
+                              >
+                                <div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <Award size={16} color="#2563eb" />
+                                    <span style={{ fontWeight: 800, fontSize: '14px', color: '#1d4ed8' }}>
+                                      Overall Band: {pt.overallScore}
+                                    </span>
+                                  </div>
+                                  <div style={{ fontSize: '11.5px', color: '#475569', marginTop: '3px' }}>
+                                    L: {pt.listeningScore ?? '-'} • R: {pt.readingScore ?? '-'} • W:{' '}
+                                    {pt.writingScore ?? '-'} • S: {pt.speakingScore ?? '-'}
+                                  </div>
+                                  {pt.suggestedCourseName && (
+                                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#059669', marginTop: '4px' }}>
+                                      → Khóa học đề xuất: {pt.suggestedCourseName}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <div style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>
+                                Chưa cập nhật điểm chấm thi 4 kỹ năng.
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                      <ul
-                        style={{
-                          margin: 0,
-                          paddingLeft: '18px',
-                          fontSize: '12px',
-                          color: '#475569',
-                          lineHeight: '1.8',
-                        }}
-                      >
-                        <li>Bước 1: Chọn ngày & ca thi Placement Test tại phòng test trung tâm.</li>
-                        <li>Bước 2: Học viên làm bài test 60 phút (Nghe, Đọc, Viết & Nói).</li>
-                        <li>Bước 3: Giảng viên chấm điểm và nhập kết quả vào hệ thống.</li>
-                        <li>Bước 4: Chuyển Lead sang trạng thái Đã nhập học và xếp lớp.</li>
-                      </ul>
-                    </div>
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: '16px 8px' }}>
+                        <div
+                          style={{
+                            width: '54px',
+                            height: '54px',
+                            borderRadius: '50%',
+                            background: '#eff6ff',
+                            color: '#2563eb',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: '12px',
+                          }}
+                        >
+                          <Calendar size={28} />
+                        </div>
+                        <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0' }}>
+                          Chưa Có Lịch Thi Placement Test
+                        </h4>
+                        <p
+                          style={{
+                            fontSize: '12.5px',
+                            color: '#64748b',
+                            margin: '0 auto',
+                            maxWidth: '360px',
+                            lineHeight: '1.5',
+                          }}
+                        >
+                          Đặt lịch kiểm tra năng lực tiếng Anh ({selectedLead.interest}) 4 kỹ năng cho học viên hoặc
+                          chuyển thẳng sang bước Ghi danh & Xếp lớp.
+                        </p>
+                      </div>
+                    )}
 
-                    <Button
-                      variant="primary"
-                      size="md"
-                      iconLeft={<Calendar size={16} />}
-                      onClick={() => {
-                        setSelectedLead(null);
-                        navigate('/tests');
-                      }}
-                      style={{ background: '#2563eb', width: '100%', justifyContent: 'center' }}
-                    >
-                      Lên Lịch Thi Placement Test Ngay
-                    </Button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <Button
+                        variant="primary"
+                        size="md"
+                        iconLeft={<Calendar size={16} />}
+                        onClick={() => {
+                          const targetId = selectedLead.id;
+                          setSelectedLead(null);
+                          navigate(`/tests?bookLeadId=${targetId}`);
+                        }}
+                        style={{ background: '#2563eb', width: '100%', justifyContent: 'center' }}
+                      >
+                        Đặt Lịch Thi Placement Test Cho Học Viên Này
+                      </Button>
+
+                      {canEnrollStudent && (
+                        <Button
+                          variant="glass"
+                          size="md"
+                          iconLeft={<GraduationCap size={16} />}
+                          onClick={() => {
+                            const targetId = selectedLead.id;
+                            setSelectedLead(null);
+                            navigate(`/students?enrollLeadId=${targetId}`);
+                          }}
+                          style={{
+                            background: '#ecfdf5',
+                            color: '#047857',
+                            border: '1px solid #a7f3d0',
+                            fontWeight: 700,
+                            width: '100%',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          Chốt Ghi Danh & Xếp Lớp Ngay
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1635,16 +2339,18 @@ export const LeadsPage: React.FC = () => {
                   <Button variant="glass" size="sm" onClick={() => setSelectedLead(null)}>
                     Đóng
                   </Button>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    disabled={isSavingLead}
-                    onClick={handleSaveLead}
-                    iconLeft={<Save size={15} />}
-                    style={{ background: '#2563eb' }}
-                  >
-                    {isSavingLead ? 'Đang lưu...' : 'Lưu Thay Đổi'}
-                  </Button>
+                  {canEditLead && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      disabled={isSavingLead}
+                      onClick={handleSaveLead}
+                      iconLeft={<Save size={15} />}
+                      style={{ background: '#2563eb' }}
+                    >
+                      {isSavingLead ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
