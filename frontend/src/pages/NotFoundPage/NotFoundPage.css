@@ -1,0 +1,192 @@
+/* ==========================================================================
+   404 NOT FOUND PAGE STYLES - EDUFLOW CRM
+   Minimalist Liquid Glass, Matching 403 Page Aesthetics
+   ========================================================================== */
+
+.not-found-container {
+  position: relative;
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-canvas, #f6f8fc);
+  overflow-x: hidden;
+  padding: 32px 20px;
+  box-sizing: border-box;
+}
+
+/* Subtle, diluted liquid glass ambient backgrounds */
+.not-found-bg-glow-1 {
+  position: absolute;
+  top: -10%;
+  left: -5%;
+  width: 55vw;
+  height: 55vh;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.04) 0%, rgba(124, 58, 237, 0) 70%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.not-found-bg-glow-2 {
+  position: absolute;
+  bottom: -10%;
+  right: -5%;
+  width: 55vw;
+  height: 55vh;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(24, 197, 230, 0.04) 0%, rgba(24, 197, 230, 0) 70%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Content Container centered exactly like the 403 page */
+.not-found-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 760px;
+  width: 100%;
+  animation: notFoundFadeUp 0.35s ease-out;
+}
+
+@keyframes notFoundFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Illustration Box */
+.not-found-illustration-wrapper {
+  width: 100%;
+  max-width: 640px;
+  margin-bottom: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.not-found-illustration {
+  width: 100%;
+  height: auto;
+  max-height: 350px;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 32px rgba(15, 23, 42, 0.05));
+  transition: transform 0.4s ease;
+}
+
+.not-found-illustration:hover {
+  transform: translateY(-4px) scale(1.01);
+}
+
+/* Typography matching the 403 design */
+.not-found-title {
+  font-family: var(--font-family-base, 'Quicksand', sans-serif);
+  font-size: 34px;
+  font-weight: 800;
+  color: #1e1b4b;
+  margin: 0 0 14px 0;
+  letter-spacing: -0.02em;
+}
+
+.not-found-subtitle {
+  font-family: var(--font-family-base, 'Quicksand', sans-serif);
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: #5a667d;
+  max-width: 520px;
+  margin: 0 0 32px 0;
+}
+
+.not-found-subtitle p {
+  margin: 2px 0;
+}
+
+/* Action Buttons: Glowing Cyan-Blue Pill */
+.not-found-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.not-found-btn-go-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 44px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--font-family-base, 'Quicksand', sans-serif);
+  color: #ffffff;
+  background: linear-gradient(135deg, #18c5e6 0%, #16b4d7 100%);
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  box-shadow: 0 12px 26px -4px rgba(22, 180, 215, 0.45);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  text-decoration: none;
+}
+
+.not-found-btn-go-back:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px -4px rgba(22, 180, 215, 0.6);
+  filter: brightness(1.04);
+}
+
+.not-found-btn-go-back:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 18px -4px rgba(22, 180, 215, 0.4);
+}
+
+/* Subtle Secondary link to Dashboard */
+.not-found-link-dashboard {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #64748b;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s ease;
+  font-family: var(--font-family-base, 'Quicksand', sans-serif);
+}
+
+.not-found-link-dashboard:hover {
+  color: var(--color-primary-royal, #7c3aed);
+  background: rgba(124, 58, 237, 0.06);
+}
+
+@media (max-width: 640px) {
+  .not-found-title {
+    font-size: 26px;
+  }
+  .not-found-subtitle {
+    font-size: 14px;
+    padding: 0 12px;
+  }
+  .not-found-illustration-wrapper {
+    max-width: 320px;
+    margin-bottom: 20px;
+  }
+  .not-found-btn-go-back {
+    padding: 12px 36px;
+    font-size: 14px;
+  }
+}

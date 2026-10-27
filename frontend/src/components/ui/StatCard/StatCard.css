@@ -93,8 +93,9 @@
 }
 
 .ui-stat-sparkline {
-  margin-top: 4px;
+  margin-top: 6px;
   width: 100%;
-  height: 36px;
+  height: 40px;
   overflow: visible;
+  transition: transform 0.2s ease;
 }

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -10,97 +10,16 @@ import {
   LogOut,
   User,
   Shield,
-  CheckCheck,
-  Clock,
-  UserCheck,
-  CalendarCheck,
-  AlertTriangle,
-  CreditCard,
-  Inbox,
   Settings,
   KeyRound,
   X,
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
+import { NotificationDropdown } from './NotificationDropdown';
+import { useNotificationCenter } from '../../hooks/useNotificationCenter';
 import defaultAvatarMale from '../../assets/avatars/default-avatar-male.jpg';
 import { hasRequiredRole } from '../../config/rbac.config';
-import type { UserRole } from '../../types/auth';
-
-interface NotificationItem {
-  id: string;
-  type: 'lead' | 'test' | 'class' | 'payment' | 'system';
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  link: string;
-  /** Vai trò được phép nhận thông báo này (RBAC) */
-  roles: UserRole[];
-}
-
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 'notif-1',
-    type: 'lead',
-    title: 'Lead mới cần tư vấn',
-    message: 'Nguyễn Thị Thuỳ Dung đăng ký tư vấn IELTS qua Facebook Ads',
-    time: '15 phút trước',
-    read: false,
-    link: '/leads',
-    roles: ['ADMIN', 'SALES'],
-  },
-  {
-    id: 'notif-2',
-    type: 'test',
-    title: 'Lịch thi Placement Test',
-    message: 'Ca thi 14:00 hôm nay tại Phòng 302 có 3 thí sinh cần điểm danh',
-    time: '45 phút trước',
-    read: false,
-    link: '/tests',
-    roles: ['ADMIN', 'SALES', 'ACADEMIC'],
-  },
-  {
-    id: 'notif-3',
-    type: 'class',
-    title: 'Cảnh báo Sĩ số Lớp học',
-    message: 'Lớp IELTS Bứt phá K26 đã chạm trần 15/15 học viên (Khóa tự động)',
-    time: '2 giờ trước',
-    read: false,
-    link: '/classes',
-    roles: ['ADMIN', 'SALES', 'ACADEMIC'],
-  },
-  {
-    id: 'notif-teacher-1',
-    type: 'class',
-    title: 'Lịch giảng dạy hôm nay',
-    message: 'Lớp IELTS Bứt phá K26 (18:00 - 19:30) tại Phòng 302 — nhớ điểm danh học viên',
-    time: '1 giờ trước',
-    read: false,
-    link: '/classes',
-    roles: ['TEACHER'],
-  },
-  {
-    id: 'notif-4',
-    type: 'payment',
-    title: 'Học phí hoàn tất',
-    message: 'Học viên STU-202610-0001 đã thanh toán đủ 100% học phí (Biên lai REC-0002)',
-    time: '5 giờ trước',
-    read: true,
-    link: '/students',
-    roles: ['ADMIN', 'SALES'],
-  },
-  {
-    id: 'notif-5',
-    type: 'system',
-    title: 'Bảo mật & Phân quyền',
-    message: 'Chính sách bảo vệ dữ liệu khách hàng RBAC đã được kích hoạt',
-    time: '1 ngày trước',
-    read: true,
-    link: '/settings',
-    roles: ['ADMIN'],
-  },
-];
 
 const ROLE_CAPABILITIES: Record<string, string[]> = {
   ADMIN: [
@@ -136,7 +55,7 @@ export const Header: React.FC = () => {
 
   // Profile dropdown
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [notificationOpen, setNotificationOpen] = useState(false);
 
   // Profile & Change Password Window Modal (FR-AUTH-04)
   const [profileModalOpen, setProfileModalOpen] = useState(false);
@@ -147,25 +66,27 @@ export const Header: React.FC = () => {
   const [isChangingPwd, setIsChangingPwd] = useState(false);
   const [pwdFeedback, setPwdFeedback] = useState<{ text: string; isError?: boolean } | null>(null);
 
-  // Notification dropdown
-  const [notificationOpen, setNotificationOpen] = useState(false);
-  const [notificationFilter, setNotificationFilter] = useState<'all' | 'unread'>('all');
-  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
-  const notificationRef = useRef<HTMLDivElement>(null);
+  // Realtime Notification State & Background Polling
+  const {
+    notifications,
+    unreadCount,
+    readIds,
+    isLoading: isNotifLoading,
+    markAsRead,
+    markAllAsRead,
+  } = useNotificationCenter();
 
-  // Chỉ hiển thị thông báo thuộc phạm vi nghiệp vụ của vai trò hiện tại
-  const roleNotifications = useMemo(
-    () => notifications.filter((n) => hasRequiredRole(user?.role, n.roles)),
-    [notifications, user?.role]
-  );
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const notifDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns on outside click & Cmd+K shortcut
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
         setDropdownOpen(false);
       }
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+      if (notifDropdownRef.current && !notifDropdownRef.current.contains(target)) {
         setNotificationOpen(false);
       }
     };
@@ -182,43 +103,6 @@ export const Header: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
-
-  const unreadCount = useMemo(() => roleNotifications.filter((n) => !n.read).length, [roleNotifications]);
-
-  const filteredNotifications = useMemo(() => {
-    if (notificationFilter === 'unread') {
-      return roleNotifications.filter((n) => !n.read);
-    }
-    return roleNotifications;
-  }, [roleNotifications, notificationFilter]);
-
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
-
-  const handleNotificationClick = (item: NotificationItem) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === item.id ? { ...n, read: true } : n))
-    );
-    setNotificationOpen(false);
-    navigate(item.link);
-  };
-
-  const getNotificationIcon = (type: NotificationItem['type']) => {
-    switch (type) {
-      case 'lead':
-        return <UserCheck size={16} />;
-      case 'test':
-        return <CalendarCheck size={16} />;
-      case 'class':
-        return <AlertTriangle size={16} />;
-      case 'payment':
-        return <CreditCard size={16} />;
-      case 'system':
-      default:
-        return <Shield size={16} />;
-    }
-  };
 
   // Compute page title based on path
   const getPageTitle = (pathname: string) => {
@@ -331,118 +215,37 @@ export const Header: React.FC = () => {
             <kbd className="header-search-kbd">⌘K</kbd>
           </div>
 
-          {/* Notification Bell Dropdown */}
-          <div className="header-notification-wrapper" ref={notificationRef}>
+          {/* Notification Bell with Dropdown */}
+          <div className="header-notification-wrapper" ref={notifDropdownRef}>
             <button
               type="button"
               className={`header-icon-btn ${notificationOpen ? 'active' : ''}`}
               aria-label="Thông báo hệ thống"
-              title={unreadCount > 0 ? `${unreadCount} thông báo mới` : 'Thông báo hệ thống'}
+              aria-expanded={notificationOpen}
+              title={unreadCount > 0 ? `${unreadCount} thông báo chưa đọc` : 'Thông báo hệ thống'}
               onClick={() => {
                 setNotificationOpen(!notificationOpen);
                 if (dropdownOpen) setDropdownOpen(false);
               }}
-              aria-expanded={notificationOpen}
             >
               <Bell size={18} />
               {unreadCount > 0 && (
-                <span className="header-badge-count">{unreadCount}</span>
+                <span className="header-badge-count">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
               )}
             </button>
 
             {notificationOpen && (
-              <div className="header-notification-dropdown" role="dialog" aria-label="Trung tâm thông báo">
-                {/* Header */}
-                <div className="notification-dropdown-header">
-                  <div className="notification-header-title">
-                    <span>Thông báo</span>
-                    {unreadCount > 0 && (
-                      <span className="notification-pill-badge">{unreadCount} mới</span>
-                    )}
-                  </div>
-                  {unreadCount > 0 && (
-                    <button
-                      type="button"
-                      className="notification-mark-all-btn"
-                      onClick={markAllAsRead}
-                      title="Đánh dấu tất cả là đã đọc"
-                    >
-                      <CheckCheck size={14} />
-                      <span>Đã đọc tất cả</span>
-                    </button>
-                  )}
-                </div>
-
-                {/* Filter Tabs */}
-                <div className="notification-dropdown-tabs">
-                  <button
-                    type="button"
-                    className={`notification-tab-btn ${notificationFilter === 'all' ? 'active' : ''}`}
-                    onClick={() => setNotificationFilter('all')}
-                  >
-                    Tất cả ({roleNotifications.length})
-                  </button>
-                  <button
-                    type="button"
-                    className={`notification-tab-btn ${notificationFilter === 'unread' ? 'active' : ''}`}
-                    onClick={() => setNotificationFilter('unread')}
-                  >
-                    Chưa đọc ({unreadCount})
-                  </button>
-                </div>
-
-                {/* List */}
-                <div className="notification-dropdown-list">
-                  {filteredNotifications.length === 0 ? (
-                    <div className="notification-empty-state">
-                      <Inbox size={32} />
-                      <p>Không có thông báo nào</p>
-                    </div>
-                  ) : (
-                    filteredNotifications.map((item) => (
-                      <div
-                        key={item.id}
-                        className={`notification-item ${!item.read ? 'unread' : ''}`}
-                        onClick={() => handleNotificationClick(item)}
-                        role="button"
-                        tabIndex={0}
-                      >
-                        <div className={`notification-icon-box ${item.type}`}>
-                          {getNotificationIcon(item.type)}
-                        </div>
-                        <div className="notification-content">
-                          <div className="notification-item-top">
-                            <h4 className="notification-title">{item.title}</h4>
-                            <span className="notification-time">
-                              <Clock size={11} />
-                              {item.time}
-                            </span>
-                          </div>
-                          <p className="notification-desc">{item.message}</p>
-                        </div>
-                        {!item.read && <span className="notification-unread-dot" />}
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {/* Footer */}
-                {isAdmin && (
-                  <div className="notification-dropdown-footer">
-                    <button
-                      type="button"
-                      className="notification-footer-link"
-                      onClick={() => {
-                        setNotificationOpen(false);
-                        navigate('/settings');
-                      }}
-                    >
-                      <Settings size={13} />
-                      <span>Cài đặt thông báo hệ thống</span>
-                    </button>
-                  </div>
-                )}
-              </div>
+              <NotificationDropdown
+                notifications={notifications}
+                unreadCount={unreadCount}
+                readIds={readIds}
+                isLoading={isNotifLoading}
+                onClose={() => setNotificationOpen(false)}
+                onMarkAsRead={markAsRead}
+                onMarkAllAsRead={markAllAsRead}
+              />
             )}
           </div>
 

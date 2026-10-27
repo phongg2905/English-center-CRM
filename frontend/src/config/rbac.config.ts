@@ -21,8 +21,8 @@ export const ROUTE_PERMISSIONS: Record<string, UserRole[]> = {
   // Quản lý Lớp học & Khóa học đào tạo
   classes: ['ADMIN', 'SALES', 'ACADEMIC', 'TEACHER'],
 
-  // Báo cáo & Thống kê số liệu
-  reports: ['ADMIN', 'SALES', 'ACADEMIC'],
+  // Báo cáo & Thống kê số liệu (Admin Only)
+  reports: ['ADMIN'],
 
   // Quản lý Tài khoản Nhân sự & Giảng viên (Admin Only)
   staff: ['ADMIN'],
@@ -72,8 +72,8 @@ export const ACTION_PERMISSIONS = {
   REVENUE_REPORT: ['ADMIN'] as UserRole[],
   // Bảng xếp hạng tư vấn viên & hiệu quả kênh (chứa doanh số) - Giáo vụ không xem
   SALES_PERFORMANCE_REPORT: ['ADMIN', 'SALES'] as UserRole[],
-  // Xuất báo cáo (loại dữ liệu được xuất giới hạn theo vai trò ở Backend)
-  EXPORT_REPORT: ['ADMIN', 'ACADEMIC'] as UserRole[],
+  // Xuất báo cáo tài chính & doanh thu
+  EXPORT_REPORT: ['ADMIN'] as UserRole[],
 
   // Quản trị Nhân sự
   STAFF_MANAGE: ['ADMIN'] as UserRole[],

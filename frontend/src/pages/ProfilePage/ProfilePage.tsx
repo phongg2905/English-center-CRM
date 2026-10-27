@@ -119,7 +119,7 @@ export const ProfilePage: React.FC = () => {
     try {
       setPasswordLoading(true);
       await AuthService.changePassword({
-        oldPassword: passwordData.oldPassword,
+        currentPassword: passwordData.oldPassword,
         newPassword: passwordData.newPassword,
       });
       setPasswordMsg({ type: 'success', text: 'Đổi mật khẩu thành công! Hãy ghi nhớ mật khẩu mới của bạn.' });
