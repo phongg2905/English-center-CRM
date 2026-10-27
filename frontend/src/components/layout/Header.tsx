@@ -9,6 +9,7 @@ import {
   User,
   Shield,
 } from 'lucide-react';
+import defaultAvatarMale from '../../assets/avatars/default-avatar-male.jpg';
 
 export const Header: React.FC = () => {
   const location = useLocation();
@@ -86,7 +87,11 @@ export const Header: React.FC = () => {
             aria-haspopup="true"
           >
             <div className="header-profile-avatar">
-              {(user?.fullName || user?.username || 'U')[0].toUpperCase()}
+              <img
+                src={defaultAvatarMale}
+                alt={user?.fullName || user?.username || 'Avatar'}
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+              />
             </div>
             <span className="header-profile-name">{user?.fullName || user?.username}</span>
             <ChevronDown size={14} style={{ color: 'var(--text-muted)' }} />
@@ -124,25 +129,27 @@ export const Header: React.FC = () => {
                 role="menuitem"
                 onClick={() => {
                   setDropdownOpen(false);
-                  navigate('/settings');
+                  navigate('/profile');
                 }}
               >
                 <User size={15} />
                 <span>Hồ sơ cá nhân</span>
               </button>
 
-              <button
-                type="button"
-                className="header-dropdown-item"
-                role="menuitem"
-                onClick={() => {
-                  setDropdownOpen(false);
-                  navigate('/settings');
-                }}
-              >
-                <Shield size={15} />
-                <span>Phân quyền & Bảo mật</span>
-              </button>
+              {user?.role === 'ADMIN' && (
+                <button
+                  type="button"
+                  className="header-dropdown-item"
+                  role="menuitem"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    navigate('/settings');
+                  }}
+                >
+                  <Shield size={15} />
+                  <span>Cài đặt hệ thống</span>
+                </button>
+              )}
 
               <div className="header-dropdown-divider" />
 
