@@ -49,6 +49,8 @@ export interface TeacherItem {
   assignedClasses: TeacherAssignedClass[];
 }
 
+export type TeacherOption = TeacherItem;
+
 export interface StaffPagination {
   page: number;
   limit: number;
