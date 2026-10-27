@@ -13,7 +13,10 @@ import { StudentsPage } from '../pages/StudentsPage';
 import { StaffPage } from '../pages/StaffPage';
 import { ReportsPage } from '../pages/ReportsPage';
 import { SettingsPage } from '../pages/SettingsPage';
+import { ActivityLogsPage } from '../pages/ActivityLogsPage';
 import { AccessDeniedPage } from '../pages/AccessDeniedPage';
+import { NotFoundPage } from '../pages/NotFoundPage';
+import { ProfilePage } from '../pages/ProfilePage';
 import { ROUTE_PERMISSIONS } from '../config/rbac.config';
 
 export const AppRoutes: React.FC = () => {
@@ -24,6 +27,7 @@ export const AppRoutes: React.FC = () => {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/403" element={<AccessDeniedPage />} />
+      <Route path="/404" element={<NotFoundPage />} />
 
       {/* Protected Routes inside AppShell */}
       <Route
@@ -128,7 +132,8 @@ export const AppRoutes: React.FC = () => {
           }
         />
 
-        {/* 8. Cài đặt hệ thống (ADMIN Only) */}
+        {/* 8. Cài đặt hệ thống & Nhật ký hoạt động (ADMIN Only) */}
+        <Route path="audit-logs" element={<ProtectedRoute allowedRoles={ROUTE_PERMISSIONS.auditLogs} moduleName="Nhật ký hoạt động"><ActivityLogsPage /></ProtectedRoute>} />
         <Route
           path="settings"
           element={
@@ -140,10 +145,23 @@ export const AppRoutes: React.FC = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* 9. Hồ sơ cá nhân người dùng (All Authenticated Staff) */}
+        <Route
+          path="profile"
+          element={
+            <ProtectedRoute
+              allowedRoles={ROUTE_PERMISSIONS.profile}
+              moduleName="Hồ sơ cá nhân"
+            >
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
 
-      {/* Catch-all route */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      {/* Catch-all route -> Dedicated 404 Not Found Page */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };

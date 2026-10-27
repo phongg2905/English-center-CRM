@@ -46,6 +46,23 @@ export class StaffController {
   }
 
   /**
+   * @route GET /api/staff/consultants
+   * @desc  Lấy danh sách tư vấn viên đang hoạt động (cho phép ADMIN, SALES, ACADEMIC)
+   */
+  static async getConsultants(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await StaffService.getStaffs({
+        roleCode: 'SALES',
+        isActive: true,
+        limit: 100,
+      });
+      ApiResponse.success(res, result.staffs || [], 'Lấy danh sách tư vấn viên thành công');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * @route GET /api/staff/:id
    * @desc  Lấy thông tin chi tiết một nhân viên
    */

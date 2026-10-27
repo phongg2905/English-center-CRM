@@ -1,21 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, BookOpen, AlertCircle } from 'lucide-react';
+import { X, BookOpen, AlertCircle, Save } from 'lucide-react';
 import { AcademicService } from '../../services/academic.service';
-import type { CreateCoursePayload } from '../../types/academic';
+import type { CourseItem, CreateCoursePayload } from '../../types/academic';
 import { Button } from '../../components/ui';
 
 interface CreateCourseModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  editingCourse?: CourseItem | null;
 }
+
+const QUICK_TUITIONS = [
+  { label: '4.5 Triệu', value: 4500000 },
+  { label: '6.5 Triệu', value: 6500000 },
+  { label: '9.8 Triệu', value: 9800000 },
+  { label: '12.5 Triệu', value: 12500000 },
+];
+
+const QUICK_LESSONS = [24, 30, 36, 40];
+
+const QUICK_TARGETS = [
+  'IELTS 5.5+',
+  'IELTS 6.5+',
+  'IELTS 7.0+',
+  'TOEIC 650+',
+  'Giao tiếp B1-B2',
+];
 
 export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  editingCourse,
 }) => {
+  const isEdit = Boolean(editingCourse);
+
   const [courseCode, setCourseCode] = useState<string>('');
   const [courseName, setCourseName] = useState<string>('');
   const [standardTuition, setStandardTuition] = useState<number>(6500000);
@@ -24,24 +45,62 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
   const [minEntryScore, setMinEntryScore] = useState<string>('0');
   const [maxEntryScore, setMaxEntryScore] = useState<string>('9.0');
   const [description, setDescription] = useState<string>('');
+  const [isActive, setIsActive] = useState<boolean>(true);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Auto generate courseCode when courseName changes
+  useEffect(() => {
+    if (isOpen) {
+      if (editingCourse) {
+        setCourseCode(editingCourse.courseCode || '');
+        setCourseName(editingCourse.courseName || '');
+        setStandardTuition(Number(editingCourse.standardTuition) || 0);
+        setTotalLessons(Number(editingCourse.totalLessons) || 24);
+        setTargetOutput(editingCourse.targetOutput || '');
+        setMinEntryScore(
+          editingCourse.minEntryScore !== null && editingCourse.minEntryScore !== undefined
+            ? String(editingCourse.minEntryScore)
+            : '0'
+        );
+        setMaxEntryScore(
+          editingCourse.maxEntryScore !== null && editingCourse.maxEntryScore !== undefined
+            ? String(editingCourse.maxEntryScore)
+            : '9.0'
+        );
+        setDescription(editingCourse.description || '');
+        setIsActive(editingCourse.isActive !== false);
+      } else {
+        setCourseCode('');
+        setCourseName('');
+        setStandardTuition(6500000);
+        setTotalLessons(24);
+        setTargetOutput('');
+        setMinEntryScore('0');
+        setMaxEntryScore('9.0');
+        setDescription('');
+        setIsActive(true);
+      }
+      setErrorMsg(null);
+    }
+  }, [isOpen, editingCourse]);
+
+  // Auto generate courseCode when courseName changes if code hasn't been manually typed (create mode only)
   const handleNameChange = (name: string) => {
     setCourseName(name);
-    const slug = name
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z0-9\s]/g, '')
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((w) => w.toUpperCase())
-      .join('-');
-    if (slug) {
-      setCourseCode(`${slug}-${Math.floor(10 + Math.random() * 89)}`);
+    if (!isEdit && (!courseCode || courseCode.startsWith('CRS-') || courseCode.includes('-'))) {
+      const slug = name
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9\s]/g, '')
+        .trim()
+        .split(/\s+/)
+        .slice(0, 3)
+        .map((w) => w.toUpperCase())
+        .join('-');
+      if (slug) {
+        setCourseCode(slug);
+      }
     }
   };
 
@@ -51,6 +110,11 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
 
     if (!courseName.trim()) {
       setErrorMsg('Vui lòng nhập tên khóa học.');
+      return;
+    }
+
+    if (!courseCode.trim()) {
+      setErrorMsg('Vui lòng nhập mã khóa học.');
       return;
     }
 
@@ -77,13 +141,15 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
       return;
     }
 
-    const generatedCode =
-      courseCode.trim().toUpperCase() || `CRS-${Math.floor(100 + Math.random() * 900)}`;
+    if (minScoreNum !== null && maxScoreNum !== null && minScoreNum > maxScoreNum) {
+      setErrorMsg('Điểm đầu vào tối thiểu không được lớn hơn điểm đầu vào tối đa.');
+      return;
+    }
 
     try {
       setIsLoading(true);
       const payload: CreateCoursePayload = {
-        courseCode: generatedCode,
+        courseCode: courseCode.trim().toUpperCase(),
         courseName: courseName.trim(),
         standardTuition: Number(standardTuition),
         totalLessons: Number(totalLessons),
@@ -91,15 +157,23 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
         minEntryScore: minScoreNum,
         maxEntryScore: maxScoreNum,
         description: description.trim() || null,
-        isActive: true,
+        isActive,
       };
 
-      await AcademicService.createCourse(payload);
+      if (isEdit && editingCourse) {
+        await AcademicService.updateCourse(editingCourse.id, payload);
+      } else {
+        await AcademicService.createCourse(payload);
+      }
       onSuccess();
       onClose();
     } catch (err: any) {
-      console.error('Lỗi tạo khóa học:', err);
-      setErrorMsg(err?.response?.data?.message || err?.message || 'Không thể tạo khóa học mới.');
+      console.error('Lỗi lưu khóa học:', err);
+      setErrorMsg(
+        err?.response?.data?.message ||
+          err?.message ||
+          (isEdit ? 'Không thể cập nhật khóa học.' : 'Không thể tạo khóa học mới.')
+      );
     } finally {
       setIsLoading(false);
     }
@@ -118,8 +192,11 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
             </div>
             <div>
               <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#0f172a' }}>
-                Tạo Khóa Học Mới
+                {isEdit ? 'Chỉnh Sửa Khóa Học Đào Tạo' : 'Tạo Khóa Học Đào Tạo Mới'}
               </h3>
+              <p style={{ margin: '2px 0 0 0', fontSize: '12.5px', color: '#64748b' }}>
+                Thiết lập chương trình đào tạo, học phí niêm yết và chuẩn cam kết đầu ra
+              </p>
             </div>
           </div>
 
@@ -180,7 +257,27 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
               </div>
 
               <div className="drawer-field-group">
-                <label className="drawer-label">Học Phí Tiêu Chuẩn (VNĐ) *</label>
+                <label className="drawer-label">Mã Khóa Học (Course Code) *</label>
+                <input
+                  type="text"
+                  placeholder="Ví dụ: IELTS-FIGHT"
+                  value={courseCode}
+                  onChange={(e) => setCourseCode(e.target.value.toUpperCase())}
+                  className="drawer-input-control"
+                  required
+                />
+                <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                  Mã định danh duy nhất của khóa học trong hệ thống
+                </span>
+              </div>
+
+              <div className="drawer-field-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="drawer-label" style={{ marginBottom: 0 }}>Học Phí Tiêu Chuẩn (VNĐ) *</label>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#16a34a' }}>
+                    {Number(standardTuition || 0).toLocaleString('vi-VN')} đ
+                  </span>
+                </div>
                 <input
                   type="number"
                   step="500000"
@@ -191,6 +288,27 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                   className="drawer-input-control"
                   required
                 />
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                  {QUICK_TUITIONS.map((item) => (
+                    <button
+                      key={item.value}
+                      type="button"
+                      onClick={() => setStandardTuition(item.value)}
+                      style={{
+                        fontSize: '11px',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        border: standardTuition === item.value ? '1px solid #16a34a' : '1px solid #e2e8f0',
+                        background: standardTuition === item.value ? '#f0fdf4' : '#f8fafc',
+                        color: standardTuition === item.value ? '#16a34a' : '#475569',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="drawer-field-group">
@@ -204,13 +322,34 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                   className="drawer-input-control"
                   required
                 />
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                  {QUICK_LESSONS.map((num) => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => setTotalLessons(num)}
+                      style={{
+                        fontSize: '11px',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        border: totalLessons === num ? '1px solid #16a34a' : '1px solid #e2e8f0',
+                        background: totalLessons === num ? '#f0fdf4' : '#f8fafc',
+                        color: totalLessons === num ? '#16a34a' : '#475569',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {num} buổi
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* Cột 2: Chuẩn đầu ra, Thang điểm & Mô tả */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div className="drawer-field-group">
-                <label className="drawer-label">Chuẩn Cam Kết Đầu Ra</label>
+                <label className="drawer-label">Chuẩn Cam Kết Đầu Ra (Target Output)</label>
                 <input
                   type="text"
                   placeholder="Ví dụ: IELTS 6.0 - 6.5, TOEIC 650+"
@@ -218,6 +357,27 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                   onChange={(e) => setTargetOutput(e.target.value)}
                   className="drawer-input-control"
                 />
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                  {QUICK_TARGETS.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setTargetOutput(t)}
+                      style={{
+                        fontSize: '11px',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        border: targetOutput === t ? '1px solid #16a34a' : '1px solid #e2e8f0',
+                        background: targetOutput === t ? '#f0fdf4' : '#f8fafc',
+                        color: targetOutput === t ? '#16a34a' : '#475569',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -252,7 +412,7 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
               <div className="drawer-field-group">
                 <label className="drawer-label">Mô Tả Khóa Học & Lộ Trình</label>
                 <textarea
-                  rows={4}
+                  rows={3}
                   placeholder="Xây dựng nền tảng ngữ pháp, từ vựng học thuật và chiến thuật giải đề..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -262,6 +422,28 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     resize: 'vertical',
                   }}
                 />
+              </div>
+
+              <div className="drawer-field-group">
+                <label
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: '#0f172a',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isActive}
+                    onChange={(e) => setIsActive(e.target.checked)}
+                    style={{ accentColor: '#16a34a', width: '15px', height: '15px' }}
+                  />
+                  <span>Đang mở tuyển sinh cho khóa học này</span>
+                </label>
               </div>
             </div>
           </div>
@@ -275,13 +457,14 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
               variant="primary"
               type="submit"
               disabled={isLoading}
+              iconLeft={isEdit ? <Save size={15} /> : undefined}
               style={{
                 background: '#16a34a',
                 boxShadow: '0 2px 8px rgba(22, 163, 74, 0.25)',
                 fontWeight: 600,
               }}
             >
-              {isLoading ? 'Đang Tạo...' : 'Tạo Khóa Học Ngay'}
+              {isLoading ? 'Đang Lưu...' : isEdit ? 'Lưu Cập Nhật Khóa Học' : 'Tạo Khóa Học Ngay'}
             </Button>
           </div>
         </form>

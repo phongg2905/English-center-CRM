@@ -70,6 +70,7 @@ export interface CreateClassDto {
   teacherName?: string | null;
   startDate: string;
   maxCapacity?: number;
+  status?: ClassStatus;
 }
 
 export interface UpdateClassDto extends Partial<CreateClassDto> {

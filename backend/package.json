@@ -14,7 +14,10 @@
     "test:password": "tsx src/scripts/test-password-recovery.ts",
     "test:leads": "tsx src/scripts/test-leads.ts",
     "test:tests": "tsx src/scripts/test-placement-tests.ts",
+    "test:academic": "tsx src/scripts/test-academic-flow.ts",
     "test:analytics": "tsx src/scripts/test-analytics.ts",
+    "test:staff": "tsx src/scripts/test-staff-flow.ts",
+    "test:e2e": "tsx src/scripts/test-e2e-integration.ts",
     "studio": "prisma studio"
   },
   "keywords": [

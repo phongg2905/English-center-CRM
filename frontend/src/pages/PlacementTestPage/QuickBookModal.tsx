@@ -25,6 +25,7 @@ interface QuickBookModalProps {
   initialDate?: string;
   initialTimeSlot?: string;
   initialRoom?: string;
+  initialLeadId?: number;
   availabilitySlots?: ShiftSlotAvailability[];
   lockShift?: boolean;
 }
@@ -43,6 +44,7 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
   initialDate,
   initialTimeSlot,
   initialRoom,
+  initialLeadId,
   availabilitySlots = [],
   lockShift = false,
 }) => {
@@ -67,7 +69,7 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
     initialTimeSlot || '09:00 - 10:30'
   );
   const [room, setRoom] = useState<string>(
-    initialRoom || 'Phòng Lab 201'
+    initialRoom || 'Room 101 - Tầng 1'
   );
   const [testType, setTestType] = useState<TestType>('IELTS');
   const [notes, setNotes] = useState<string>('');
@@ -78,13 +80,18 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
   // Fetch leads on modal open
   useEffect(() => {
     if (isOpen) {
+      setErrorMsg(null);
+      if (initialLeadId) {
+        setActiveTab('select_existing');
+        setSelectedLeadIds([initialLeadId]);
+      }
       PlacementTestService.getAvailableLeads()
         .then((data) => {
           setLeads(data);
         })
         .catch(() => {});
     }
-  }, [isOpen]);
+  }, [isOpen, initialLeadId]);
 
   // Update initial fields when changed
   useEffect(() => {
@@ -171,6 +178,17 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
       return;
     }
 
+    if (activeTab === 'direct_input') {
+      const validCandidates = newCandidates.filter((c) => c.fullName.trim() && c.phoneNumber.trim());
+      for (const candidate of validCandidates) {
+        const cleanPhone = candidate.phoneNumber.trim().replace(/\s+/g, '');
+        if (!/^0\d{9}$/.test(cleanPhone)) {
+          setErrorMsg(`Số điện thoại của "${candidate.fullName}" không hợp lệ (Phải gồm 10 chữ số bắt đầu bằng 0).`);
+          return;
+        }
+      }
+    }
+
     if (isOverCapacity) {
       setErrorMsg(
         `Không thể đặt lịch: Bạn đang thêm ${candidateCount} thí sinh nhưng phòng chỉ còn ${availableSeats} chỗ trống!`
@@ -197,10 +215,11 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
         // Direct input: Create lead then book for each candidate
         const validCandidates = newCandidates.filter((c) => c.fullName.trim() && c.phoneNumber.trim());
         for (const candidate of validCandidates) {
+          const cleanPhone = candidate.phoneNumber.trim().replace(/\s+/g, '');
           // 1. Create lead
           const createdLead = await PlacementTestService.createLead({
             fullName: candidate.fullName.trim(),
-            phoneNumber: candidate.phoneNumber.trim(),
+            phoneNumber: cleanPhone,
             email: candidate.email.trim() || undefined,
             interest: testType,
           });
@@ -394,7 +413,7 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
               </div>
             )}
 
-            {/* TAB 2: DIRECT INPUT NEW CANDIDATES (NO EXISTING LEAD REQUIRED) */}
+            {/* TAB 2: DIRECT INPUT NEW CANDIDATES */}
             {activeTab === 'direct_input' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div style={{ fontSize: '12.5px', color: '#64748b' }}>
@@ -429,7 +448,7 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
                         type="text"
                         className="pt-form-input"
                         style={{ height: '34px', fontSize: '12.5px' }}
-                        placeholder="Số điện thoại *"
+                        placeholder="SĐT 10 số *"
                         value={c.phoneNumber}
                         onChange={(e) => handleUpdateCandidate(c.id, 'phoneNumber', e.target.value)}
                         required={idx === 0}
@@ -500,7 +519,8 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
                   required
                 >
                   <option value="09:00 - 10:30">09:00 - 10:30 (Ca Sáng)</option>
-                  <option value="14:30 - 16:00">14:30 - 16:00 (Ca Chiều)</option>
+                  <option value="14:00 - 15:30">14:00 - 15:30 (Ca Chiều 1)</option>
+                  <option value="14:30 - 16:00">14:30 - 16:00 (Ca Chiều 2)</option>
                   <option value="18:00 - 19:30">18:00 - 19:30 (Ca Tối)</option>
                 </select>
               </div>
@@ -520,9 +540,11 @@ export const QuickBookModal: React.FC<QuickBookModalProps> = ({
                   style={lockShift ? { background: '#f8fafc', cursor: 'not-allowed' } : undefined}
                   required
                 >
+                  <option value="Room 101 - Tầng 1">Room 101 - Tầng 1</option>
+                  <option value="Room 102 - Tầng 1">Room 102 - Tầng 1</option>
+                  <option value="Room 201 - Tầng 2">Room 201 - Tầng 2</option>
                   <option value="Phòng Lab 201">Phòng Lab 201 (Cơ sở Q.1)</option>
                   <option value="Phòng Lab 101">Phòng Lab 101 (Cơ sở Bình Thạnh)</option>
-                  <option value="Phòng 302">Phòng 302 (Cơ sở Tân Bình)</option>
                 </select>
               </div>
 

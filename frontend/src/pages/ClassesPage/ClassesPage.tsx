@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
   BookOpen,
   Calendar,
@@ -25,6 +26,8 @@ import {
   Copy,
   Check,
   Flame,
+  Edit2,
+  Trash2,
 } from 'lucide-react';
 
 import { AcademicService } from '../../services/academic.service';
@@ -47,6 +50,42 @@ import { Button, CardGridSkeleton } from '../../components/ui';
 import { useAuth } from '../../hooks/useAuth';
 import { hasRequiredRole, ACTION_PERMISSIONS } from '../../config/rbac.config';
 import './ClassesPage.css';
+
+export const CLASS_STATUS_META: Record<
+  string,
+  { label: string; bg: string; color: string; border: string }
+> = {
+  PLANNING: {
+    label: 'Dự kiến mở',
+    bg: '#fef3c7',
+    color: '#b45309',
+    border: '#fde68a',
+  },
+  OPEN: {
+    label: 'Đang tuyển sinh',
+    bg: '#dcfce7',
+    color: '#15803d',
+    border: '#bbf7d0',
+  },
+  IN_PROGRESS: {
+    label: 'Đang học',
+    bg: '#dbeafe',
+    color: '#1d4ed8',
+    border: '#bfdbfe',
+  },
+  FULL: {
+    label: 'Đã đầy lớp',
+    bg: '#fee2e2',
+    color: '#b91c1c',
+    border: '#fecaca',
+  },
+  COMPLETED: {
+    label: 'Đã kết thúc',
+    bg: '#f1f5f9',
+    color: '#475569',
+    border: '#cbd5e1',
+  },
+};
 
 const formatTeacherName = (name?: string | null) => {
   if (!name) return 'Chưa phân công';
@@ -255,7 +294,11 @@ interface CourseAccordionGroupProps {
   onToggleSelectCourseClasses: (classIds: number[], selectAll: boolean) => void;
   canManageClassesAndCourses: boolean;
   canEnrollStudent: boolean;
+  canViewTuition: boolean;
+  isAdmin: boolean;
   onOpenCreateClassForCourse: (courseId: number) => void;
+  onEditCourse: (course: CourseItem) => void;
+  onDeleteCourse: (course: CourseItem, classesCount: number) => void;
   onSelectClassDetail: (cls: ClassItem) => void;
   onQuickEnroll: (classId: number) => void;
 }
@@ -270,7 +313,11 @@ const CourseAccordionGroup: React.FC<CourseAccordionGroupProps> = ({
   onToggleSelectCourseClasses,
   canManageClassesAndCourses,
   canEnrollStudent,
+  canViewTuition,
+  isAdmin,
   onOpenCreateClassForCourse,
+  onEditCourse,
+  onDeleteCourse,
   onSelectClassDetail,
   onQuickEnroll,
 }) => {
@@ -373,13 +420,17 @@ const CourseAccordionGroup: React.FC<CourseAccordionGroupProps> = ({
               <Clock className="w-4 h-4 text-gray-500" size={16} />
               <strong>{crs.totalLessons} buổi</strong>
             </span>
-            <span className="course-meta-divider">•</span>
-            <span className="course-meta-item" title="Học phí khóa học">
-              <Wallet className="w-4 h-4 text-gray-500" size={16} />
-              <strong className="course-tuition-text">
-                {Number(crs.standardTuition).toLocaleString('vi-VN')} đ
-              </strong>
-            </span>
+            {canViewTuition && (
+              <>
+                <span className="course-meta-divider">•</span>
+                <span className="course-meta-item" title="Học phí khóa học">
+                  <Wallet className="w-4 h-4 text-gray-500" size={16} />
+                  <strong className="course-tuition-text">
+                    {Number(crs.standardTuition).toLocaleString('vi-VN')} đ
+                  </strong>
+                </span>
+              </>
+            )}
             <span className="course-meta-divider">•</span>
             <span
               className={`course-open-badge ${
@@ -396,7 +447,41 @@ const CourseAccordionGroup: React.FC<CourseAccordionGroupProps> = ({
         </div>
 
         {canManageClassesAndCourses && (
-          <div className="course-header-actions" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="course-header-actions"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="course-open-class-btn"
+              onClick={() => onEditCourse(crs)}
+              title={`Chỉnh sửa khóa học ${crs.courseName}`}
+              style={{
+                background: '#f8fafc',
+                color: '#475569',
+                borderColor: '#cbd5e1',
+                padding: '6px 9px',
+              }}
+            >
+              <Edit2 size={13} />
+            </button>
+            {isAdmin && (
+              <button
+                type="button"
+                className="course-open-class-btn"
+                onClick={() => onDeleteCourse(crs, courseClasses.length)}
+                title={`Xóa khóa học ${crs.courseName}`}
+                style={{
+                  background: '#fef2f2',
+                  color: '#dc2626',
+                  borderColor: '#fecaca',
+                  padding: '6px 9px',
+                }}
+              >
+                <Trash2 size={13} />
+              </button>
+            )}
             <button
               type="button"
               className="course-open-class-btn"
@@ -529,7 +614,9 @@ const CourseAccordionGroup: React.FC<CourseAccordionGroupProps> = ({
                       <div className="capacity-inline-row">
                         <span className="capacity-fraction-text">
                           <Users className="w-4 h-4 text-gray-500" size={14} />
-                          <strong>{cls.currentEnrolled}/{cls.maxCapacity}</strong>
+                          <strong>
+                            {cls.currentEnrolled}/{cls.maxCapacity}
+                          </strong>
                         </span>
                         <div className="capacity-track">
                           <div
@@ -542,7 +629,6 @@ const CourseAccordionGroup: React.FC<CourseAccordionGroupProps> = ({
 
                     {/* Cột 5: Nút Hành động Ghi danh */}
                     <div className="class-col class-col-actions">
-
                       {canEnrollStudent && (
                         <button
                           type="button"
@@ -579,15 +665,22 @@ const CourseAccordionGroup: React.FC<CourseAccordionGroupProps> = ({
 
 export const ClassesPage: React.FC = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const canManageClassesAndCourses = hasRequiredRole(user?.role, ACTION_PERMISSIONS.CLASS_CREATE);
   const canEditClass = hasRequiredRole(user?.role, ACTION_PERMISSIONS.CLASS_EDIT);
   const canEnrollStudent = hasRequiredRole(user?.role, ACTION_PERMISSIONS.ENROLL_STUDENT);
   const canRecordPayment = hasRequiredRole(user?.role, ACTION_PERMISSIONS.RECORD_PAYMENT);
   const canTransferClass = hasRequiredRole(user?.role, ACTION_PERMISSIONS.CLASS_TRANSFER);
+  const canViewTuition = hasRequiredRole(user?.role, ACTION_PERMISSIONS.VIEW_TUITION);
+  const isAdmin = user?.role === 'ADMIN';
 
-  const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [courses, setCourses] = useState<CourseItem[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const initialCachedClasses = AcademicService.peekClasses();
+  const initialCachedCourses = AcademicService.peekCourses();
+
+  const [classes, setClasses] = useState<ClassItem[]>(initialCachedClasses || []);
+  const [courses, setCourses] = useState<CourseItem[]>(initialCachedCourses || []);
+  const [isLoading, setIsLoading] = useState<boolean>(!initialCachedClasses);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   // Search & Quick Filters (Course, Teacher, Schedule, Status)
@@ -622,15 +715,21 @@ export const ClassesPage: React.FC = () => {
 
   // Modals & Drawer State
   const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null);
+  const [drawerInitialTab, setDrawerInitialTab] = useState<'GENERAL' | 'ROSTER'>('GENERAL');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [isCreateCourseModalOpen, setIsCreateCourseModalOpen] = useState<boolean>(false);
+  const [editingCourse, setEditingCourse] = useState<CourseItem | null>(null);
   const [createInitialCourseId, setCreateInitialCourseId] = useState<number | undefined>(undefined);
 
   // Enrollment, Payment & Transfer Modals State
   const [isEnrollWizardOpen, setIsEnrollWizardOpen] = useState<boolean>(false);
-  const [enrollWizardInitialClassId, setEnrollWizardInitialClassId] = useState<number | undefined>(undefined);
-  const [selectedEnrollmentForPayment, setSelectedEnrollmentForPayment] = useState<ClassEnrollmentItem | null>(null);
-  const [selectedEnrollmentForTransfer, setSelectedEnrollmentForTransfer] = useState<ClassEnrollmentItem | null>(null);
+  const [enrollWizardInitialClassId, setEnrollWizardInitialClassId] = useState<number | undefined>(
+    undefined
+  );
+  const [selectedEnrollmentForPayment, setSelectedEnrollmentForPayment] =
+    useState<ClassEnrollmentItem | null>(null);
+  const [selectedEnrollmentForTransfer, setSelectedEnrollmentForTransfer] =
+    useState<ClassEnrollmentItem | null>(null);
   const [receiptForPrint, setReceiptForPrint] = useState<PaymentReceipt | null>(null);
   const [enrollmentForPrint, setEnrollmentForPrint] = useState<ClassEnrollmentItem | null>(null);
 
@@ -655,14 +754,19 @@ export const ClassesPage: React.FC = () => {
     }
   };
 
-  const loadData = useCallback(async (showSilent = false) => {
+  const loadData = useCallback(async (showSilent = false, forceRefresh = false) => {
     try {
-      if (!showSilent) setIsLoading(true);
+      const hasCached = Boolean(AcademicService.peekClasses());
+      if (!showSilent && !hasCached) {
+        setIsLoading(true);
+      } else if (forceRefresh) {
+        setIsRefreshing(true);
+      }
       setError(null);
 
       const [classList, courseList] = await Promise.all([
-        AcademicService.getClasses(),
-        AcademicService.getCourses(),
+        AcademicService.getClasses(undefined, { forceRefresh }),
+        AcademicService.getCourses(undefined, { forceRefresh }),
       ]);
 
       setClasses(classList);
@@ -685,15 +789,34 @@ export const ClassesPage: React.FC = () => {
       });
     } catch (err: any) {
       console.error('Lỗi khi tải dữ liệu lớp học / khóa học:', err);
-      setError(err?.response?.data?.message || err.message || 'Không thể tải dữ liệu từ máy chủ.');
+      setError(
+        err?.response?.data?.message || err.message || 'Không thể tải dữ liệu từ máy chủ.'
+      );
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Hỗ trợ mở nhanh lớp học từ URL (?classId=123&tab=ROSTER)
+  useEffect(() => {
+    const classIdParam = searchParams.get('classId');
+    if (classIdParam && classes.length > 0) {
+      const found = classes.find((c) => c.id === Number(classIdParam));
+      if (found) {
+        const tabParam = searchParams.get('tab');
+        setDrawerInitialTab(tabParam === 'ROSTER' ? 'ROSTER' : 'GENERAL');
+        setSelectedClass(found);
+        searchParams.delete('classId');
+        searchParams.delete('tab');
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+  }, [classes, searchParams, setSearchParams]);
 
   // Unique Teacher options derived from classes
   const teacherOptions = useMemo(() => {
@@ -950,6 +1073,27 @@ export const ClassesPage: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  const handleDeleteCourse = async (crs: CourseItem, classesCount: number) => {
+    const totalCourseClasses = classes.filter((c) => c.courseId === crs.id).length || classesCount;
+    if (totalCourseClasses > 0) {
+      alert(
+        `Không thể xóa khóa học "${crs.courseName}" vì hiện đang có ${totalCourseClasses} lớp học thuộc khóa này.\n\nBạn có thể bấm nút sửa khóa học và tắt trạng thái mở tuyển sinh nếu muốn tạm ngưng.`
+      );
+      return;
+    }
+    const confirmed = window.confirm(
+      `Bạn có chắc chắn muốn xóa khóa học "${crs.courseName}" (${crs.courseCode}) khỏi danh mục đào tạo không?`
+    );
+    if (!confirmed) return;
+
+    try {
+      await AcademicService.deleteCourse(crs.id);
+      await loadData(true, true);
+    } catch (err: any) {
+      alert(err?.response?.data?.message || err.message || 'Không thể xóa khóa học này.');
+    }
+  };
+
   // Bulk Action Execution (Export, Notify, Change Status)
   const handleBulkAction = async (action: string) => {
     if (selectedClassItems.length === 0) return;
@@ -977,7 +1121,7 @@ export const ClassesPage: React.FC = () => {
             AcademicService.updateClass(cls.id, { status: newStatus })
           )
         );
-        await loadData(true);
+        await loadData(true, true);
         const statusText =
           newStatus === 'OPEN'
             ? 'Đang mở tuyển sinh'
@@ -1009,7 +1153,11 @@ export const ClassesPage: React.FC = () => {
       {/* 1A. THANH ĐIỀU HƯỚNG TRẠNG THÁI (TABS) & TÁC VỤ CHÍNH (NGOÀI KHUNG TRẮNG) */}
       <div className="classes-top-action-bar">
         {/* Bên trái: Segmented Status Tabs đếm số lượng trực tiếp */}
-        <div className="status-segmented-tabs" role="tablist" aria-label="Lọc nhanh theo trạng thái lớp">
+        <div
+          className="status-segmented-tabs"
+          role="tablist"
+          aria-label="Lọc nhanh theo trạng thái lớp"
+        >
           <button
             type="button"
             role="tab"
@@ -1075,11 +1223,11 @@ export const ClassesPage: React.FC = () => {
           <button
             type="button"
             className="compact-icon-btn"
-            onClick={() => loadData()}
-            disabled={isLoading}
+            onClick={() => loadData(false, true)}
+            disabled={isLoading || isRefreshing}
             title="Làm mới dữ liệu"
           >
-            <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
+            <RefreshCw size={15} className={isLoading || isRefreshing ? 'animate-spin' : ''} />
           </button>
 
           <button
@@ -1099,7 +1247,10 @@ export const ClassesPage: React.FC = () => {
               <button
                 type="button"
                 className="compact-action-btn create-course-btn"
-                onClick={() => setIsCreateCourseModalOpen(true)}
+                onClick={() => {
+                  setEditingCourse(null);
+                  setIsCreateCourseModalOpen(true);
+                }}
               >
                 <Plus size={14} />
                 <span>Tạo Khóa Học</span>
@@ -1227,7 +1378,11 @@ export const ClassesPage: React.FC = () => {
       {error ? (
         <div className="classes-empty-state">
           <p style={{ color: '#dc2626', fontWeight: 600 }}>{error}</p>
-          <Button variant="glass" onClick={() => loadData()} style={{ marginTop: '12px' }}>
+          <Button
+            variant="glass"
+            onClick={() => loadData(false, true)}
+            style={{ marginTop: '12px' }}
+          >
             Thử lại
           </Button>
         </div>
@@ -1258,11 +1413,21 @@ export const ClassesPage: React.FC = () => {
               onToggleSelectCourseClasses={handleToggleSelectCourseClasses}
               canManageClassesAndCourses={canManageClassesAndCourses}
               canEnrollStudent={canEnrollStudent}
+              canViewTuition={canViewTuition}
+              isAdmin={isAdmin}
               onOpenCreateClassForCourse={(courseId) => {
                 setCreateInitialCourseId(courseId);
                 setIsCreateModalOpen(true);
               }}
-              onSelectClassDetail={(cls) => setSelectedClass(cls)}
+              onEditCourse={(courseItem) => {
+                setEditingCourse(courseItem);
+                setIsCreateCourseModalOpen(true);
+              }}
+              onDeleteCourse={handleDeleteCourse}
+              onSelectClassDetail={(cls) => {
+                setDrawerInitialTab('GENERAL');
+                setSelectedClass(cls);
+              }}
               onQuickEnroll={(classId) => {
                 setEnrollWizardInitialClassId(classId);
                 setIsEnrollWizardOpen(true);
@@ -1350,20 +1515,24 @@ export const ClassesPage: React.FC = () => {
       <CreateClassModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={() => loadData(true)}
+        onSuccess={() => loadData(true, true)}
         initialCourseId={createInitialCourseId}
       />
 
       <CreateCourseModal
         isOpen={isCreateCourseModalOpen}
-        onClose={() => setIsCreateCourseModalOpen(false)}
-        onSuccess={() => loadData(true)}
+        editingCourse={editingCourse}
+        onClose={() => {
+          setIsCreateCourseModalOpen(false);
+          setEditingCourse(null);
+        }}
+        onSuccess={() => loadData(true, true)}
       />
 
       <EnrollStudentWizardModal
         isOpen={isEnrollWizardOpen}
         onClose={() => setIsEnrollWizardOpen(false)}
-        onSuccess={() => loadData(true)}
+        onSuccess={() => loadData(true, true)}
         initialClassId={enrollWizardInitialClassId}
         onPrintReceipt={(receipt, en) => {
           setReceiptForPrint(receipt);
@@ -1375,7 +1544,7 @@ export const ClassesPage: React.FC = () => {
         isOpen={!!selectedEnrollmentForPayment}
         enrollment={selectedEnrollmentForPayment}
         onClose={() => setSelectedEnrollmentForPayment(null)}
-        onSuccess={() => loadData(true)}
+        onSuccess={() => loadData(true, true)}
         onPrintReceipt={(receipt, en) => {
           setReceiptForPrint(receipt);
           setEnrollmentForPrint(en);
@@ -1396,14 +1565,15 @@ export const ClassesPage: React.FC = () => {
         isOpen={!!selectedEnrollmentForTransfer}
         enrollment={selectedEnrollmentForTransfer}
         onClose={() => setSelectedEnrollmentForTransfer(null)}
-        onSuccess={() => loadData(true)}
+        onSuccess={() => loadData(true, true)}
       />
 
       <ClassDetailDrawer
         classItem={selectedClass}
+        initialTab={drawerInitialTab}
         isOpen={!!selectedClass}
         onClose={() => setSelectedClass(null)}
-        onUpdated={() => loadData(true)}
+        onUpdated={() => loadData(true, true)}
         canEdit={canEditClass}
         onEnrollClick={
           canEnrollStudent
@@ -1413,11 +1583,14 @@ export const ClassesPage: React.FC = () => {
               }
             : undefined
         }
-        onCollectPayment={canRecordPayment ? (en) => setSelectedEnrollmentForPayment(en) : undefined}
+        onCollectPayment={
+          canRecordPayment ? (en) => setSelectedEnrollmentForPayment(en) : undefined
+        }
         onTransferClass={canTransferClass ? (en) => setSelectedEnrollmentForTransfer(en) : undefined}
         onPrintReceipt={(en) => handleQuickReceipt(en)}
       />
     </div>
   );
 };
+
 export default ClassesPage;

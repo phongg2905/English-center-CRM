@@ -13,7 +13,7 @@ router.use(verifyToken);
  */
 router.get(
   '/',
-  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC', 'TEACHER'), // TEACHER: chỉ xem (lọc theo lớp phụ trách, ẩn học phí)
   CourseController.getCourses
 );
 
@@ -23,7 +23,7 @@ router.get(
  */
 router.get(
   '/:id',
-  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC', 'TEACHER'), // TEACHER: chỉ xem (lọc theo lớp phụ trách, ẩn học phí)
   CourseController.getCourseById
 );
 
@@ -49,11 +49,11 @@ router.put(
 
 /**
  * @route DELETE /api/courses/:id
- * @desc  Xóa khóa học
+ * @desc  Xóa khóa học (Chỉ ADMIN được phép xóa danh mục khóa học theo ma trận RBAC)
  */
 router.delete(
   '/:id',
-  authorizeRoles('ADMIN', 'ACADEMIC'),
+  authorizeRoles('ADMIN'),
   CourseController.deleteCourse
 );
 

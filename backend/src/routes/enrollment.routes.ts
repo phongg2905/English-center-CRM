@@ -23,7 +23,7 @@ router.post(
  */
 router.get(
   '/',
-  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC', 'TEACHER'), // TEACHER: chỉ xem (lọc theo lớp phụ trách, ẩn học phí)
   EnrollmentController.getEnrollments
 );
 
@@ -33,7 +33,7 @@ router.get(
  */
 router.get(
   '/:id',
-  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC', 'TEACHER'), // TEACHER: chỉ xem (lọc theo lớp phụ trách, ẩn học phí)
   EnrollmentController.getEnrollmentById
 );
 
@@ -65,6 +65,16 @@ router.post(
   '/:id/transfer',
   authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
   EnrollmentController.transferClass
+);
+
+/**
+ * @route PATCH /api/enrollments/:id/status
+ * @desc  Cập nhật trạng thái đào tạo của học viên (ENROLLED | TRANSFERRED | DROPPED | COMPLETED)
+ */
+router.patch(
+  '/:id/status',
+  authorizeRoles('ADMIN', 'ACADEMIC'),
+  EnrollmentController.updateStatus
 );
 
 export default router;

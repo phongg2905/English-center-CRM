@@ -13,7 +13,7 @@ router.use(verifyToken);
  */
 router.get(
   '/',
-  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC', 'TEACHER'), // TEACHER: chỉ xem (lọc theo lớp phụ trách, ẩn học phí)
   ClassController.getClasses
 );
 
@@ -23,7 +23,7 @@ router.get(
  */
 router.get(
   '/:id/availability',
-  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC', 'TEACHER'), // TEACHER: chỉ xem (lọc theo lớp phụ trách, ẩn học phí)
   ClassController.checkAvailability
 );
 
@@ -33,7 +33,7 @@ router.get(
  */
 router.get(
   '/:id',
-  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC', 'TEACHER'), // TEACHER: chỉ xem (lọc theo lớp phụ trách, ẩn học phí)
   ClassController.getClassById
 );
 
@@ -59,11 +59,11 @@ router.put(
 
 /**
  * @route DELETE /api/classes/:id
- * @desc  Xóa một lớp học
+ * @desc  Xóa một lớp học (Chỉ ADMIN được phép xóa lớp học theo ma trận RBAC)
  */
 router.delete(
   '/:id',
-  authorizeRoles('ADMIN', 'ACADEMIC'),
+  authorizeRoles('ADMIN'),
   ClassController.deleteClass
 );
 

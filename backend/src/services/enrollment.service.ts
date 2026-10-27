@@ -302,4 +302,67 @@ export class EnrollmentService {
   static async getPaymentReceipts(enrollmentId: number): Promise<PaymentReceipt[]> {
     return EnrollmentRepository.getPaymentReceipts(enrollmentId);
   }
+
+  static async updateEnrollmentStatus(
+    enrollmentId: number,
+    status: 'ENROLLED' | 'TRANSFERRED' | 'DROPPED' | 'COMPLETED',
+    notes?: string
+  ): Promise<EnrollmentWithDetails> {
+    const allowedStatuses = ['ENROLLED', 'TRANSFERRED', 'DROPPED', 'COMPLETED'];
+    if (!allowedStatuses.includes(status)) {
+      throw AppError.badRequest(
+        `Trạng thái ghi danh không hợp lệ. Chỉ chấp nhận: ${allowedStatuses.join(', ')}`
+      );
+    }
+
+    const enrollment = await EnrollmentRepository.findEnrollmentById(enrollmentId);
+    if (!enrollment) {
+      throw AppError.notFound(`Không tìm thấy hồ sơ ghi danh với ID = ${enrollmentId}`);
+    }
+
+    if (status === 'ENROLLED' && enrollment.status !== 'ENROLLED') {
+      const cls = await ClassRepository.findById(enrollment.classId);
+      if (cls && cls.currentEnrolled >= cls.maxCapacity) {
+        throw AppError.conflict(
+          `Lớp học '${cls.classCode}' hiện đã đủ sĩ số (${cls.currentEnrolled}/${cls.maxCapacity}), không thể khôi phục trạng thái Đang học`
+        );
+      }
+    }
+
+    const statusLabels: Record<string, string> = {
+      ENROLLED: 'Đang theo học',
+      TRANSFERRED: 'Đã chuyển lớp',
+      DROPPED: 'Bảo lưu / Thôi học',
+      COMPLETED: 'Đã hoàn thành khóa học',
+    };
+
+    const statusNote = notes
+      ? `[Cập nhật trạng thái -> ${statusLabels[status] || status} (${new Date().toLocaleDateString('vi-VN')})]: ${notes}`
+      : `[Cập nhật trạng thái -> ${statusLabels[status] || status} (${new Date().toLocaleDateString('vi-VN')})]`;
+    const combinedNotes = enrollment.notes ? `${enrollment.notes}\n${statusNote}` : statusNote;
+
+    const updated = await EnrollmentRepository.updateEnrollment(enrollmentId, {
+      status,
+      notes: combinedNotes,
+    });
+
+    if (!updated) {
+      throw AppError.internal('Không thể cập nhật trạng thái hồ sơ ghi danh');
+    }
+
+    // Đồng bộ lại sĩ số lớp trong bộ nhớ / DB nếu chuyển vào hoặc ra khỏi ENROLLED
+    if (enrollment.status !== status) {
+      const cls = await ClassRepository.findById(enrollment.classId);
+      if (cls) {
+        const delta = status === 'ENROLLED' ? 1 : enrollment.status === 'ENROLLED' ? -1 : 0;
+        if (delta !== 0) {
+          const nextCount = Math.max(0, cls.currentEnrolled + delta);
+          await ClassRepository.updateCurrentEnrolled(cls.id, nextCount, nextCount >= cls.maxCapacity);
+        }
+      }
+    }
+
+    return updated;
+  
+  }
 }

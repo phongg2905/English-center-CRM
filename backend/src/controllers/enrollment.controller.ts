@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { EnrollmentService } from '../services/enrollment.service.js';
 import { ApiResponse } from '../utils/response.js';
+import { AppError } from '../utils/AppError.js';
+import { isTeacher, getTeacherClassIds, stripFinance } from '../utils/teacher-scope.js';
 
 export class EnrollmentController {
   /**
@@ -9,7 +11,7 @@ export class EnrollmentController {
    */
   static async enrollStudent(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const consultantId = (req as any).user?.id || 2;
+      const consultantId = (req as any).user?.userId || (req as any).user?.id || 2;
       const enrollment = await EnrollmentService.enrollStudent(req.body, consultantId);
       ApiResponse.success(res, enrollment, 'Xếp lớp cho học viên thành công', 201);
     } catch (error) {
@@ -24,7 +26,7 @@ export class EnrollmentController {
   static async recordPayment(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const enrollmentId = parseInt(req.params.id, 10);
-      const receiverId = (req as any).user?.id || 1;
+      const receiverId = (req as any).user?.userId || (req as any).user?.id || 1;
       const result = await EnrollmentService.recordPayment(enrollmentId, req.body, receiverId);
       ApiResponse.success(res, result, 'Ghi nhận thanh toán học phí thành công', 201);
     } catch (error) {
@@ -39,9 +41,24 @@ export class EnrollmentController {
   static async transferClass(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const enrollmentId = parseInt(req.params.id, 10);
-      const userId = (req as any).user?.id || 1;
+      const userId = (req as any).user?.userId || (req as any).user?.id || 1;
       const result = await EnrollmentService.transferClass(enrollmentId, req.body, userId);
       ApiResponse.success(res, result, 'Chuyển lớp học viên thành công');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * @route PATCH /api/enrollments/:id/status
+   * @desc  Cập nhật trạng thái đào tạo của học viên (ENROLLED | TRANSFERRED | DROPPED | COMPLETED)
+   */
+  static async updateStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const enrollmentId = parseInt(req.params.id, 10);
+      const { status, notes } = req.body;
+      const result = await EnrollmentService.updateEnrollmentStatus(enrollmentId, status, notes);
+      ApiResponse.success(res, result, 'Cập nhật trạng thái đào tạo học viên thành công');
     } catch (error) {
       next(error);
     }
@@ -64,11 +81,22 @@ export class EnrollmentController {
 
       if (classId) filter.classId = Number(classId);
       if (studentId) filter.studentId = Number(studentId);
-      if (paymentStatus) filter.paymentStatus = String(paymentStatus);
+      if (paymentStatus && !isTeacher(req)) filter.paymentStatus = String(paymentStatus);
       if (status) filter.status = String(status);
       if (search) filter.search = String(search);
 
       const enrollments = await EnrollmentService.getEnrollments(filter);
+
+      // Giảng viên: chỉ xem học viên thuộc lớp mình phụ trách, ẩn thông tin học phí
+      if (isTeacher(req)) {
+        const myClassIds = await getTeacherClassIds(req);
+        const mine = enrollments
+          .filter((e) => myClassIds.has(Number(e.classId)))
+          .map((e) => stripFinance(e));
+        ApiResponse.success(res, mine, 'Lấy danh sách hồ sơ ghi danh thành công');
+        return;
+      }
+
       ApiResponse.success(res, enrollments, 'Lấy danh sách hồ sơ ghi danh thành công');
     } catch (error) {
       next(error);
@@ -83,6 +111,14 @@ export class EnrollmentController {
     try {
       const id = parseInt(req.params.id, 10);
       const en = await EnrollmentService.getEnrollmentById(id);
+      if (isTeacher(req)) {
+        const myClassIds = await getTeacherClassIds(req);
+        if (!myClassIds.has(Number(en.classId))) {
+          throw AppError.forbidden('Giảng viên chỉ được xem học viên thuộc lớp do mình phụ trách');
+        }
+        ApiResponse.success(res, stripFinance(en), 'Lấy chi tiết hồ sơ ghi danh thành công');
+        return;
+      }
       ApiResponse.success(res, en, 'Lấy chi tiết hồ sơ ghi danh thành công');
     } catch (error) {
       next(error);

@@ -39,9 +39,14 @@ import './ReportsPage.css';
 export const ReportsPage: React.FC = () => {
   const { user } = useAuth();
   const canViewRevenue = hasRequiredRole(user?.role, ACTION_PERMISSIONS.REVENUE_REPORT);
+  const canViewSalesPerf = hasRequiredRole(user?.role, ACTION_PERMISSIONS.SALES_PERFORMANCE_REPORT);
   const canExport = hasRequiredRole(user?.role, ACTION_PERMISSIONS.EXPORT_REPORT);
+  const isAcademic = (user?.role || '').toUpperCase() === 'ACADEMIC';
   // Tabs: 'funnel' | 'revenue' | 'leaderboard' | 'channels' | 'occupancy'
-  const [activeTab, setActiveTab] = useState<'funnel' | 'revenue' | 'leaderboard' | 'channels' | 'occupancy'>('funnel');
+  // Giáo vụ mặc định vào tab Sĩ số & Phòng học (nghiệp vụ chính của bộ phận đào tạo)
+  const [activeTab, setActiveTab] = useState<'funnel' | 'revenue' | 'leaderboard' | 'channels' | 'occupancy'>(
+    isAcademic ? 'occupancy' : 'funnel'
+  );
 
   // Filter States
   const [revenuePeriod, setRevenuePeriod] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('month');
@@ -51,8 +56,8 @@ export const ReportsPage: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Data States
-  const [loading, setLoading] = useState(true);
-  const [overview, setOverview] = useState<ExecutiveOverview | null>(null);
+  const [loading, setLoading] = useState(() => !AnalyticsService.peekOverview());
+  const [overview, setOverview] = useState<ExecutiveOverview | null>(() => AnalyticsService.peekOverview() || null);
   const [funnel, setFunnel] = useState<FunnelData | null>(null);
   const [revenue, setRevenue] = useState<RevenueData | null>(null);
   const [leaderboard, setLeaderboard] = useState<SalesConsultant[]>([]);
@@ -80,7 +85,7 @@ export const ReportsPage: React.FC = () => {
   };
 
   const loadAllAnalytics = async () => {
-    setLoading(true);
+    if (!overview) setLoading(true);
     const range = getDateRange(dateFilter);
 
     try {
@@ -90,8 +95,8 @@ export const ReportsPage: React.FC = () => {
         canViewRevenue
           ? AnalyticsService.getRevenue({ ...range, period: revenuePeriod }).catch(() => null)
           : Promise.resolve(null),
-        AnalyticsService.getLeaderboard(range).catch(() => []),
-        AnalyticsService.getChannelROI(range).catch(() => []),
+        canViewSalesPerf ? AnalyticsService.getLeaderboard(range).catch(() => []) : Promise.resolve([]),
+        canViewSalesPerf ? AnalyticsService.getChannelROI(range).catch(() => []) : Promise.resolve([]),
         AnalyticsService.getClassOccupancy().catch(() => null),
       ]);
 
@@ -114,12 +119,16 @@ export const ReportsPage: React.FC = () => {
     loadAllAnalytics();
   }, [dateFilter, revenuePeriod]);
 
-  // Tự động chuyển khỏi tab doanh thu nếu vai trò hiện tại không được phép
+  // Tự động chuyển khỏi các tab tài chính nếu vai trò hiện tại không được phép
   useEffect(() => {
+    const fallbackTab = isAcademic ? 'occupancy' : 'funnel';
     if (!canViewRevenue && activeTab === 'revenue') {
-      setActiveTab('funnel');
+      setActiveTab(fallbackTab);
     }
-  }, [canViewRevenue, activeTab]);
+    if (!canViewSalesPerf && (activeTab === 'leaderboard' || activeTab === 'channels')) {
+      setActiveTab(fallbackTab);
+    }
+  }, [canViewRevenue, canViewSalesPerf, isAcademic, activeTab]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -161,9 +170,15 @@ export const ReportsPage: React.FC = () => {
       {/* Header Bar */}
       <div className="reports-header-section">
         <div className="reports-header-text">
-          <h1 className="reports-title">Báo Cáo & Thống Kê Tuyển Sinh</h1>
+          <h1 className="reports-title">
+            {isAcademic ? 'Báo Cáo Sĩ Số & Học Vụ' : 'Báo Cáo & Thống Kê Tuyển Sinh'}
+          </h1>
           <p className="reports-subtitle">
-            Theo dõi phễu chuyển đổi, doanh thu thực thu, hiệu suất tư vấn viên và tỷ lệ lấp đầy phòng học theo thời gian thực.
+            {canViewRevenue
+              ? 'Theo dõi phễu chuyển đổi, doanh thu thực thu, hiệu suất tư vấn viên và tỷ lệ lấp đầy phòng học theo thời gian thực.'
+              : isAcademic
+                ? 'Theo dõi sĩ số, tỷ lệ lấp đầy phòng học và phễu tuyển sinh để quyết định mở lớp hoặc dồn lớp.'
+                : 'Theo dõi phễu chuyển đổi, hiệu suất tư vấn viên, hiệu quả kênh và tỷ lệ lấp đầy phòng học.'}
           </p>
         </div>
 
@@ -200,7 +215,7 @@ export const ReportsPage: React.FC = () => {
           {/* Refresh Button */}
           <button
             className={`reports-btn secondary ${loading ? 'spinning' : ''}`}
-            onClick={loadAllAnalytics}
+            onClick={() => { AnalyticsService.invalidateCache(); loadAllAnalytics(); }}
             title="Làm mới số liệu"
             disabled={loading}
           >
@@ -223,6 +238,7 @@ export const ReportsPage: React.FC = () => {
               {exportOpen && (
                 <div className="reports-export-menu">
                   <div className="export-menu-header">Chọn mẫu dữ liệu xuất:</div>
+                  {canViewRevenue && (
                   <button className="export-menu-item" onClick={() => handleExport('leads')}>
                     <FileSpreadsheet size={15} color="#3b82f6" />
                     <div>
@@ -230,6 +246,7 @@ export const ReportsPage: React.FC = () => {
                       <div className="item-sub">Toàn bộ pipeline, kênh nguồn và lý do hủy</div>
                     </div>
                   </button>
+                  )}
                   {canViewRevenue && (
                     <button className="export-menu-item" onClick={() => handleExport('revenue')}>
                       <FileSpreadsheet size={15} color="#10b981" />
@@ -239,6 +256,8 @@ export const ReportsPage: React.FC = () => {
                       </div>
                     </button>
                   )}
+                  {canViewSalesPerf && (
+                  <>
                   <button className="export-menu-item" onClick={() => handleExport('sales-leaderboard')}>
                     <FileSpreadsheet size={15} color="#f59e0b" />
                     <div>
@@ -253,6 +272,8 @@ export const ReportsPage: React.FC = () => {
                       <div className="item-sub">Tỷ trọng lead, chuyển đổi và doanh thu kênh</div>
                     </div>
                   </button>
+                  </>
+                  )}
                   <button className="export-menu-item" onClick={() => handleExport('occupancy')}>
                     <FileSpreadsheet size={15} color="#ec4899" />
                     <div>
@@ -269,21 +290,39 @@ export const ReportsPage: React.FC = () => {
 
       {/* 4 Metric Cards (Tremor / Cosmic Sunset Style) */}
       <div className="reports-kpi-grid">
-        <div className="reports-kpi-card revenue">
-          <div className="kpi-header">
-            <span className="kpi-label">Tổng doanh thu thực thu</span>
-            <div className="kpi-icon-circle revenue">
-              <CircleDollarSign size={20} />
+        {canViewRevenue ? (
+          <div className="reports-kpi-card revenue">
+            <div className="kpi-header">
+              <span className="kpi-label">Tổng doanh thu thực thu</span>
+              <div className="kpi-icon-circle revenue">
+                <CircleDollarSign size={20} />
+              </div>
+            </div>
+            <div className="kpi-value">{overview ? formatVND(overview.totalRevenue) : <Skeleton variant="rounded" width={140} height={26} />}</div>
+            <div className="kpi-footer">
+              <span className="kpi-delta positive">
+                <TrendingUp size={13} /> {overview?.totalTransactions || 0} giao dịch
+              </span>
+              <span className="kpi-note">Từ các phiếu thu hợp lệ</span>
             </div>
           </div>
-          <div className="kpi-value">{overview ? formatVND(overview.totalRevenue) : <Skeleton variant="rounded" width={140} height={26} />}</div>
-          <div className="kpi-footer">
-            <span className="kpi-delta positive">
-              <TrendingUp size={13} /> {overview?.totalTransactions || 0} giao dịch
-            </span>
-            <span className="kpi-note">Từ các phiếu thu hợp lệ</span>
+        ) : (
+          <div className="reports-kpi-card revenue">
+            <div className="kpi-header">
+              <span className="kpi-label">Lớp học đang mở</span>
+              <div className="kpi-icon-circle revenue">
+                <Layers size={20} />
+              </div>
+            </div>
+            <div className="kpi-value">{overview ? `${overview.activeClassesCount ?? 0} Lớp` : <Skeleton variant="rounded" width={110} height={26} />}</div>
+            <div className="kpi-footer">
+              <span className="kpi-delta neutral">
+                {overview?.averageOccupancyRate ?? 0}% lấp đầy
+              </span>
+              <span className="kpi-note">Sẵn sàng tiếp nhận học viên</span>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="reports-kpi-card leads">
           <div className="kpi-header">
@@ -354,6 +393,7 @@ export const ReportsPage: React.FC = () => {
           </button>
         )}
 
+        {canViewSalesPerf && (
         <button
           className={`tab-btn ${activeTab === 'leaderboard' ? 'active' : ''}`}
           onClick={() => setActiveTab('leaderboard')}
@@ -361,7 +401,9 @@ export const ReportsPage: React.FC = () => {
           <Award size={16} />
           <span>Xếp Hạng Tư Vấn Viên</span>
         </button>
+        )}
 
+        {canViewSalesPerf && (
         <button
           className={`tab-btn ${activeTab === 'channels' ? 'active' : ''}`}
           onClick={() => setActiveTab('channels')}
@@ -369,6 +411,7 @@ export const ReportsPage: React.FC = () => {
           <Layers size={16} />
           <span>Hiệu Quả Kênh Marketing</span>
         </button>
+        )}
 
         <button
           className={`tab-btn ${activeTab === 'occupancy' ? 'active' : ''}`}

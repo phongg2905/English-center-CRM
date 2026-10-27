@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Plus,
   RefreshCw,
   Search,
   LayoutGrid,
   List,
+  X,
 } from 'lucide-react';
 import { PlacementTestService } from '../../services/placement-test.service';
 import type {
@@ -23,6 +25,7 @@ import { TableSkeleton, CalendarSkeleton } from '../../components/ui';
 import './PlacementTestPage.css';
 
 export const PlacementTestPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => getMondayOfWeek(new Date()));
   const [tests, setTests] = useState<PlacementTestWithDetails[]>([]);
   const [availabilitySlots, setAvailabilitySlots] = useState<ShiftSlotAvailability[]>([]);
@@ -51,8 +54,24 @@ export const PlacementTestPage: React.FC = () => {
     date?: string;
     timeSlot?: string;
     room?: string;
+    leadId?: number;
     lockShift?: boolean;
   }>({});
+
+  // Auto-open QuickBookModal when navigated from LeadsPage with ?bookLeadId=123
+  useEffect(() => {
+    const bookLeadIdParam = searchParams.get('bookLeadId');
+    if (bookLeadIdParam) {
+      const parsedId = Number(bookLeadIdParam);
+      if (!Number.isNaN(parsedId) && parsedId > 0) {
+        setBookingPreselect({ leadId: parsedId });
+        setIsBookingOpen(true);
+      }
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('bookLeadId');
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   // Fetch placement tests & availability
   const loadData = useCallback(async (silent = false) => {
@@ -64,7 +83,6 @@ export const PlacementTestPage: React.FC = () => {
       weekEnd.setDate(weekEnd.getDate() + 14); // 2-week window
       const weekEndStr = formatLocalDate(weekEnd);
 
-      // Query tests without restricting room at query level so all rooms are available in memory
       const filterParams: any = {
         limit: 100,
         sortBy: 'test_date',
@@ -75,15 +93,15 @@ export const PlacementTestPage: React.FC = () => {
       if (selectedAttendance !== 'ALL') filterParams.attendanceStatus = selectedAttendance as AttendanceStatus;
 
       const [testsRes, availRes] = await Promise.all([
-        PlacementTestService.getTests(filterParams),
-        PlacementTestService.getAvailability(weekStartStr, weekEndStr),
+        PlacementTestService.getTests(filterParams, { forceRefresh: silent }),
+        PlacementTestService.getAvailability(weekStartStr, weekEndStr, undefined, { forceRefresh: silent }),
       ]);
 
       const loadedTests = Array.isArray(testsRes)
         ? testsRes
         : testsRes?.tests && Array.isArray(testsRes.tests)
-        ? testsRes.tests
-        : [];
+          ? testsRes.tests
+          : [];
 
       setTests(loadedTests);
       setAvailabilitySlots(availRes || []);
@@ -123,15 +141,30 @@ export const PlacementTestPage: React.FC = () => {
     date?: string,
     timeSlot?: string,
     room?: string,
-    lockShift?: boolean
+    lockShift?: boolean,
+    leadId?: number
   ) => {
-    setBookingPreselect({ date, timeSlot, room, lockShift });
+    setBookingPreselect({ date, timeSlot, room, lockShift, leadId });
     setIsBookingOpen(true);
   };
 
-  // Filtered candidate list based on active filters and selectedShift
+  // Filtered candidate list based on active filters, searchQuery, and selectedShift
+  const q = searchQuery.trim().toLowerCase();
   const filteredCandidates = tests.filter((t) => {
     const itemDate = (t.testDate || '').split('T')[0];
+
+    // Search query filter (matches candidate name, phone, email, room, consultant, suggested course)
+    if (q) {
+      const matchName = (t.leadFullName || '').toLowerCase().includes(q);
+      const matchPhone = (t.leadPhoneNumber || '').toLowerCase().includes(q);
+      const matchEmail = (t.leadEmail || '').toLowerCase().includes(q);
+      const matchRoom = (t.room || '').toLowerCase().includes(q);
+      const matchSales = (t.assignedSalesName || '').toLowerCase().includes(q);
+      const matchCourse = (t.suggestedCourseName || '').toLowerCase().includes(q);
+      if (!matchName && !matchPhone && !matchEmail && !matchRoom && !matchSales && !matchCourse) {
+        return false;
+      }
+    }
 
     // 1. If user clicked on a specific shift in the Calendar, filter to that shift:
     if (selectedShift) {
@@ -142,7 +175,7 @@ export const PlacementTestPage: React.FC = () => {
         const r2 = selectedShift.room.toLowerCase();
         if (!r1.includes(r2) && !r2.includes(r1)) return false;
       }
-      return true; // Match found for selected shift!
+      return true;
     }
 
     // Filter by room if room dropdown filter is selected (unless 'ALL')
@@ -152,21 +185,23 @@ export const PlacementTestPage: React.FC = () => {
       if (!r1.includes(r2) && !r2.includes(r1)) return false;
     }
 
-    // 2. If no specific shift selected, filter according to quickDateFilter:
-    if (quickDateFilter === 'today') {
-      const todayStr = formatLocalDate(new Date());
-      if (itemDate !== todayStr) return false;
-    } else if (quickDateFilter === 'tomorrow') {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowStr = formatLocalDate(tomorrow);
-      if (itemDate !== tomorrowStr) return false;
-    } else if (quickDateFilter === 'week') {
-      const weekStartStr = formatLocalDate(currentWeekStart);
-      const weekEnd = new Date(currentWeekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      const weekEndStr = formatLocalDate(weekEnd);
-      if (itemDate < weekStartStr || itemDate > weekEndStr) return false;
+    // 2. If no specific shift selected and not searching globally, filter according to quickDateFilter:
+    if (!q) {
+      if (quickDateFilter === 'today') {
+        const todayStr = formatLocalDate(new Date());
+        if (itemDate !== todayStr) return false;
+      } else if (quickDateFilter === 'tomorrow') {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = formatLocalDate(tomorrow);
+        if (itemDate !== tomorrowStr) return false;
+      } else if (quickDateFilter === 'week') {
+        const weekStartStr = formatLocalDate(currentWeekStart);
+        const weekEnd = new Date(currentWeekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        const weekEndStr = formatLocalDate(weekEnd);
+        if (itemDate < weekStartStr || itemDate > weekEndStr) return false;
+      }
     }
 
     return true;
@@ -245,7 +280,7 @@ export const PlacementTestPage: React.FC = () => {
                 onClick={() => setViewMode('table')}
               >
                 <List size={15} />
-                Danh Sách Điểm Danh
+                Danh Sách Điểm Danh ({filteredCandidates.length})
               </button>
             </div>
 
@@ -253,7 +288,7 @@ export const PlacementTestPage: React.FC = () => {
               type="button"
               className="pt-btn-touch"
               style={{ background: '#fff', border: 'var(--glass-border-subtle)', color: 'var(--text-body)', height: '36px', padding: '0 14px' }}
-              onClick={() => loadData()}
+              onClick={() => { PlacementTestService.invalidateCache(); loadData(true); }}
               title="Làm mới dữ liệu"
             >
               <RefreshCw size={14} className={isLoading ? 'spin-icon' : ''} />
@@ -283,6 +318,9 @@ export const PlacementTestPage: React.FC = () => {
               onChange={(e) => setSelectedRoom(e.target.value)}
             >
               <option value="ALL">Tất cả phòng & cơ sở</option>
+              <option value="Room 101 - Tầng 1">Room 101 - Tầng 1</option>
+              <option value="Room 102 - Tầng 1">Room 102 - Tầng 1</option>
+              <option value="Room 201 - Tầng 2">Room 201 - Tầng 2</option>
               <option value="Phòng Lab 201">Phòng Lab 201 (Cơ sở Q.1)</option>
               <option value="Phòng Lab 101">Phòng Lab 101 (Cơ sở Bình Thạnh)</option>
               <option value="Phòng 302">Phòng 302 (Cơ sở Tân Bình)</option>
@@ -321,15 +359,42 @@ export const PlacementTestPage: React.FC = () => {
           </div>
 
           {/* Search Bar */}
-          <div className="pt-search-wrapper">
+          <div className="pt-search-wrapper" style={{ position: 'relative' }}>
             <Search size={15} className="pt-search-icon" />
             <input
               type="text"
               className="pt-search-input"
-              placeholder="Tìm thí sinh theo tên, SĐT, Email..."
+              placeholder="Tìm thí sinh theo tên, SĐT, Email, phòng..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (e.target.value.trim() && viewMode === 'calendar') {
+                  setViewMode('table');
+                }
+              }}
+              style={{ paddingRight: searchQuery ? '28px' : undefined }}
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                title="Xóa tìm kiếm"
+                style={{
+                  position: 'absolute',
+                  right: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#64748b',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -388,6 +453,7 @@ export const PlacementTestPage: React.FC = () => {
         initialDate={bookingPreselect.date}
         initialTimeSlot={bookingPreselect.timeSlot}
         initialRoom={bookingPreselect.room}
+        initialLeadId={bookingPreselect.leadId}
         lockShift={bookingPreselect.lockShift}
         availabilitySlots={availabilitySlots}
       />

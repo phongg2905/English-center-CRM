@@ -1,0 +1,2 @@
+export { ActivityLogsPage } from './ActivityLogsPage';
+

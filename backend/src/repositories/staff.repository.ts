@@ -1,8 +1,6 @@
 import { query } from '../database/pool.js';
 import {
   StaffFilterDto,
-  CreateStaffDto,
-  UpdateStaffDto,
   StaffListItem,
   TeacherListItem,
   TeacherAssignedClass,
@@ -300,7 +298,7 @@ export class StaffRepository {
   }
 
   /**
-   * Cập nhật thông tin nhân viên
+   * Cập nhật thông tin nhân viên (đồng bộ tên giảng viên sang các lớp phụ trách nếu có đổi tên)
    */
   static async update(
     id: number,
@@ -315,6 +313,18 @@ export class StaffRepository {
       bio?: string;
     }
   ): Promise<any> {
+    // Nếu có cập nhật fullName, đồng bộ tên giảng viên trong bảng classes
+    if (data.fullName !== undefined) {
+      const oldUserRes = await query('SELECT full_name FROM users WHERE id = $1 LIMIT 1', [id]);
+      const oldFullName = oldUserRes.rows[0]?.full_name;
+      if (oldFullName && oldFullName !== data.fullName) {
+        await query('UPDATE classes SET teacher_name = $1 WHERE teacher_name = $2', [
+          data.fullName,
+          oldFullName,
+        ]);
+      }
+    }
+
     const setClauses: string[] = [];
     const params: any[] = [];
     let paramIdx = 1;
@@ -393,11 +403,11 @@ export class StaffRepository {
   }
 
   /**
-   * Lấy danh sách giảng viên kèm thông tin chi tiết các lớp đang dạy
+   * Lấy danh sách giảng viên kèm thông tin chi tiết các lớp đang dạy (Tối ưu 2 queries song song)
    */
   static async findTeachers(): Promise<TeacherListItem[]> {
     try {
-      const sql = `
+      const teacherSql = `
         SELECT 
           u.id, 
           u.username, 
@@ -414,31 +424,38 @@ export class StaffRepository {
         WHERE r.role_code = 'TEACHER' OR u.specialization IS NOT NULL
         ORDER BY u.full_name ASC;
       `;
-      const res = await query(sql);
 
-      const teachers: TeacherListItem[] = [];
+      const classesSql = `
+        SELECT 
+          c.id, 
+          c.class_code, 
+          c.class_name, 
+          c.teacher_name,
+          co.course_name, 
+          c.schedule_days, 
+          c.time_slot, 
+          c.room, 
+          c.status, 
+          c.current_enrolled, 
+          c.max_capacity, 
+          c.start_date
+        FROM classes c
+        JOIN courses co ON c.course_id = co.id
+        WHERE c.teacher_name IS NOT NULL AND c.teacher_name != ''
+        ORDER BY c.start_date DESC;
+      `;
 
-      for (const row of res.rows) {
-        const classSql = `
-          SELECT 
-            c.id, 
-            c.class_code, 
-            c.class_name, 
-            co.course_name, 
-            c.schedule_days, 
-            c.time_slot, 
-            c.room, 
-            c.status, 
-            c.current_enrolled, 
-            c.max_capacity, 
-            c.start_date
-          FROM classes c
-          JOIN courses co ON c.course_id = co.id
-          WHERE c.teacher_name = $1
-          ORDER BY c.start_date DESC;
-        `;
-        const classRes = await query(classSql, [row.full_name]);
-        const assignedClasses: TeacherAssignedClass[] = classRes.rows.map((c) => ({
+      const [teacherRes, classRes] = await Promise.all([
+        query(teacherSql),
+        query(classesSql),
+      ]);
+
+      const classesByTeacher = new Map<string, TeacherAssignedClass[]>();
+      for (const c of classRes.rows) {
+        const key = (c.teacher_name || '').trim().toLowerCase();
+        if (!key) continue;
+        const list = classesByTeacher.get(key) || [];
+        list.push({
           id: c.id,
           classCode: c.class_code,
           className: c.class_name,
@@ -450,9 +467,14 @@ export class StaffRepository {
           currentEnrolled: c.current_enrolled,
           maxCapacity: c.max_capacity,
           startDate: c.start_date ? new Date(c.start_date).toISOString().split('T')[0] : '',
-        }));
+        });
+        classesByTeacher.set(key, list);
+      }
 
-        teachers.push({
+      return teacherRes.rows.map((row) => {
+        const key = (row.full_name || '').trim().toLowerCase();
+        const assignedClasses = classesByTeacher.get(key) || [];
+        return {
           id: row.id,
           username: row.username,
           fullName: row.full_name,
@@ -465,10 +487,8 @@ export class StaffRepository {
           bio: row.bio || undefined,
           assignedClassesCount: assignedClasses.length,
           assignedClasses,
-        });
-      }
-
-      return teachers;
+        };
+      });
     } catch (err: any) {
       logger.error('Lỗi truy vấn danh sách giảng viên:', err.message);
       throw err;
@@ -520,4 +540,3 @@ export class StaffRepository {
     return (res.rowCount ?? 0) > 0;
   }
 }
-
