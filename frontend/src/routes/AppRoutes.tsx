@@ -14,6 +14,7 @@ import { StaffPage } from '../pages/StaffPage';
 import { ReportsPage } from '../pages/ReportsPage';
 import { SettingsPage } from '../pages/SettingsPage';
 import { AccessDeniedPage } from '../pages/AccessDeniedPage';
+import { NotFoundPage } from '../pages/NotFoundPage';
 import { ProfilePage } from '../pages/ProfilePage';
 import { ROUTE_PERMISSIONS } from '../config/rbac.config';
 
@@ -25,6 +26,7 @@ export const AppRoutes: React.FC = () => {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/403" element={<AccessDeniedPage />} />
+      <Route path="/404" element={<NotFoundPage />} />
 
       {/* Protected Routes inside AppShell */}
       <Route
@@ -156,8 +158,8 @@ export const AppRoutes: React.FC = () => {
         />
       </Route>
 
-      {/* Catch-all route */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      {/* Catch-all route -> Dedicated 404 Not Found Page */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };
