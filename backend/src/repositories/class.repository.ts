@@ -117,7 +117,7 @@ export class ClassRepository {
         course_id, class_code, class_name, schedule_days, time_slot,
         room, teacher_name, start_date, max_capacity, current_enrolled, status
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0, 'OPEN')
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0, $10)
       RETURNING id
     `;
     const maxCap = dto.maxCapacity ?? 15;
@@ -131,6 +131,7 @@ export class ClassRepository {
       dto.teacherName?.trim() ?? null,
       dto.startDate,
       maxCap,
+      dto.status && ['PLANNING', 'OPEN', 'IN_PROGRESS', 'FULL', 'COMPLETED'].includes(dto.status) ? dto.status : 'OPEN',
     ];
     const res = await query(sql, params);
     const createdId = res.rows[0].id;

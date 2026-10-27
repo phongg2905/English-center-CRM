@@ -9,6 +9,7 @@ import enrollmentRoutes from './enrollment.routes.js';
 import staffRoutes from './staff.routes.js';
 import analyticsRoutes from './analytics.routes.js';
 import settingsRoutes from './settings.routes.js';
+import auditLogRoutes from './audit-log.routes.js';
 import swaggerRoutes, { swaggerSpec } from '../docs/swagger.js';
 import { ApiResponse } from '../utils/response.js';
 
@@ -93,6 +94,7 @@ router.get('/', (req: Request, res: Response) => {
           recordPayment: 'POST /api/enrollments/:id/payments',
           receipts: 'GET /api/enrollments/:id/receipts',
           transferClass: 'POST /api/enrollments/:id/transfer',
+          updateStatus: 'PATCH /api/enrollments/:id/status',
         },
         analytics: {
           overview: 'GET /api/analytics/overview',
@@ -102,6 +104,9 @@ router.get('/', (req: Request, res: Response) => {
           channelRoi: 'GET /api/analytics/channel-roi',
           classOccupancy: 'GET /api/analytics/class-occupancy',
           export: 'GET /api/analytics/export?type=leads|revenue|sales-leaderboard&format=csv|json',
+        },
+        auditLogs: {
+          list: 'GET /api/audit-logs',
         },
       },
     },
@@ -126,6 +131,7 @@ router.use('/classes', classRoutes);
 router.use('/enrollments', enrollmentRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/settings', settingsRoutes);
+router.use('/audit-logs', auditLogRoutes);
 router.use('/docs', swaggerRoutes);
 
 export default router;

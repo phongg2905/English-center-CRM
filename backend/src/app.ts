@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { env } from './config/environment.js';
 import { requestLogger } from './middlewares/requestLogger.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
+import { auditActivityMiddleware } from './services/audit-log.service.js';
 import apiRoutes from './routes/index.js';
 
 export function createApp(): Application {
@@ -35,8 +36,9 @@ export function createApp(): Application {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-  // 4. Ghi nhận HTTP Request Log
+  // 4. Ghi nhận HTTP Request Log & Audit Activity Log
   app.use(requestLogger);
+  app.use(auditActivityMiddleware);
 
   // 5. Đường dẫn chào mừng gốc
   app.get('/', (req: Request, res: Response) => {

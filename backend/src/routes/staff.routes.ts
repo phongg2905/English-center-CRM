@@ -18,6 +18,16 @@ router.get(
 );
 
 /**
+ * @route GET /api/staff/consultants
+ * @desc  Lấy danh sách tư vấn viên đang hoạt động (cho phép ADMIN, SALES, ACADEMIC)
+ */
+router.get(
+  '/consultants',
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  StaffController.getConsultants
+);
+
+/**
  * @route GET /api/staff
  * @desc  Lấy danh sách nhân viên kèm bộ lọc, tìm kiếm và phân trang (Admin Only)
  */

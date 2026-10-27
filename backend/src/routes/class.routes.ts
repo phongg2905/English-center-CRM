@@ -13,7 +13,7 @@ router.use(verifyToken);
  */
 router.get(
   '/',
-  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC', 'TEACHER'), // TEACHER: chỉ xem (lọc theo lớp phụ trách, ẩn học phí)
   ClassController.getClasses
 );
 
@@ -23,7 +23,7 @@ router.get(
  */
 router.get(
   '/:id/availability',
-  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC', 'TEACHER'), // TEACHER: chỉ xem (lọc theo lớp phụ trách, ẩn học phí)
   ClassController.checkAvailability
 );
 
@@ -33,7 +33,7 @@ router.get(
  */
 router.get(
   '/:id',
-  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC', 'TEACHER'), // TEACHER: chỉ xem (lọc theo lớp phụ trách, ẩn học phí)
   ClassController.getClassById
 );
 
