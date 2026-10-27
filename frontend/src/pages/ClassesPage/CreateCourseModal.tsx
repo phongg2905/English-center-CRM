@@ -28,22 +28,20 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Auto generate courseCode when courseName changes if code hasn't been manually typed
+  // Auto generate courseCode when courseName changes
   const handleNameChange = (name: string) => {
     setCourseName(name);
-    if (!courseCode || courseCode.startsWith('CRS-') || courseCode.includes('-')) {
-      const slug = name
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-zA-Z0-9\s]/g, '')
-        .trim()
-        .split(/\s+/)
-        .slice(0, 2)
-        .map((w) => w.toUpperCase())
-        .join('-');
-      if (slug) {
-        setCourseCode(slug);
-      }
+    const slug = name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((w) => w.toUpperCase())
+      .join('-');
+    if (slug) {
+      setCourseCode(`${slug}-${Math.floor(10 + Math.random() * 89)}`);
     }
   };
 
@@ -53,11 +51,6 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
 
     if (!courseName.trim()) {
       setErrorMsg('Vui lòng nhập tên khóa học.');
-      return;
-    }
-
-    if (!courseCode.trim()) {
-      setErrorMsg('Vui lòng nhập mã khóa học.');
       return;
     }
 
@@ -84,10 +77,13 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
       return;
     }
 
+    const generatedCode =
+      courseCode.trim().toUpperCase() || `CRS-${Math.floor(100 + Math.random() * 900)}`;
+
     try {
       setIsLoading(true);
       const payload: CreateCoursePayload = {
-        courseCode: courseCode.trim().toUpperCase(),
+        courseCode: generatedCode,
         courseName: courseName.trim(),
         standardTuition: Number(standardTuition),
         totalLessons: Number(totalLessons),
@@ -124,9 +120,6 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
               <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#0f172a' }}>
                 Tạo Khóa Học Mới
               </h3>
-              <p style={{ margin: '2px 0 0 0', fontSize: '12.5px', color: '#64748b' }}>
-                Thiết lập chương trình đào tạo, học phí niêm yết và chuẩn cam kết đầu ra
-              </p>
             </div>
           </div>
 
@@ -187,21 +180,6 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
               </div>
 
               <div className="drawer-field-group">
-                <label className="drawer-label">Mã Khóa Học (Course Code) *</label>
-                <input
-                  type="text"
-                  placeholder="Ví dụ: IELTS-FIGHT"
-                  value={courseCode}
-                  onChange={(e) => setCourseCode(e.target.value.toUpperCase())}
-                  className="drawer-input-control"
-                  required
-                />
-                <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-                  Mã định danh duy nhất của khóa học trong hệ thống
-                </span>
-              </div>
-
-              <div className="drawer-field-group">
                 <label className="drawer-label">Học Phí Tiêu Chuẩn (VNĐ) *</label>
                 <input
                   type="number"
@@ -232,7 +210,7 @@ export const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
             {/* Cột 2: Chuẩn đầu ra, Thang điểm & Mô tả */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div className="drawer-field-group">
-                <label className="drawer-label">Chuẩn Cam Kết Đầu Ra (Target Output)</label>
+                <label className="drawer-label">Chuẩn Cam Kết Đầu Ra</label>
                 <input
                   type="text"
                   placeholder="Ví dụ: IELTS 6.0 - 6.5, TOEIC 650+"

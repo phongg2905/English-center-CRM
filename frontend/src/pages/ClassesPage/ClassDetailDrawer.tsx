@@ -15,6 +15,11 @@ import {
   CreditCard,
   ArrowRightLeft,
   Printer,
+  Target,
+  Hash,
+  Flame,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { AcademicService } from '../../services/academic.service';
 import type {
@@ -26,11 +31,44 @@ import type {
 } from '../../types/academic';
 import { Button } from '../../components/ui';
 
+const formatTeacherName = (name?: string | null) => {
+  if (!name) return '';
+  return name.replace(/\s*\([^)]*\)/g, '').trim();
+};
+
+const formatShortClassCode = (code?: string | null): string => {
+  if (!code) return '';
+  return code
+    .replace(/-(T246|T357|T7CN|246|357|T7|CN|WEEKEND|MON_WED_FRI|TUE_THU_SAT)$/i, '')
+    .trim();
+};
+
+const getLifecycleStatusLabel = (status?: ClassStatus, currentEnrolled = 0): string => {
+  if (status === 'CANCELLED' || (status === 'COMPLETED' && currentEnrolled === 0)) {
+    return 'Đã hủy';
+  }
+  switch (status) {
+    case 'PLANNING':
+      return 'Dự kiến khai giảng';
+    case 'OPEN':
+      return 'Đang mở tuyển sinh';
+    case 'IN_PROGRESS':
+      return 'Đang học';
+    case 'FULL':
+      return 'Đã khóa sổ (Đầy)';
+    case 'COMPLETED':
+      return 'Đã kết thúc';
+    default:
+      return 'Đang mở';
+  }
+};
+
 interface ClassDetailDrawerProps {
   classItem: ClassItem | null;
   isOpen: boolean;
   onClose: () => void;
   onUpdated: () => void;
+  canEdit?: boolean;
   onEnrollClick?: (classId: number) => void;
   onCollectPayment?: (enrollment: ClassEnrollmentItem) => void;
   onTransferClass?: (enrollment: ClassEnrollmentItem) => void;
@@ -42,12 +80,12 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
   isOpen,
   onClose,
   onUpdated,
+  canEdit = true,
   onEnrollClick,
   onCollectPayment,
   onTransferClass,
   onPrintReceipt,
 }) => {
-
   const [activeTab, setActiveTab] = useState<'GENERAL' | 'ROSTER'>('GENERAL');
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [enrollments, setEnrollments] = useState<ClassEnrollmentItem[]>([]);
@@ -55,6 +93,7 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
   const [saveErrorMsg, setSaveErrorMsg] = useState<string | null>(null);
+  const [copiedCode, setCopiedCode] = useState<boolean>(false);
 
   // Editable Form States
   const [editClassName, setEditClassName] = useState<string>('');
@@ -66,34 +105,47 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
   const [editMaxCapacity, setEditMaxCapacity] = useState<number>(15);
   const [editStatus, setEditStatus] = useState<ClassStatus>('OPEN');
 
+  const lastClassIdRef = React.useRef<number | null>(null);
+
   // Sync state whenever classItem changes
   useEffect(() => {
-    if (!classItem) return;
+    if (!classItem) {
+      lastClassIdRef.current = null;
+      return;
+    }
+
+    const isSwitchingClass = lastClassIdRef.current !== classItem.id;
+    lastClassIdRef.current = classItem.id;
 
     setEditClassName(classItem.className || '');
-    setEditTeacherName(classItem.teacherName || '');
+    setEditTeacherName(formatTeacherName(classItem.teacherName));
     setEditScheduleDays(classItem.scheduleDays || 'MON_WED_FRI');
     setEditTimeSlot(classItem.timeSlot || '');
     setEditRoom(classItem.room || '');
     setEditStartDate(classItem.startDate ? classItem.startDate.split('T')[0] : '');
     setEditMaxCapacity(classItem.maxCapacity || 15);
     setEditStatus(classItem.status || 'OPEN');
-    setSaveSuccessMsg(null);
-    setSaveErrorMsg(null);
-    setIsEditing(false);
 
-    loadRoster(classItem.id);
+    if (isSwitchingClass) {
+      setActiveTab('GENERAL');
+      setSaveSuccessMsg(null);
+      setSaveErrorMsg(null);
+      setIsEditing(false);
+      setCopiedCode(false);
+    }
+
+    loadRoster(classItem.id, !isSwitchingClass);
   }, [classItem]);
 
-  const loadRoster = async (classId: number) => {
+  const loadRoster = async (classId: number, silent = false) => {
     try {
-      setIsLoadingRoster(true);
+      if (!silent) setIsLoadingRoster(true);
       const data = await AcademicService.getClassEnrollments(classId);
       setEnrollments(data);
     } catch (err) {
       console.error('Lỗi khi tải danh sách học viên trong lớp:', err);
     } finally {
-      setIsLoadingRoster(false);
+      if (!silent) setIsLoadingRoster(false);
     }
   };
 
@@ -111,7 +163,9 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
   };
 
   const formatDate = (dateStr?: string | null) => {
-    if (!dateStr || dateStr === 'Chưa cập nhật' || dateStr === 'null' || dateStr === 'undefined') return 'Chưa cập nhật';
+    if (!dateStr || dateStr === 'Chưa cập nhật' || dateStr === 'null' || dateStr === 'undefined') {
+      return 'Chưa cập nhật';
+    }
     try {
       const cleaned = dateStr.replace(/\s+GM.*$/, '');
       const d = new Date(cleaned);
@@ -124,32 +178,108 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
 
   if (!isOpen || !classItem) return null;
 
-  const currentFillPercent = Math.min(
-    100,
-    Math.round((classItem.currentEnrolled / classItem.maxCapacity) * 100)
-  );
+  // Unified Capacity & Status Metrics (100% consistent with ClassesPage list)
+  const maxCap = classItem.maxCapacity > 0 ? classItem.maxCapacity : 1;
+  const rawFillRate = (classItem.currentEnrolled / maxCap) * 100;
+  const currentFillPercent = Math.min(100, Math.max(0, Math.round(rawFillRate)));
+
+  const isEnded = classItem.status === 'COMPLETED' || classItem.status === 'CANCELLED';
+  const isCancelled =
+    classItem.status === 'CANCELLED' ||
+    (classItem.status === 'COMPLETED' && classItem.currentEnrolled === 0);
+
+  const isClassFull =
+    !isEnded &&
+    (classItem.isFull ||
+      classItem.currentEnrolled >= classItem.maxCapacity ||
+      classItem.status === 'FULL' ||
+      rawFillRate >= 100);
+
+  const isNearFull = !isEnded && !isClassFull && rawFillRate >= 80;
+  const canEnrollThisClass = !isEnded && !isClassFull;
+
+  const shortClassCode = formatShortClassCode(classItem.classCode) || classItem.classCode;
+
+  const handleCopyCode = () => {
+    if (!shortClassCode) return;
+    navigator.clipboard?.writeText(shortClassCode);
+    setCopiedCode(true);
+    window.setTimeout(() => setCopiedCode(false), 1800);
+  };
+
+  // Header Badge Rendering (Prioritizes Ended/Cancelled -> Full -> Near Full -> In Progress -> Open)
+  const renderHeaderBadge = () => {
+    if (isCancelled) {
+      return <span className="class-status-badge completed">Đã hủy</span>;
+    }
+    if (isEnded) {
+      return <span className="class-status-badge completed">Đã kết thúc</span>;
+    }
+    if (isClassFull) {
+      return (
+        <span className="class-status-badge full-muted">
+          <Lock size={11} />
+          <span>Đã đầy</span>
+        </span>
+      );
+    }
+    if (isNearFull) {
+      return (
+        <span className="class-status-badge near-full">
+          <Flame size={11} />
+          <span>Sắp đầy</span>
+        </span>
+      );
+    }
+    if (classItem.status === 'IN_PROGRESS') {
+      return <span className="class-status-badge in-progress">● Đang học</span>;
+    }
+    return (
+      <span
+        className="class-status-badge"
+        style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0' }}
+      >
+        ● Đang mở tuyển sinh
+      </span>
+    );
+  };
 
   const handleExportRosterCSV = () => {
     if (enrollments.length === 0) {
       alert('Lớp học chưa có học viên nào để xuất dữ liệu.');
       return;
     }
-    const headers = ['Mã Học Viên', 'Họ và Tên', 'Số Điện Thoại', 'Ngày Ghi Danh', 'Trạng Thái Học Phí', 'Đã Nộp (VNĐ)', 'Còn Nợ (VNĐ)'];
+    const headers = [
+      'Họ và Tên',
+      'Số Điện Thoại',
+      'Ngày Ghi Danh',
+      'Trạng Thái Học Phí',
+      'Đã Nộp (VNĐ)',
+      'Còn Nợ (VNĐ)',
+    ];
     const rows = enrollments.map((e) => [
-      e.studentCode,
       `"${e.fullName}"`,
       e.phoneNumber,
-      e.enrollmentDate,
-      e.paymentStatus,
+      formatDate(e.enrollmentDate),
+      e.paymentStatus === 'FULLY_PAID'
+        ? 'Đã nộp đủ'
+        : Number(e.balanceDue || 0) > 0
+        ? 'Còn nợ'
+        : 'Chưa nộp',
       e.paidAmount,
       e.balanceDue,
     ]);
 
-    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const csvContent =
+      'data:text/csv;charset=utf-8,\uFEFF' +
+      [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Roster_${classItem.className.replace(/\s+/g, '_')}.csv`);
+    link.setAttribute(
+      'download',
+      `Danh_sach_hoc_vien_${classItem.className.replace(/\s+/g, '_')}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -158,7 +288,7 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
   const handleCancelEdit = () => {
     if (!classItem) return;
     setEditClassName(classItem.className || '');
-    setEditTeacherName(classItem.teacherName || '');
+    setEditTeacherName(formatTeacherName(classItem.teacherName));
     setEditScheduleDays(classItem.scheduleDays || 'MON_WED_FRI');
     setEditTimeSlot(classItem.timeSlot || '');
     setEditRoom(classItem.room || '');
@@ -211,36 +341,28 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
         {/* Drawer Header */}
         <div className="classes-drawer-header">
           <div className="drawer-header-top-row">
-            <div>
-              {classItem.isFull || classItem.currentEnrolled >= classItem.maxCapacity ? (
-                <span className="class-status-badge full">
-                  <Lock size={12} /> ĐÃ ĐẦY LỚP
-                </span>
-              ) : (
-                <span className={`class-status-badge ${classItem.status.toLowerCase().replace('_', '-')}`}>
-                  ● {classItem.status === 'OPEN' ? 'Đang tuyển sinh' : classItem.status === 'IN_PROGRESS' ? 'Đang học' : classItem.status === 'COMPLETED' ? 'Đã kết thúc' : classItem.status}
-                </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              {renderHeaderBadge()}
+              {shortClassCode && (
+                <button
+                  type="button"
+                  className="class-row-code text-xs text-gray-500"
+                  onClick={handleCopyCode}
+                  title={copiedCode ? 'Đã sao chép mã lớp!' : 'Nhấn để sao chép mã lớp'}
+                  style={{ margin: 0 }}
+                >
+                  <Hash className="w-3 h-3" size={12} />
+                  <span>{shortClassCode}</span>
+                  {copiedCode ? (
+                    <Check className="w-3 h-3 copy-code-icon copied" size={12} />
+                  ) : (
+                    <Copy className="w-3 h-3 copy-code-icon" size={12} />
+                  )}
+                </button>
               )}
             </div>
 
             <div className="drawer-header-actions">
-              {onEnrollClick && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  iconLeft={<UserPlus size={13} />}
-                  onClick={() => onEnrollClick(classItem.id)}
-                  style={{
-                    background: '#2563eb',
-                    fontWeight: 600,
-                    borderRadius: '8px',
-                    height: '32px',
-                    fontSize: '12.5px',
-                  }}
-                >
-                  Ghi Danh
-                </Button>
-              )}
               <button
                 type="button"
                 className="drawer-close-btn"
@@ -257,7 +379,9 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
             <p className="drawer-subtitle">
               <span>{classItem.courseName}</span>
               <span className="drawer-dot">·</span>
-              <span className="drawer-tuition">{Number(classItem.standardTuition).toLocaleString('vi-VN')} đ</span>
+              <span className="drawer-tuition">
+                {Number(classItem.standardTuition).toLocaleString('vi-VN')} đ
+              </span>
             </p>
           </div>
         </div>
@@ -277,14 +401,12 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
             className={`drawer-tab-btn ${activeTab === 'ROSTER' ? 'active' : ''}`}
             onClick={() => {
               setActiveTab('ROSTER');
-              loadRoster(classItem.id);
+              loadRoster(classItem.id, true);
             }}
           >
             <Users size={15} />
             <span>Học viên</span>
-            <span className="drawer-tab-count-badge">
-              {classItem.currentEnrolled}
-            </span>
+            <span className="drawer-tab-count-badge">{classItem.currentEnrolled}</span>
           </button>
         </div>
 
@@ -334,35 +456,19 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
           {/* TAB 1: TỔNG QUAN */}
           {activeTab === 'GENERAL' && (
             <>
-              {/* Sĩ số Card */}
+              {/* Sĩ số Card (Đồng bộ ngưỡng 80% / 100% với danh sách ngoài) */}
               <div className="drawer-section-card">
                 <div className="drawer-section-header">
                   <h4 className="drawer-section-title">
                     <Users size={16} style={{ color: '#2563eb' }} />
                     <span>Sĩ Số Lớp Học</span>
                   </h4>
-                  <span
-                    style={{
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      color:
-                        classItem.availableSeats === 0
-                          ? '#dc2626'
-                          : classItem.availableSeats <= 2
-                          ? '#d97706'
-                          : '#059669',
-                    }}
-                  >
-                    {classItem.availableSeats === 0
-                      ? '🔒 Đã đầy lớp'
-                      : `Còn ${classItem.availableSeats} chỗ trống`}
-                  </span>
                 </div>
 
                 <div className="class-capacity-progress-box">
-                  <div className="capacity-text-row">
+                  <div className="capacity-text-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                     <span className="capacity-fraction-text">
-                      Hiện có: <strong>{classItem.currentEnrolled}</strong> / {classItem.maxCapacity} học viên
+                      Hiện có: <strong>{classItem.currentEnrolled}/{classItem.maxCapacity}</strong> học viên
                     </span>
                     <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>
                       {currentFillPercent}%
@@ -373,41 +479,41 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                       className="capacity-fill"
                       style={{
                         width: `${currentFillPercent}%`,
-                        backgroundColor:
-                          currentFillPercent >= 100
-                            ? '#ef4444'
-                            : currentFillPercent >= 75
-                            ? '#f59e0b'
-                            : '#10b981',
+                        backgroundColor: isEnded
+                          ? '#94a3b8'
+                          : isClassFull
+                          ? '#ef4444'
+                          : isNearFull
+                          ? '#f97316'
+                          : '#22c55e',
                       }}
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Thông tin chi tiết Card */}
+              {/* Thông tin chi tiết Card (Đã loại bỏ Khóa Học & Học Phí bị trùng với Header) */}
               {!isEditing ? (
                 <div className="drawer-section-card">
                   <div className="drawer-section-header">
                     <h4 className="drawer-section-title">
                       <Clock size={16} style={{ color: '#2563eb' }} />
-                      <span>Thông Tin Chi Tiết</span>
+                      <span>Thông Tin Lớp Học</span>
                     </h4>
-                    <Button
-                      variant="glass"
-                      size="sm"
-                      iconLeft={<Edit2 size={13} />}
-                      onClick={() => setIsEditing(true)}
-                    >
-                      Chỉnh Sửa
-                    </Button>
                   </div>
 
                   <div className="drawer-prop-grid">
                     <div className="drawer-prop-item">
                       <span className="drawer-prop-label">Giảng Viên</span>
                       <span className="drawer-prop-value">
-                        {classItem.teacherName || 'Chưa phân công'}
+                        {formatTeacherName(classItem.teacherName) || 'Chưa phân công'}
+                      </span>
+                    </div>
+
+                    <div className="drawer-prop-item">
+                      <span className="drawer-prop-label">Phòng Học / Cơ Sở</span>
+                      <span className="drawer-prop-value">
+                        {classItem.room || 'Chưa xếp phòng'}
                       </span>
                     </div>
 
@@ -426,30 +532,16 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                     </div>
 
                     <div className="drawer-prop-item">
-                      <span className="drawer-prop-label">Phòng Học / Cơ Sở</span>
-                      <span className="drawer-prop-value">
-                        {classItem.room || 'Chưa xếp phòng'}
-                      </span>
-                    </div>
-
-                    <div className="drawer-prop-item">
-                      <span className="drawer-prop-label">Khai Giảng</span>
+                      <span className="drawer-prop-label">Ngày Khai Giảng</span>
                       <span className="drawer-prop-value">
                         {formatDate(classItem.startDate)}
                       </span>
                     </div>
 
                     <div className="drawer-prop-item">
-                      <span className="drawer-prop-label">Khóa Học</span>
-                      <span className="drawer-prop-value highlight">
-                        {classItem.courseName}
-                      </span>
-                    </div>
-
-                    <div className="drawer-prop-item">
-                      <span className="drawer-prop-label">Học Phí Niêm Yết</span>
-                      <span className="drawer-prop-value price">
-                        {Number(classItem.standardTuition).toLocaleString('vi-VN')} VNĐ
+                      <span className="drawer-prop-label">Trạng Thái Lớp</span>
+                      <span className="drawer-prop-value">
+                        {getLifecycleStatusLabel(classItem.status, classItem.currentEnrolled)}
                       </span>
                     </div>
 
@@ -457,7 +549,8 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                       <div className="drawer-prop-item full-width">
                         <span className="drawer-prop-label">Chuẩn Đầu Ra Cam Kết</span>
                         <span className="drawer-prop-value" style={{ color: '#2563eb' }}>
-                          🎯 {classItem.targetOutput}
+                          <Target size={14} />
+                          <span>{classItem.targetOutput}</span>
                         </span>
                       </div>
                     )}
@@ -491,7 +584,7 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                         value={editTeacherName}
                         onChange={(e) => setEditTeacherName(e.target.value)}
                         className="drawer-input-control"
-                        placeholder="VD: Ms. Emily Nguyễn (8.5 IELTS)"
+                        placeholder="VD: Ms. Emily Nguyễn"
                       />
                     </div>
 
@@ -502,14 +595,14 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                         onChange={(e) => setEditScheduleDays(e.target.value as ScheduleDays)}
                         className="drawer-input-control"
                       >
-                        <option value="MON_WED_FRI">📅 Thứ 2 - Thứ 4 - Thứ 6</option>
-                        <option value="TUE_THU_SAT">📅 Thứ 3 - Thứ 5 - Thứ 7</option>
-                        <option value="WEEKEND">📅 Cuối tuần (T7 & CN)</option>
+                        <option value="MON_WED_FRI">Thứ 2 - Thứ 4 - Thứ 6</option>
+                        <option value="TUE_THU_SAT">Thứ 3 - Thứ 5 - Thứ 7</option>
+                        <option value="WEEKEND">Cuối tuần (T7 & CN)</option>
                       </select>
                     </div>
 
                     <div className="drawer-field-group">
-                      <label className="drawer-label">Ca Học (Time Slot)</label>
+                      <label className="drawer-label">Ca Học</label>
                       <input
                         type="text"
                         value={editTimeSlot}
@@ -562,10 +655,11 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                         onChange={(e) => setEditStatus(e.target.value as ClassStatus)}
                         className="drawer-input-control"
                       >
-                        <option value="OPEN">🟢 Đang mở tuyển sinh</option>
-                        <option value="IN_PROGRESS">🔵 Đang học</option>
-                        <option value="COMPLETED">🟣 Đã kết thúc</option>
-                        <option value="FULL">🔴 Khóa sổ sĩ số (Đầy)</option>
+                        <option value="PLANNING">Dự kiến khai giảng</option>
+                        <option value="OPEN">Đang mở tuyển sinh</option>
+                        <option value="IN_PROGRESS">Đang học</option>
+                        <option value="COMPLETED">Đã kết thúc</option>
+                        <option value="FULL">Khóa sổ sĩ số (Đầy)</option>
                       </select>
                     </div>
                   </div>
@@ -580,7 +674,7 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
               <div className="drawer-section-header">
                 <h4 className="drawer-section-title">
                   <Users size={16} style={{ color: '#2563eb' }} />
-                  <span>Danh Sách Học Viên ({enrollments.length})</span>
+                  <span>Danh Sách Học Viên</span>
                 </h4>
                 <Button
                   variant="glass"
@@ -598,32 +692,29 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                   Đang tải danh sách học viên...
                 </div>
               ) : enrollments.length === 0 ? (
-                <div style={{ padding: '36px 16px', textAlign: 'center', background: '#f8fafc', borderRadius: '12px' }}>
+                <div
+                  style={{
+                    padding: '36px 16px',
+                    textAlign: 'center',
+                    background: '#f8fafc',
+                    borderRadius: '12px',
+                  }}
+                >
                   <Users size={32} style={{ color: '#94a3b8', margin: '0 auto 8px auto' }} />
                   <p style={{ fontWeight: 600, color: '#334155', margin: '0 0 4px 0' }}>
                     Chưa có học viên nào trong lớp
                   </p>
-                  <p style={{ fontSize: '12.5px', color: '#64748b', margin: '0 0 14px 0' }}>
-                    Lớp hiện đang mở tuyển sinh. Bạn có thể ghi danh học viên mới ngay.
+                  <p style={{ fontSize: '12.5px', color: '#64748b', margin: '0' }}>
+                    {isEnded
+                      ? 'Lớp học này đã kết thúc hoặc đã hủy.'
+                      : 'Lớp hiện đang mở tuyển sinh. Bạn có thể bấm nút Ghi Danh Học Viên ở thanh dưới cùng.'}
                   </p>
-                  {onEnrollClick && (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      iconLeft={<UserPlus size={14} />}
-                      onClick={() => onEnrollClick(classItem.id)}
-                      style={{ background: '#2563eb' }}
-                    >
-                      Ghi Danh Học Viên
-                    </Button>
-                  )}
                 </div>
               ) : (
-                <div style={{ overflowX: 'auto' }}>
+                <div className="roster-table-container">
                   <table className="roster-table">
                     <thead>
                       <tr>
-                        <th>Mã HV</th>
                         <th>Học Viên</th>
                         <th>Liên Hệ</th>
                         <th>Ngày Nhập Học</th>
@@ -632,42 +723,38 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                       </tr>
                     </thead>
                     <tbody>
-                      {enrollments.map((en) => (
+                      {enrollments.map((en, idx) => (
                         <tr key={en.id}>
-                          <td>
-                            <span
-                              style={{
-                                fontSize: '11px',
-                                fontWeight: 700,
-                                background: '#ede9fe',
-                                color: '#4f46e5',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                              }}
-                            >
-                              {en.studentCode}
-                            </span>
-                          </td>
                           <td>
                             <div style={{ fontWeight: 600, color: '#0f172a' }}>{en.fullName}</div>
                           </td>
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                               <Phone size={11} style={{ color: '#2563eb' }} />
-                              <span style={{ fontSize: '12px', fontWeight: 500 }}>{en.phoneNumber}</span>
+                              <span style={{ fontSize: '12px', fontWeight: 500 }}>
+                                {en.phoneNumber}
+                              </span>
                             </div>
                             {en.email && (
                               <div style={{ fontSize: '11px', color: '#94a3b8' }}>{en.email}</div>
                             )}
                           </td>
                           <td>
-                            <span style={{ fontSize: '12px', color: '#475569' }}>{formatDate(en.enrollmentDate)}</span>
+                            <span style={{ fontSize: '12px', color: '#475569' }}>
+                              {formatDate(en.enrollmentDate)}
+                            </span>
                           </td>
                           {/* Học Phí - Single-Line Notion Pill with Hover Popover */}
                           <td style={{ textAlign: 'center' }}>
                             <div className="notion-finance-wrapper">
                               <div
-                                className={`notion-finance-pill ${en.paymentStatus === 'FULLY_PAID' ? 'paid' : Number(en.balanceDue || 0) > 0 ? 'debt' : 'unpaid'}`}
+                                className={`notion-finance-pill ${
+                                  en.paymentStatus === 'FULLY_PAID'
+                                    ? 'paid'
+                                    : Number(en.balanceDue || 0) > 0
+                                    ? 'debt'
+                                    : 'unpaid'
+                                }`}
                                 onClick={() => onCollectPayment && onCollectPayment(en)}
                                 title="Bấm để xem chi tiết hoặc thu học phí"
                               >
@@ -680,17 +767,28 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                                 )}
                               </div>
 
-                              {/* Hover Popover Breakdown */}
-                              <div className="notion-finance-popover">
+                              {/* Hover Popover Breakdown (opens downward on first row to prevent clipping) */}
+                              <div
+                                className={`notion-finance-popover ${
+                                  idx === 0 ? 'popover-bottom' : ''
+                                }`}
+                              >
                                 <div className="notion-popover-title">Chi Tiết Học Phí & Công Nợ</div>
                                 <div className="notion-popover-row">
                                   <span>Học phí niêm yết:</span>
-                                  <span>{Number(en.originalTuition || en.finalAmount || 0).toLocaleString('vi-VN')} đ</span>
+                                  <span>
+                                    {Number(
+                                      en.originalTuition || en.finalAmount || 0
+                                    ).toLocaleString('vi-VN')}{' '}
+                                    đ
+                                  </span>
                                 </div>
                                 {Number(en.discountAmount || 0) > 0 && (
                                   <div className="notion-popover-row discount">
                                     <span>Ưu đãi / Chiết khấu:</span>
-                                    <span>-{Number(en.discountAmount).toLocaleString('vi-VN')} đ</span>
+                                    <span>
+                                      -{Number(en.discountAmount).toLocaleString('vi-VN')} đ
+                                    </span>
                                   </div>
                                 )}
                                 <div className="notion-popover-row highlight">
@@ -702,8 +800,16 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                                   <span>Đã thanh toán:</span>
                                   <span>{Number(en.paidAmount || 0).toLocaleString('vi-VN')} đ</span>
                                 </div>
-                                <div className={`notion-popover-row ${Number(en.balanceDue || 0) > 0 ? 'debt' : 'paid-full'}`}>
-                                  <span>{Number(en.balanceDue || 0) > 0 ? 'Còn nợ học phí:' : 'Trạng thái:'}</span>
+                                <div
+                                  className={`notion-popover-row ${
+                                    Number(en.balanceDue || 0) > 0 ? 'debt' : 'paid-full'
+                                  }`}
+                                >
+                                  <span>
+                                    {Number(en.balanceDue || 0) > 0
+                                      ? 'Còn nợ học phí:'
+                                      : 'Trạng thái:'}
+                                  </span>
                                   <span>
                                     {Number(en.balanceDue || 0) > 0
                                       ? `${Number(en.balanceDue).toLocaleString('vi-VN')} đ`
@@ -721,10 +827,14 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => onCollectPayment(en)}
-                                  className={`table-action-icon-btn ${Number(en.balanceDue || 0) > 0 ? 'pay-debt' : 'pay-done'}`}
+                                  className={`table-action-icon-btn ${
+                                    Number(en.balanceDue || 0) > 0 ? 'pay-debt' : 'pay-done'
+                                  }`}
                                   title={
                                     Number(en.balanceDue || 0) > 0
-                                      ? `Ghi nhận thu phí (Còn nợ: ${Number(en.balanceDue).toLocaleString('vi-VN')} đ)`
+                                      ? `Ghi nhận thu phí (Còn nợ: ${Number(
+                                          en.balanceDue
+                                        ).toLocaleString('vi-VN')} đ)`
                                       : 'Xem lịch sử thanh toán học phí'
                                   }
                                 >
@@ -753,75 +863,70 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                               )}
                             </div>
                           </td>
-
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-
               )}
             </div>
           )}
         </div>
 
-        {/* Drawer Sticky Footer */}
-        <div className="classes-drawer-footer" style={{ gap: '10px' }}>
-          {activeTab === 'GENERAL' ? (
-            isEditing ? (
-              <>
-                <Button variant="glass" onClick={handleCancelEdit} disabled={isSaving}>
-                  Hủy
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleSaveGeneralInfo}
-                  disabled={isSaving}
-                  iconLeft={<Save size={15} />}
-                  style={{
-                    background: '#2563eb',
-                    fontWeight: 600,
-                  }}
-                >
-                  {isSaving ? 'Đang lưu...' : 'Lưu Thay Đổi'}
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button variant="glass" onClick={onClose}>
-                  Đóng
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={() => setIsEditing(true)}
-                  iconLeft={<Edit2 size={14} />}
-                  style={{
-                    background: '#2563eb',
-                    fontWeight: 600,
-                  }}
-                >
-                  Chỉnh Sửa
-                </Button>
-              </>
-            )
+        {/* Drawer Sticky Footer (Single authoritative action bar) */}
+        <div className="classes-drawer-footer" style={{ gap: '10px', justifyContent: 'space-between' }}>
+          {activeTab === 'GENERAL' && isEditing ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: 'auto' }}>
+              <Button variant="glass" onClick={handleCancelEdit} disabled={isSaving}>
+                Hủy
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleSaveGeneralInfo}
+                disabled={isSaving}
+                iconLeft={<Save size={15} />}
+                style={{
+                  background: '#2563eb',
+                  fontWeight: 600,
+                }}
+              >
+                {isSaving ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+              </Button>
+            </div>
           ) : (
             <>
-              <Button variant="glass" onClick={onClose}>
-                Đóng
-              </Button>
-              {onEnrollClick && (
-                <Button
-                  variant="primary"
-                  onClick={() => onEnrollClick(classItem.id)}
-                  iconLeft={<UserPlus size={14} />}
-                  style={{
-                    background: '#2563eb',
-                    fontWeight: 600,
-                  }}
-                >
-                  Ghi Danh Học Viên
-                </Button>
-              )}
+              <div>
+                {activeTab === 'GENERAL' && canEdit && (
+                  <Button
+                    variant="glass"
+                    onClick={() => setIsEditing(true)}
+                    iconLeft={<Edit2 size={14} />}
+                  >
+                    Chỉnh Sửa Lớp
+                  </Button>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {onEnrollClick && (
+                  <Button
+                    variant="primary"
+                    onClick={() => onEnrollClick(classItem.id)}
+                    disabled={!canEnrollThisClass}
+                    iconLeft={<UserPlus size={14} />}
+                    style={{
+                      background: canEnrollThisClass ? '#2563eb' : '#94a3b8',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {isEnded
+                      ? 'Lớp Đã Đóng'
+                      : isClassFull
+                      ? 'Đã Đầy Lớp'
+                      : 'Ghi Danh Học Viên'}
+                  </Button>
+                )}
+              </div>
             </>
           )}
         </div>

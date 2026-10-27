@@ -47,16 +47,12 @@ export const TransferClassModal: React.FC<TransferClassModalProps> = ({
     const loadAvailableClasses = async () => {
       try {
         setIsLoadingClasses(true);
-        // Load classes of the same course by default, or all classes
         const all = await AcademicService.getClasses();
-        // Find current class
         const current = all.find((c) => c.id === enrollment.classId) || null;
         setCurrentClass(current);
-        // Exclude current class
         const filtered = all.filter((c) => c.id !== enrollment.classId);
         setClasses(filtered);
 
-        // Pre-select first available class if exists
         const firstAvailable = filtered.find(
           (c) => !c.isFull && c.currentEnrolled < c.maxCapacity && c.status === 'OPEN'
         );
@@ -92,7 +88,7 @@ export const TransferClassModal: React.FC<TransferClassModalProps> = ({
 
     if (targetClass.isFull || targetClass.currentEnrolled >= targetClass.maxCapacity) {
       setErrorMsg(
-        `Lớp ${targetClass.classCode} đã đầy sĩ số (${targetClass.currentEnrolled}/${targetClass.maxCapacity}). Vui lòng chọn lớp học khác còn chỗ.`
+        `Lớp ${targetClass.className} đã đầy sĩ số (${targetClass.currentEnrolled}/${targetClass.maxCapacity}). Vui lòng chọn lớp học khác còn chỗ.`
       );
       return;
     }
@@ -205,10 +201,11 @@ export const TransferClassModal: React.FC<TransferClassModalProps> = ({
                 <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '13.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {enrollment.className}
                 </div>
-                <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontFamily: 'monospace', color: '#94a3b8' }}>{enrollment.classCode}</span>
-                  {currentSchedule && <span>· {currentSchedule}</span>}
-                </div>
+                {currentSchedule && (
+                  <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '2px' }}>
+                    {currentSchedule}
+                  </div>
+                )}
               </div>
 
               {/* Icon mũi tên chuyển sang */}
@@ -246,10 +243,11 @@ export const TransferClassModal: React.FC<TransferClassModalProps> = ({
                     <div style={{ fontWeight: 700, color: '#0369a1', fontSize: '13.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {selectedNewClass.className}
                     </div>
-                    <div style={{ fontSize: '11.5px', color: '#0284c7', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontFamily: 'monospace', opacity: 0.8 }}>{selectedNewClass.classCode}</span>
-                      {selectedNewSchedule && <span>· {selectedNewSchedule}</span>}
-                    </div>
+                    {selectedNewSchedule && (
+                      <div style={{ fontSize: '11.5px', color: '#0284c7', marginTop: '2px' }}>
+                        {selectedNewSchedule}
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic', marginTop: '4px' }}>
@@ -321,7 +319,7 @@ export const TransferClassModal: React.FC<TransferClassModalProps> = ({
                           boxShadow: isSelected ? '0 1px 3px rgba(2, 132, 199, 0.12)' : 'none',
                         }}
                       >
-                        {/* Cột 1: Tên lớp (Dòng 1) & Mã lớp phụ (Dòng 2) */}
+                        {/* Cột 1: Tên lớp */}
                         <div style={{ minWidth: 0 }}>
                           <div
                             style={{
@@ -335,17 +333,6 @@ export const TransferClassModal: React.FC<TransferClassModalProps> = ({
                           >
                             {cls.className}
                           </div>
-                          <div
-                            style={{
-                              fontSize: '11px',
-                              color: isSelected ? '#0284c7' : '#94a3b8',
-                              fontFamily: 'monospace',
-                              marginTop: '1px',
-                              lineHeight: '13px',
-                            }}
-                          >
-                            {cls.classCode}
-                          </div>
                         </div>
 
                         {/* Cột 2: Lịch học */}
@@ -353,7 +340,7 @@ export const TransferClassModal: React.FC<TransferClassModalProps> = ({
                           {schedule}
                         </span>
 
-                        {/* Cột 3: Tình trạng chỗ (không còn icon tick) */}
+                        {/* Cột 3: Tình trạng chỗ */}
                         <div style={{ textAlign: 'right' }}>
                           {isFull ? (
                             <span style={{ fontSize: '11px', fontWeight: 600, color: '#b91c1c', background: '#fee2e2', padding: '2px 7px', borderRadius: '4px', display: 'inline-block' }}>

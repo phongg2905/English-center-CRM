@@ -51,11 +51,9 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
     setTransactionRef('');
     setPaymentMethod('BANK_TRANSFER');
 
-    // Default amount to balance due
     const remaining = Math.max(0, Number(enrollment.balanceDue || 0));
     setAmount(remaining);
 
-    // Load receipts history
     loadReceipts(enrollment.id);
   }, [isOpen, enrollment]);
 
@@ -179,7 +177,6 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
                   <span style={{ color: '#cbd5e1' }}>•</span>
                   <span>Lớp:</span>
                   <strong style={{ color: '#0f172a' }}>{enrollment.className}</strong>
-                  <span style={{ color: '#94a3b8', fontSize: '12px', fontFamily: 'monospace' }}>({enrollment.classCode})</span>
                 </div>
               </div>
 
@@ -330,10 +327,10 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
                 </div>
 
                 <div className="classes-form-group">
-                  <label className="classes-form-label">Mã tham chiếu</label>
+                  <label className="classes-form-label">Nội dung giao dịch</label>
                   <input
                     type="text"
-                    placeholder="Mã giao dịch ngân hàng..."
+                    placeholder="Ghi chú chuyển khoản ngân hàng..."
                     value={transactionRef}
                     onChange={(e) => setTransactionRef(e.target.value)}
                     className="classes-form-input"
@@ -358,12 +355,12 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
           <div style={{ marginTop: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
               <History size={14} style={{ color: '#6366f1' }} />
-              <span>Lịch sử biên lai ({receiptsHistory.length})</span>
+              <span>Lịch sử thu phí ({receiptsHistory.length})</span>
             </div>
 
             {isLoadingHistory ? (
               <div style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', padding: '12px' }}>
-                Đang tải lịch sử biên lai...
+                Đang tải lịch sử thu phí...
               </div>
             ) : receiptsHistory.length === 0 ? (
               <div style={{ fontSize: '12px', color: '#94a3b8', background: '#f8fafc', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
@@ -374,7 +371,6 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                   <thead style={{ background: '#f8fafc', color: '#475569', textAlign: 'left' }}>
                     <tr>
-                      <th style={{ padding: '8px 10px' }}>Mã biên lai</th>
                       <th style={{ padding: '8px 10px' }}>Số tiền</th>
                       <th style={{ padding: '8px 10px' }}>Hình thức</th>
                       <th style={{ padding: '8px 10px' }}>Ngày thu</th>
@@ -384,9 +380,6 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
                   <tbody>
                     {receiptsHistory.map((rec) => (
                       <tr key={rec.id} style={{ borderTop: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '8px 10px', fontWeight: 600, color: '#4f46e5' }}>
-                          {rec.receiptCode}
-                        </td>
                         <td style={{ padding: '8px 10px', fontWeight: 700, color: '#0f172a' }}>
                           {Number(rec.amount).toLocaleString('vi-VN')} đ
                         </td>

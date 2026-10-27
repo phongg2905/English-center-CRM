@@ -35,6 +35,23 @@ interface EnrollStudentWizardModalProps {
 
 type WizardStep = 1 | 2 | 3 | 4;
 
+const getPipelineStageLabel = (stage?: string) => {
+  switch (stage) {
+    case 'NEW':
+      return 'Mới tiếp nhận';
+    case 'CONTACTING':
+      return 'Đang tư vấn';
+    case 'TEST_SCHEDULED':
+      return 'Đã hẹn test';
+    case 'ENROLLED':
+      return 'Đã ghi danh';
+    case 'LOST':
+      return 'Đã hủy';
+    default:
+      return 'Tiềm năng';
+  }
+};
+
 export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> = ({
   isOpen,
   onClose,
@@ -118,7 +135,6 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
           const match = clsList.find((c) => c.id === initialClassId);
           if (match && !match.isFull && match.currentEnrolled < match.maxCapacity) {
             setSelectedClass(match);
-            // Default payment amount to standard tuition
             setPaymentAmount(match.standardTuition);
           }
         }
@@ -187,7 +203,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
     }
     if (selectedClass.isFull || selectedClass.currentEnrolled >= selectedClass.maxCapacity) {
       setErrorMsg(
-        `Lớp ${selectedClass.classCode} đã đạt sĩ số tối đa (${selectedClass.currentEnrolled}/${selectedClass.maxCapacity}). Vui lòng chọn lớp khác.`
+        `Lớp ${selectedClass.className} đã đạt sĩ số tối đa (${selectedClass.currentEnrolled}/${selectedClass.maxCapacity}). Vui lòng chọn lớp khác.`
       );
       return;
     }
@@ -217,7 +233,6 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
     try {
       setIsSubmitting(true);
 
-      // 1. Prepare Enrollment Payload
       const payload: any = {
         classId: selectedClass.id,
         discountAmount: discountAmount || 0,
@@ -234,11 +249,9 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
         };
       }
 
-      // 2. Call Enroll API
       const enrollmentRes = await AcademicService.enrollStudent(payload);
       setCreatedEnrollment(enrollmentRes);
 
-      // 3. If collect payment now, record payment
       let receiptRes: PaymentReceipt | null = null;
       if (collectPaymentNow && paymentAmount > 0) {
         const payRes = await AcademicService.recordPayment(enrollmentRes.id, {
@@ -252,7 +265,6 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
         setCreatedEnrollment(payRes.enrollment);
       }
 
-      // Move to Step 4 (Success / Student Card)
       setCurrentStep(4);
     } catch (err: any) {
       console.error('Lỗi khi xếp lớp học viên:', err);
@@ -294,7 +306,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
           )}
         </div>
 
-        {/* STEPPER PROGRESS BAR (Hidden on Step 4 Success) */}
+        {/* STEPPER PROGRESS BAR */}
         {currentStep !== 4 && (
           <div
             style={{
@@ -419,12 +431,9 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
 
         {/* MODAL BODY */}
         <div style={{ padding: '20px 24px', maxHeight: '68vh', overflowY: 'auto' }}>
-          {/* ========================================================================= */}
-          {/* BƯỚC 1: CHỌN HỌC VIÊN                                                    */}
-          {/* ========================================================================= */}
+          {/* BƯỚC 1: CHỌN HỌC VIÊN */}
           {currentStep === 1 && (
             <div>
-              {/* Switch Mode: Chọn Lead có sẵn vs Nhập mới */}
               <div
                 style={{
                   display: 'flex',
@@ -476,7 +485,6 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
 
               {candidateMode === 'LEAD' ? (
                 <div>
-                  {/* Lead Search Input */}
                   <div
                     style={{
                       position: 'relative',
@@ -499,7 +507,6 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                     />
                   </div>
 
-                  {/* Leads List Box */}
                   <div
                     style={{
                       maxHeight: '280px',
@@ -519,7 +526,6 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                       </div>
                     ) : (
                       filteredLeads.map((lead) => {
-
                         const isSelected = selectedLead?.id === lead.id;
                         return (
                           <div
@@ -558,18 +564,6 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                               >
                                 <span>{lead.phoneNumber}</span>
                                 {lead.email && <span>{lead.email}</span>}
-                                {lead.sourceChannel && (
-                                  <span
-                                    style={{
-                                      background: '#f1f5f9',
-                                      padding: '1px 6px',
-                                      borderRadius: '4px',
-                                      fontSize: '11px',
-                                    }}
-                                  >
-                                    {lead.sourceChannel}
-                                  </span>
-                                )}
                               </div>
                             </div>
 
@@ -594,11 +588,10 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                                       : '#475569',
                                 }}
                               >
-                                {lead.pipelineStage}
+                                {getPipelineStageLabel(lead.pipelineStage)}
                               </span>
                               {isSelected && <CheckCircle2 size={18} style={{ color: '#4f46e5' }} />}
                             </div>
-
                           </div>
                         );
                       })
@@ -606,7 +599,6 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                   </div>
                 </div>
               ) : (
-                /* Manual Candidate Form */
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <div className="classes-form-row">
                     <div className="classes-form-group">
@@ -650,12 +642,9 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
             </div>
           )}
 
-          {/* ========================================================================= */}
-          {/* BƯỚC 2: CHỌN LỚP HỌC KHẢ DỤNG                                             */}
-          {/* ========================================================================= */}
+          {/* BƯỚC 2: CHỌN LỚP HỌC KHẢ DỤNG */}
           {currentStep === 2 && (
             <div>
-              {/* Course filter selector */}
               <div style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>
                   Khóa học:
@@ -669,13 +658,12 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                   <option value="ALL">Tất cả ({classes.length} lớp)</option>
                   {courses.map((crs) => (
                     <option key={crs.id} value={crs.id.toString()}>
-                      {crs.courseCode} - {crs.courseName}
+                      {crs.courseName}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Header hàng cột cho danh sách lớp */}
               <div
                 style={{
                   display: 'grid',
@@ -692,7 +680,6 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                 <span style={{ textAlign: 'right' }}>Chỗ trống</span>
               </div>
 
-              {/* Danh sách lớp học khả dụng */}
               <div
                 style={{
                   display: 'flex',
@@ -735,7 +722,6 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                           boxShadow: isSelected ? '0 1px 3px rgba(79, 70, 229, 0.12)' : 'none',
                         }}
                       >
-                        {/* Cột 1: Tên lớp (Dòng 1) & Mã lớp phụ (Dòng 2) */}
                         <div style={{ minWidth: 0 }}>
                           <div
                             style={{
@@ -749,25 +735,12 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                           >
                             {cls.className}
                           </div>
-                          <div
-                            style={{
-                              fontSize: '11px',
-                              color: isSelected ? '#6366f1' : '#94a3b8',
-                              fontFamily: 'monospace',
-                              marginTop: '1px',
-                              lineHeight: '13px',
-                            }}
-                          >
-                            {cls.classCode}
-                          </div>
                         </div>
 
-                        {/* Cột 2: Lịch học */}
                         <span style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {schedule}
                         </span>
 
-                        {/* Cột 3: Tình trạng chỗ (không còn icon tick) */}
                         <div style={{ textAlign: 'right' }}>
                           {isFull ? (
                             <span style={{ fontSize: '11px', fontWeight: 600, color: '#b91c1c', background: '#fee2e2', padding: '2px 7px', borderRadius: '4px', display: 'inline-block' }}>
@@ -787,12 +760,9 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
             </div>
           )}
 
-          {/* ========================================================================= */}
-          {/* BƯỚC 3: XÁC NHẬN SĨ SỐ, HỌC PHÍ & BIÊN LAI                               */}
-          {/* ========================================================================= */}
+          {/* BƯỚC 3: XÁC NHẬN SĨ SỐ, HỌC PHÍ & BIÊN LAI */}
           {currentStep === 3 && selectedClass && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Tóm tắt học viên & lớp học gọn gàng */}
               <div
                 style={{
                   display: 'flex',
@@ -817,9 +787,6 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                 <div>
                   <span style={{ color: '#64748b', fontSize: '12px' }}>Lớp: </span>
                   <strong style={{ color: '#0f172a' }}>{selectedClass.className}</strong>
-                  <span style={{ color: '#94a3b8', fontSize: '12px', marginLeft: '6px', fontFamily: 'monospace' }}>
-                    ({selectedClass.classCode})
-                  </span>
                   <span style={{ color: '#64748b', fontSize: '12px', marginLeft: '6px' }}>
                     · Sĩ số: {selectedClass.currentEnrolled + 1}/{selectedClass.maxCapacity}
                   </span>
@@ -993,10 +960,10 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
 
                     {paymentMethod === 'BANK_TRANSFER' && (
                       <div className="classes-form-group">
-                        <label className="classes-form-label">Mã tham chiếu</label>
+                        <label className="classes-form-label">Nội dung giao dịch</label>
                         <input
                           type="text"
-                          placeholder="Mã giao dịch ngân hàng..."
+                          placeholder="Ghi chú chuyển khoản ngân hàng..."
                           value={transactionRef}
                           onChange={(e) => setTransactionRef(e.target.value)}
                           className="classes-form-input"
@@ -1033,9 +1000,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
             </div>
           )}
 
-          {/* ========================================================================= */}
-          {/* BƯỚC 4: THÀNH CÔNG & THẺ HỌC VIÊN CHÍNH THỨC                             */}
-          {/* ========================================================================= */}
+          {/* BƯỚC 4: THÀNH CÔNG & THẺ HỌC VIÊN */}
           {currentStep === 4 && createdEnrollment && (
             <div style={{ textAlign: 'center', padding: '16px 8px' }}>
               <div
@@ -1076,7 +1041,6 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                   overflow: 'hidden',
                 }}
               >
-                {/* Background watermarks */}
                 <div
                   style={{
                     position: 'absolute',
@@ -1115,21 +1079,23 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
 
                 <div style={{ marginBottom: '14px' }}>
                   <div style={{ fontSize: '11px', color: '#a5b4fc', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    Mã học viên
+                    Họ và tên học viên
                   </div>
-                  <div style={{ fontSize: '20px', fontWeight: 800, color: '#ffffff', letterSpacing: '1px' }}>
-                    {createdEnrollment.studentCode}
+                  <div style={{ fontSize: '19px', fontWeight: 800, color: '#ffffff' }}>
+                    {createdEnrollment.fullName}
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div>
-                    <div style={{ fontSize: '11px', color: '#a5b4fc' }}>Họ và tên</div>
-                    <div style={{ fontWeight: 700, fontSize: '14px' }}>{createdEnrollment.fullName}</div>
+                    <div style={{ fontSize: '11px', color: '#a5b4fc' }}>Số điện thoại</div>
+                    <div style={{ fontWeight: 700, fontSize: '13.5px' }}>{createdEnrollment.phoneNumber}</div>
                   </div>
                   <div>
                     <div style={{ fontSize: '11px', color: '#a5b4fc' }}>Lớp học</div>
-                    <div style={{ fontWeight: 700, fontSize: '14px' }}>{createdEnrollment.classCode}</div>
+                    <div style={{ fontWeight: 700, fontSize: '13.5px' }}>
+                      {createdEnrollment.className || selectedClass?.className}
+                    </div>
                   </div>
                 </div>
 

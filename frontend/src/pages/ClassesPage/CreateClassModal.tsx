@@ -70,7 +70,7 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({
         if (tList.length > 0) {
           setTeacherName(tList[0].fullName);
         } else {
-          setTeacherName('Mr. David Trần (8.0 IELTS)');
+          setTeacherName('Mr. David Trần');
         }
       } catch (err: any) {
         console.error('Lỗi tải dữ liệu khóa học/giảng viên:', err);
@@ -84,7 +84,7 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({
   const autoSuggestCodeAndName = (_courseId: number, code: string, name: string) => {
     const randomSuffix = Math.floor(10 + Math.random() * 89);
     const dayTag = scheduleDays === 'MON_WED_FRI' ? 'T246' : scheduleDays === 'TUE_THU_SAT' ? 'T357' : 'T7CN';
-    const suggestedCode = `${code.split('-')[0] || 'CLS'}-K${randomSuffix}-${dayTag}`;
+    const suggestedCode = `${(code || 'CLS').split('-')[0]}-K${randomSuffix}-${dayTag}`;
     setClassCode(suggestedCode);
     setClassName(`${name} - K${randomSuffix}`);
   };
@@ -101,10 +101,6 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({
     e.preventDefault();
     setErrorMsg(null);
 
-    if (!classCode.trim()) {
-      setErrorMsg('Vui lòng nhập mã lớp học');
-      return;
-    }
     if (!className.trim()) {
       setErrorMsg('Vui lòng nhập tên lớp học');
       return;
@@ -118,11 +114,17 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({
       return;
     }
 
+    const generatedCode =
+      classCode.trim() ||
+      `CLS-${Math.floor(100 + Math.random() * 900)}-${
+        scheduleDays === 'MON_WED_FRI' ? 'T246' : scheduleDays === 'TUE_THU_SAT' ? 'T357' : 'T7CN'
+      }`;
+
     try {
       setIsLoading(true);
       const payload: CreateClassPayload = {
         courseId: selectedCourseId,
-        classCode: classCode.trim(),
+        classCode: generatedCode,
         className: className.trim(),
         scheduleDays,
         timeSlot: timeSlot.trim(),
@@ -157,9 +159,6 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({
               <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
                 Mở Lớp Học Mới
               </h3>
-              <p style={{ margin: 0, fontSize: '12.5px', color: '#64748b' }}>
-                Phân bổ phòng học, giảng viên phụ trách và thiết lập sĩ số ban đầu
-              </p>
             </div>
           </div>
           <button
@@ -203,7 +202,7 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({
           </div>
         )}
 
-        {/* Form Body - 2 Columns (Pinterest Style) */}
+        {/* Form Body - 2 Columns */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
           <div className="create-class-form-body">
             <div className="create-class-grid-two-cols">
@@ -226,21 +225,6 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({
                 </div>
 
                 <div className="drawer-field-group">
-                  <label className="drawer-label">Mã Lớp Học (Class Code) *</label>
-                  <input
-                    type="text"
-                    value={classCode}
-                    onChange={(e) => setClassCode(e.target.value)}
-                    placeholder="VD: IELTS-K28-T246"
-                    className="drawer-input-control"
-                    required
-                  />
-                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-                    Mã duy nhất để phân biệt lớp và xuất bảng điểm danh.
-                  </span>
-                </div>
-
-                <div className="drawer-field-group">
                   <label className="drawer-label">Tên Hiển Thị Lớp Học *</label>
                   <input
                     type="text"
@@ -253,7 +237,33 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({
                 </div>
 
                 <div className="drawer-field-group">
-                  <label className="drawer-label">Sĩ Số Tối Đa (Max Capacity) *</label>
+                  <label className="drawer-label">Giảng Viên Phụ Trách</label>
+                  {teachers.length > 0 ? (
+                    <select
+                      value={teacherName}
+                      onChange={(e) => setTeacherName(e.target.value)}
+                      className="drawer-input-control"
+                      style={{ fontWeight: 600 }}
+                    >
+                      {teachers.map((t) => (
+                        <option key={t.id} value={t.fullName}>
+                          {t.fullName}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={teacherName}
+                      onChange={(e) => setTeacherName(e.target.value)}
+                      placeholder="VD: Ms. Sarah Lê"
+                      className="drawer-input-control"
+                    />
+                  )}
+                </div>
+
+                <div className="drawer-field-group">
+                  <label className="drawer-label">Sĩ Số Tối Đa *</label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <input
                       type="number"
@@ -266,45 +276,20 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({
                       required
                     />
                     <span style={{ fontSize: '12px', color: '#64748b' }}>
-                      học viên (Hệ thống sẽ tự khóa khi đủ)
+                      học viên
                     </span>
                   </div>
                   {maxCapacity > systemMaxCapacity && (
-                    <span style={{ fontSize: '11.5px', color: '#b45309', display: 'block', marginTop: '5px', fontWeight: 600 }}>
-                      ⚠️ Lưu ý: Sức chứa này vượt quá giới hạn khuyến nghị ({systemMaxCapacity} học viên) trong Cài đặt hệ thống.
+                    <span style={{ fontSize: '11.5px', color: '#b45309', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '5px', fontWeight: 600 }}>
+                      <AlertCircle size={13} style={{ flexShrink: 0 }} />
+                      <span>Lưu ý: Sức chứa này vượt quá giới hạn khuyến nghị ({systemMaxCapacity} học viên).</span>
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* CỘT PHẢI: PHÂN BỔ GIẢNG VIÊN, LỊCH & PHÒNG HỌC */}
+              {/* CỘT PHẢI: LỊCH HỌC & PHÒNG HỌC */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div className="drawer-field-group">
-                  <label className="drawer-label">Giảng Viên Phụ Trách</label>
-                  {teachers.length > 0 ? (
-                    <select
-                      value={teacherName}
-                      onChange={(e) => setTeacherName(e.target.value)}
-                      className="drawer-input-control"
-                      style={{ fontWeight: 600 }}
-                    >
-                      {teachers.map((t) => (
-                        <option key={t.id} value={t.fullName}>
-                          {t.fullName} {t.specialization ? `(${t.specialization})` : ''}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={teacherName}
-                      onChange={(e) => setTeacherName(e.target.value)}
-                      placeholder="VD: Ms. Sarah Lê (8.0 IELTS)"
-                      className="drawer-input-control"
-                    />
-                  )}
-                </div>
-
                 <div className="drawer-field-group">
                   <label className="drawer-label">Lịch Học Trong Tuần *</label>
                   <select
@@ -313,14 +298,14 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({
                     className="drawer-input-control"
                     style={{ fontWeight: 600 }}
                   >
-                    <option value="MON_WED_FRI">📅 Thứ 2 - Thứ 4 - Thứ 6</option>
-                    <option value="TUE_THU_SAT">📅 Thứ 3 - Thứ 5 - Thứ 7</option>
-                    <option value="WEEKEND">📅 Cuối tuần (Thứ 7 & Chủ Nhật)</option>
+                    <option value="MON_WED_FRI">Thứ 2 - Thứ 4 - Thứ 6</option>
+                    <option value="TUE_THU_SAT">Thứ 3 - Thứ 5 - Thứ 7</option>
+                    <option value="WEEKEND">Cuối tuần (Thứ 7 & Chủ Nhật)</option>
                   </select>
                 </div>
 
                 <div className="drawer-field-group">
-                  <label className="drawer-label">Ca Học (Time Slot) *</label>
+                  <label className="drawer-label">Ca Học *</label>
                   <input
                     type="text"
                     value={timeSlot}
