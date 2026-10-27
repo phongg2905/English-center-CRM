@@ -38,7 +38,7 @@ router.get(
 /**
  * @route GET /api/analytics/revenue
  * @desc  Báo cáo doanh thu thực thu theo tuần/tháng/quý/năm & phương thức thanh toán
- * @access ADMIN, ACADEMIC
+ * @access ADMIN (Dữ liệu tài chính nhạy cảm - chỉ Quản lý trung tâm)
  */
 router.get(
   '/revenue',
@@ -49,22 +49,22 @@ router.get(
 /**
  * @route GET /api/analytics/sales-leaderboard
  * @desc  Bảng xếp hạng hiệu suất tư vấn viên (Số lead chốt & doanh số đem về)
- * @access ADMIN, SALES, ACADEMIC
+ * @access ADMIN, SALES (Chứa doanh số - Giáo vụ không có quyền xem)
  */
 router.get(
   '/sales-leaderboard',
-  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  authorizeRoles('ADMIN', 'SALES'),
   AnalyticsController.getLeaderboard
 );
 
 /**
  * @route GET /api/analytics/channel-roi
  * @desc  Thống kê hiệu quả và doanh thu từng kênh Marketing
- * @access ADMIN, SALES, ACADEMIC
+ * @access ADMIN, SALES (Chứa doanh thu kênh - Giáo vụ không có quyền xem)
  */
 router.get(
   '/channel-roi',
-  authorizeRoles('ADMIN', 'SALES', 'ACADEMIC'),
+  authorizeRoles('ADMIN', 'SALES'),
   AnalyticsController.getChannelROI
 );
 
@@ -82,7 +82,7 @@ router.get(
 /**
  * @route GET /api/analytics/export
  * @desc  Hỗ trợ xuất dữ liệu thô báo cáo định dạng JSON/CSV
- * @access ADMIN, ACADEMIC, SALES
+ * @access ADMIN, ACADEMIC, SALES (Loại báo cáo được xuất bị giới hạn theo vai trò trong Controller)
  */
 router.get(
   '/export',

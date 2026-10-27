@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User } from '../types/auth';
 import { AuthService } from '../services/auth.service';
+import { dataCache } from '../utils/dataCache';
 
 interface AuthContextType {
   user: User | null;
@@ -137,6 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('access_token', result.tokens.accessToken);
       localStorage.setItem('refresh_token', result.tokens.refreshToken);
       localStorage.setItem('user', JSON.stringify(result.user));
+      dataCache.clearAll();
       setUser(result.user);
       return result.user;
     } finally {
@@ -148,6 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       await AuthService.logout();
+      dataCache.clearAll();
     } finally {
       setUser(null);
       setIsLoading(false);

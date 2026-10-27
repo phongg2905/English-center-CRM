@@ -10,6 +10,7 @@ import {
   BarChart3,
   Briefcase,
   Settings,
+  ShieldCheck,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -72,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
           },
           {
             to: '/classes',
-            label: 'Quản lý Lớp học',
+            label: 'Lớp học & Khóa học',
             icon: <BookOpen size={19} />,
             roles: ROUTE_PERMISSIONS.classes,
           },
@@ -83,7 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
         items: [
           {
             to: '/reports',
-            label: 'Báo cáo doanh thu',
+            label: 'Báo cáo & Thống kê',
             icon: <BarChart3 size={19} />,
             roles: ROUTE_PERMISSIONS.reports,
           },
@@ -92,6 +93,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
             label: 'Nhân sự & Giảng viên',
             icon: <Briefcase size={19} />,
             roles: ROUTE_PERMISSIONS.staff,
+          },
+          {
+            to: '/audit-logs',
+            label: 'Nhật ký hoạt động',
+            icon: <ShieldCheck size={19} />,
+            roles: ROUTE_PERMISSIONS.auditLogs,
           },
           {
             to: '/settings',

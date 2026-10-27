@@ -65,6 +65,7 @@ export interface CreateClassPayload {
   teacherName?: string | null;
   startDate: string;
   maxCapacity?: number;
+  status?: ClassStatus;
 }
 
 export interface UpdateClassPayload {

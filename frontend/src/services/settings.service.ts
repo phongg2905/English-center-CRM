@@ -1,4 +1,5 @@
 import { apiClient } from './api';
+import { dataCache } from '../utils/dataCache';
 
 export interface SystemSettingsData {
   id?: number;
@@ -38,18 +39,35 @@ export interface SystemSettingsData {
 
 export class SettingsService {
   /**
-   * Lấy cấu hình hệ thống từ Backend / Database
+   * Lấy cấu hình hệ thống từ Backend / Database (có hỗ trợ Smart Cache)
    */
-  static async getSettings(): Promise<SystemSettingsData> {
-    const res = await apiClient.get<{ success: boolean; data: SystemSettingsData }>('/settings');
-    return res.data.data;
+  static async getSettings(options?: { forceRefresh?: boolean }): Promise<SystemSettingsData> {
+    return dataCache.getOrFetch(
+      'settings:system',
+      async () => {
+        const res = await apiClient.get<{ success: boolean; data: SystemSettingsData }>(
+          '/settings'
+        );
+        return res.data.data;
+      },
+      { forceRefresh: options?.forceRefresh }
+    );
+  }
+
+  static peekSettings(): SystemSettingsData | undefined {
+    return dataCache.peek<SystemSettingsData>('settings:system');
   }
 
   /**
    * Cập nhật cấu hình hệ thống
    */
   static async updateSettings(data: Partial<SystemSettingsData>): Promise<SystemSettingsData> {
-    const res = await apiClient.put<{ success: boolean; data: SystemSettingsData }>('/settings', data);
+    const res = await apiClient.put<{ success: boolean; data: SystemSettingsData }>(
+      '/settings',
+      data
+    );
+    dataCache.set('settings:system', res.data.data);
+    dataCache.invalidate('audit-logs');
     return res.data.data;
   }
 }

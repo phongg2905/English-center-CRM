@@ -12,7 +12,8 @@ export const ROUTE_PERMISSIONS: Record<string, UserRole[]> = {
   leads: ['ADMIN', 'SALES', 'ACADEMIC'],
 
   // Khảo thí & Lịch thi Placement Test
-  tests: ['ADMIN', 'SALES', 'ACADEMIC', 'TEACHER'],
+  // (Giảng viên không tham gia đặt lịch/tiếp nhận thí sinh - Backend cũng chặn TEACHER)
+  tests: ['ADMIN', 'SALES', 'ACADEMIC'],
 
   // Quản lý Học viên & Ghi danh
   students: ['ADMIN', 'SALES', 'ACADEMIC', 'TEACHER'],
@@ -25,6 +26,7 @@ export const ROUTE_PERMISSIONS: Record<string, UserRole[]> = {
 
   // Quản lý Tài khoản Nhân sự & Giảng viên (Admin Only)
   staff: ['ADMIN'],
+  auditLogs: ['ADMIN'],
 
   // Cấu hình trung tâm & Thiết lập hệ thống (Admin Only)
   settings: ['ADMIN'],
@@ -50,11 +52,14 @@ export const ACTION_PERMISSIONS = {
   CLASS_CREATE: ['ADMIN', 'ACADEMIC'] as UserRole[],
   CLASS_EDIT: ['ADMIN', 'ACADEMIC'] as UserRole[],
   CLASS_DELETE: ['ADMIN', 'ACADEMIC'] as UserRole[],
-  CLASS_TRANSFER: ['ADMIN', 'ACADEMIC'] as UserRole[],
+  // Đồng bộ với Backend: POST /api/enrollments/:id/transfer cho phép ADMIN, SALES, ACADEMIC
+  CLASS_TRANSFER: ['ADMIN', 'SALES', 'ACADEMIC'] as UserRole[],
 
   // Ghi danh & Học phí
   ENROLL_STUDENT: ['ADMIN', 'SALES', 'ACADEMIC'] as UserRole[],
   RECORD_PAYMENT: ['ADMIN', 'SALES', 'ACADEMIC'] as UserRole[],
+  // Xem học phí, công nợ, trạng thái thanh toán (Giảng viên chỉ xem danh sách lớp/học viên - không xem tài chính)
+  VIEW_TUITION: ['ADMIN', 'SALES', 'ACADEMIC'] as UserRole[],
 
   // Tuyển sinh & Lead
   LEAD_CREATE: ['ADMIN', 'SALES'] as UserRole[],
@@ -62,8 +67,12 @@ export const ACTION_PERMISSIONS = {
   LEAD_ASSIGN: ['ADMIN', 'SALES'] as UserRole[],
   LEAD_DELETE: ['ADMIN'] as UserRole[],
 
-  // Báo cáo & Tài chính (Admin Only)
+  // Báo cáo & Tài chính
+  // Doanh thu thực thu là dữ liệu tài chính nhạy cảm - chỉ Quản lý trung tâm (SRS-01)
   REVENUE_REPORT: ['ADMIN'] as UserRole[],
+  // Bảng xếp hạng tư vấn viên & hiệu quả kênh (chứa doanh số) - Giáo vụ không xem
+  SALES_PERFORMANCE_REPORT: ['ADMIN', 'SALES'] as UserRole[],
+  // Xuất báo cáo tài chính & doanh thu
   EXPORT_REPORT: ['ADMIN'] as UserRole[],
 
   // Quản trị Nhân sự

@@ -8,19 +8,19 @@ import {
   Mail,
   Phone,
   BookOpen,
-  ChevronLeft,
-  ChevronRight,
   Shield,
   Briefcase,
   GraduationCap,
   School,
 } from 'lucide-react';
 import type { StaffMember, StaffRole, StaffPagination } from '../../types/staff';
+import { PaginationBar } from '../../components/ui';
 
 interface StaffTableProps {
   staffs: StaffMember[];
   pagination: StaffPagination;
   onPageChange: (newPage: number) => void;
+  onPageSizeChange?: (newSize: number) => void;
   onViewDetail: (staff: StaffMember) => void;
   onEdit: (staff: StaffMember) => void;
   onResetPassword: (staff: StaffMember) => void;
@@ -33,6 +33,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
   staffs,
   pagination,
   onPageChange,
+  onPageSizeChange,
   onViewDetail,
   onEdit,
   onResetPassword,
@@ -280,48 +281,15 @@ export const StaffTable: React.FC<StaffTableProps> = ({
       </div>
 
       {/* Pagination Footer */}
-      {pagination.totalPages > 1 && (
-        <div
-          style={{
-            padding: '14px 20px',
-            borderTop: 'var(--glass-border-subtle)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: 'rgba(248, 250, 252, 0.5)',
-          }}
-        >
-          <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
-            Hiển thị <strong>{staffs.length}</strong> / <strong>{pagination.total}</strong> nhân sự
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <button
-              type="button"
-              className="staff-action-btn"
-              disabled={pagination.page <= 1}
-              onClick={() => onPageChange(pagination.page - 1)}
-              style={pagination.page <= 1 ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
-            >
-              <ChevronLeft size={16} />
-            </button>
-
-            <span style={{ fontSize: 12.5, fontWeight: 700, padding: '0 8px', color: 'var(--text-heading)' }}>
-              Trang {pagination.page} / {pagination.totalPages}
-            </span>
-
-            <button
-              type="button"
-              className="staff-action-btn"
-              disabled={pagination.page >= pagination.totalPages}
-              onClick={() => onPageChange(pagination.page + 1)}
-              style={pagination.page >= pagination.totalPages ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      )}
+      <PaginationBar
+        currentPage={pagination.page}
+        totalItems={pagination.total || staffs.length}
+        pageSize={pagination.limit || 8}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        pageSizeOptions={[6, 8, 12, 20]}
+        itemLabel="nhân sự"
+      />
     </div>
   );
 };

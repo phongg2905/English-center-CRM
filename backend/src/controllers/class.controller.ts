@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { ClassService } from '../services/class.service.js';
 import { ApiResponse } from '../utils/response.js';
 import { ClassStatus, ScheduleDays } from '../types/academic.types.js';
+import { AppError } from '../utils/AppError.js';
+import { isTeacher, getTeacherClassIds, stripFinance } from '../utils/teacher-scope.js';
 
 export class ClassController {
   /**
@@ -24,6 +26,17 @@ export class ClassController {
       if (search) filter.search = String(search);
 
       const classes = await ClassService.getAllClasses(filter);
+
+      // Giảng viên: chỉ xem lớp mình phụ trách, ẩn thông tin học phí
+      if (isTeacher(req)) {
+        const myClassIds = await getTeacherClassIds(req);
+        const myClasses = classes
+          .filter((c) => myClassIds.has(Number(c.id)))
+          .map((c) => stripFinance(c));
+        ApiResponse.success(res, myClasses, 'Lấy danh sách lớp học thành công');
+        return;
+      }
+
       ApiResponse.success(res, classes, 'Lấy danh sách lớp học thành công');
     } catch (error) {
       next(error);
@@ -37,6 +50,15 @@ export class ClassController {
   static async getClassById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id, 10);
+      if (isTeacher(req)) {
+        const myClassIds = await getTeacherClassIds(req);
+        if (!myClassIds.has(id)) {
+          throw AppError.forbidden('Giảng viên chỉ được xem lớp học do mình phụ trách');
+        }
+        const cls = await ClassService.getClassById(id);
+        ApiResponse.success(res, stripFinance(cls), 'Lấy chi tiết lớp học thành công');
+        return;
+      }
       const cls = await ClassService.getClassById(id);
       ApiResponse.success(res, cls, 'Lấy chi tiết lớp học thành công');
     } catch (error) {
@@ -51,6 +73,12 @@ export class ClassController {
   static async checkAvailability(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id, 10);
+      if (isTeacher(req)) {
+        const myClassIds = await getTeacherClassIds(req);
+        if (!myClassIds.has(id)) {
+          throw AppError.forbidden('Giảng viên chỉ được xem lớp học do mình phụ trách');
+        }
+      }
       const avail = await ClassService.checkClassAvailability(id);
       ApiResponse.success(res, avail, 'Kiểm tra sĩ số khả dụng thành công');
     } catch (error) {

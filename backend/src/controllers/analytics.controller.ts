@@ -8,6 +8,18 @@ import { Request, Response, NextFunction } from 'express';
 import { AnalyticsService } from '../services/analytics.service.js';
 import { ApiResponse } from '../utils/response.js';
 import { RevenuePeriod, ExportReportType, ExportFormat } from '../types/analytics.types.js';
+import { AppError } from '../utils/AppError.js';
+
+/**
+ * Ma trận loại báo cáo được phép xuất theo vai trò (RBAC - SRS-01)
+ * - ADMIN: toàn quyền
+ * - SALES: dữ liệu tuyển sinh & hiệu suất tư vấn (không gồm doanh thu tài chính tổng)
+ * - ACADEMIC: chỉ báo cáo sĩ số / tỷ lệ lấp đầy lớp học
+ */
+const EXPORT_PERMISSIONS: Record<string, string[]> = {
+  SALES: ['leads', 'sales-leaderboard', 'channel-roi', 'occupancy'],
+  ACADEMIC: ['occupancy'],
+};
 
 export class AnalyticsController {
   /**
@@ -16,7 +28,20 @@ export class AnalyticsController {
    */
   static async getOverview(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const data = await AnalyticsService.getOverview();
+      const data: any = await AnalyticsService.getOverview();
+      const role = String((req as any).user?.role || '').toUpperCase();
+
+      // Ẩn số liệu tài chính đối với các vai trò không phải Quản lý trung tâm
+      if (role !== 'ADMIN' && data && typeof data === 'object') {
+        delete data.totalRevenue;
+        delete data.totalTransactions;
+      }
+
+      // Tư vấn viên xuất sắc (kèm doanh số) thuộc nhóm báo cáo hiệu suất Sales - chỉ ADMIN, SALES
+      if (role !== 'ADMIN' && role !== 'SALES' && data && typeof data === 'object') {
+        delete data.topPerformingConsultant;
+      }
+
       ApiResponse.success(res, data, 'Lấy tổng quan chỉ số điều hành thành công');
     } catch (error) {
       next(error);
@@ -132,6 +157,16 @@ export class AnalyticsController {
   static async exportData(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { type, format, startDate, endDate } = req.query;
+      const role = String((req as any).user?.role || '').toUpperCase();
+
+      if (role !== 'ADMIN') {
+        const allowedTypes = EXPORT_PERMISSIONS[role] || [];
+        if (!allowedTypes.includes(String(type))) {
+          throw AppError.forbidden(
+            `Vai trò [${role}] không có quyền xuất báo cáo loại [${type}]. Loại được phép: [${allowedTypes.join(', ') || 'không có'}]`
+          );
+        }
+      }
 
       const result = await AnalyticsService.exportData({
         type: type as ExportReportType,

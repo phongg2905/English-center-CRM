@@ -27,7 +27,7 @@ export class PlacementTestController {
         throw AppError.badRequest('Vui lòng chọn khung giờ thi (timeSlot)');
       }
 
-      const userId = (req as any).user?.id || 1;
+      const userId = (req as any).user?.userId || (req as any).user?.id || 1;
       const userRole = (req as any).user?.role || 'SALES';
 
       const result = await PlacementTestService.bookTest(
@@ -182,7 +182,7 @@ export class PlacementTestController {
         );
       }
 
-      const userId = (req as any).user?.id || 1;
+      const userId = (req as any).user?.userId || (req as any).user?.id || 1;
       const userRole = (req as any).user?.role || 'ACADEMIC';
 
       const updated = await PlacementTestService.updateAttendance(
@@ -215,7 +215,7 @@ export class PlacementTestController {
         suggestedCourseId,
       } = req.body;
 
-      const userId = (req as any).user?.id || 1;
+      const userId = (req as any).user?.userId || (req as any).user?.id || 1;
       const userRole = (req as any).user?.role || 'ACADEMIC';
 
       const result = await PlacementTestService.recordScore(
@@ -284,7 +284,7 @@ export class PlacementTestController {
   static async cancelTest(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      const userId = (req as any).user?.id || 1;
+      const userId = (req as any).user?.userId || (req as any).user?.id || 1;
 
       await PlacementTestService.cancelTest(Number(id), userId);
       ApiResponse.success(res, null, 'Hủy lịch thi thành công');
