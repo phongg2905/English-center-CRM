@@ -97,6 +97,7 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
       });
 
       await onSuccess();
+      window.dispatchEvent(new CustomEvent('eduflow:lead-created'));
       onClose();
     } catch (err: any) {
       const status = err?.response?.status;

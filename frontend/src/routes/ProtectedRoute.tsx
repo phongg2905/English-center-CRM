@@ -2,7 +2,6 @@ import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { EduFlowLogo } from '../components/common/EduFlowLogo';
-import { AccessDeniedPage } from '../pages/AccessDeniedPage';
 import { hasRequiredRole } from '../config/rbac.config';
 import type { UserRole } from '../types/auth';
 

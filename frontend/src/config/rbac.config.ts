@@ -20,8 +20,8 @@ export const ROUTE_PERMISSIONS: Record<string, UserRole[]> = {
   // Quản lý Lớp học & Khóa học đào tạo
   classes: ['ADMIN', 'SALES', 'ACADEMIC', 'TEACHER'],
 
-  // Báo cáo & Thống kê số liệu
-  reports: ['ADMIN', 'SALES', 'ACADEMIC'],
+  // Báo cáo & Thống kê số liệu (Admin Only)
+  reports: ['ADMIN'],
 
   // Quản lý Tài khoản Nhân sự & Giảng viên (Admin Only)
   staff: ['ADMIN'],
@@ -62,9 +62,9 @@ export const ACTION_PERMISSIONS = {
   LEAD_ASSIGN: ['ADMIN', 'SALES'] as UserRole[],
   LEAD_DELETE: ['ADMIN'] as UserRole[],
 
-  // Báo cáo & Tài chính
-  REVENUE_REPORT: ['ADMIN', 'ACADEMIC'] as UserRole[],
-  EXPORT_REPORT: ['ADMIN', 'ACADEMIC'] as UserRole[],
+  // Báo cáo & Tài chính (Admin Only)
+  REVENUE_REPORT: ['ADMIN'] as UserRole[],
+  EXPORT_REPORT: ['ADMIN'] as UserRole[],
 
   // Quản trị Nhân sự
   STAFF_MANAGE: ['ADMIN'] as UserRole[],

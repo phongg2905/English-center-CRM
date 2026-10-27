@@ -9,6 +9,8 @@ import {
   User,
   Shield,
 } from 'lucide-react';
+import { NotificationDropdown } from './NotificationDropdown';
+import { useNotificationCenter } from '../../hooks/useNotificationCenter';
 import defaultAvatarMale from '../../assets/avatars/default-avatar-male.jpg';
 
 export const Header: React.FC = () => {
@@ -16,13 +18,30 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [notificationOpen, setNotificationOpen] = useState(false);
 
-  // Close dropdown on outside click
+  // Realtime Notification State & Background Polling
+  const {
+    notifications,
+    unreadCount,
+    readIds,
+    isLoading: isNotifLoading,
+    markAsRead,
+    markAllAsRead,
+  } = useNotificationCenter();
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const notifDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
         setDropdownOpen(false);
+      }
+      if (notifDropdownRef.current && !notifDropdownRef.current.contains(target)) {
+        setNotificationOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -42,6 +61,7 @@ export const Header: React.FC = () => {
 
   const handleLogout = async () => {
     setDropdownOpen(false);
+    setNotificationOpen(false);
     await logout();
     navigate('/login');
   };
@@ -66,16 +86,39 @@ export const Header: React.FC = () => {
           <kbd className="header-search-kbd">⌘K</kbd>
         </div>
 
-        {/* Notification Bell */}
-        <button
-          type="button"
-          className="header-icon-btn"
-          aria-label="Thông báo hệ thống"
-          title="3 thông báo mới"
-        >
-          <Bell size={18} />
-          <span className="header-badge-dot" />
-        </button>
+        {/* Notification Bell with Dropdown */}
+        <div className="header-notification-wrapper" ref={notifDropdownRef}>
+          <button
+            type="button"
+            className={`header-icon-btn ${notificationOpen ? 'active' : ''}`}
+            aria-label="Thông báo hệ thống"
+            aria-expanded={notificationOpen}
+            title={unreadCount > 0 ? `${unreadCount} thông báo chưa đọc` : 'Thông báo hệ thống'}
+            onClick={() => {
+              setNotificationOpen(!notificationOpen);
+              if (dropdownOpen) setDropdownOpen(false);
+            }}
+          >
+            <Bell size={18} />
+            {unreadCount > 0 && (
+              <span className="header-badge-count">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+
+          {notificationOpen && (
+            <NotificationDropdown
+              notifications={notifications}
+              unreadCount={unreadCount}
+              readIds={readIds}
+              isLoading={isNotifLoading}
+              onClose={() => setNotificationOpen(false)}
+              onMarkAsRead={markAsRead}
+              onMarkAllAsRead={markAllAsRead}
+            />
+          )}
+        </div>
 
         {/* User Profile Menu */}
         <div className="header-profile-menu-wrapper" ref={dropdownRef}>

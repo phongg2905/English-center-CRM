@@ -269,21 +269,23 @@ export const ReportsPage: React.FC = () => {
 
       {/* 4 Metric Cards (Tremor / Cosmic Sunset Style) */}
       <div className="reports-kpi-grid">
-        <div className="reports-kpi-card revenue">
-          <div className="kpi-header">
-            <span className="kpi-label">Tổng doanh thu thực thu</span>
-            <div className="kpi-icon-circle revenue">
-              <CircleDollarSign size={20} />
+        {canViewRevenue && (
+          <div className="reports-kpi-card revenue">
+            <div className="kpi-header">
+              <span className="kpi-label">Tổng doanh thu thực thu</span>
+              <div className="kpi-icon-circle revenue">
+                <CircleDollarSign size={20} />
+              </div>
+            </div>
+            <div className="kpi-value">{overview ? formatVND(overview.totalRevenue) : <Skeleton variant="rounded" width={140} height={26} />}</div>
+            <div className="kpi-footer">
+              <span className="kpi-delta positive">
+                <TrendingUp size={13} /> {overview?.totalTransactions || 0} giao dịch
+              </span>
+              <span className="kpi-note">Từ các phiếu thu hợp lệ</span>
             </div>
           </div>
-          <div className="kpi-value">{overview ? formatVND(overview.totalRevenue) : <Skeleton variant="rounded" width={140} height={26} />}</div>
-          <div className="kpi-footer">
-            <span className="kpi-delta positive">
-              <TrendingUp size={13} /> {overview?.totalTransactions || 0} giao dịch
-            </span>
-            <span className="kpi-note">Từ các phiếu thu hợp lệ</span>
-          </div>
-        </div>
+        )}
 
         <div className="reports-kpi-card leads">
           <div className="kpi-header">

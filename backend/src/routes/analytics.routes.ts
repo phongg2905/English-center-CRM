@@ -42,7 +42,7 @@ router.get(
  */
 router.get(
   '/revenue',
-  authorizeRoles('ADMIN', 'ACADEMIC'),
+  authorizeRoles('ADMIN'),
   AnalyticsController.getRevenue
 );
 
