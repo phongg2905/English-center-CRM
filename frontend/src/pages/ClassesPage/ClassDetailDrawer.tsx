@@ -141,7 +141,16 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
   useEffect(() => {
     if (classItem) {
       setClassName(classItem.className);
-      setSelectedTeacherId(classItem.teacherId ? String(classItem.teacherId) : '');
+      const matched = teachers.find(
+        (t) => t.fullName.toLowerCase() === classItem.teacherName?.toLowerCase()
+      );
+      setSelectedTeacherId(
+        matched
+          ? String(matched.id)
+          : classItem.teacherId
+          ? String(classItem.teacherId)
+          : ''
+      );
       setRoom(classItem.room || '');
       setScheduleDays(classItem.scheduleDays);
       setTimeSlot(classItem.timeSlot);
@@ -156,21 +165,32 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
       setRosterStatusFilter('ALL');
       setRosterPage(1);
     }
-  }, [classItem]);
+  }, [classItem, teachers]);
 
   useEffect(() => {
     if (isOpen && classItem) {
       setActiveTab(initialTab);
     }
-  }, [isOpen, classItem?.id, initialTab]);
+  }, [isOpen, classItem, initialTab]);
 
   useEffect(() => {
     if (isOpen && canEditClass) {
       StaffService.getTeachers()
-        .then((list) => setTeachers(list || []))
+        .then((list) => {
+          const teacherList = list || [];
+          setTeachers(teacherList);
+          if (classItem?.teacherName) {
+            const found = teacherList.find(
+              (t) => t.fullName.toLowerCase() === classItem.teacherName?.toLowerCase()
+            );
+            if (found) {
+              setSelectedTeacherId(String(found.id));
+            }
+          }
+        })
         .catch(() => {});
     }
-  }, [isOpen, canEditClass]);
+  }, [isOpen, canEditClass, classItem]);
 
   const loadRoster = useCallback(async (classId: number, forceRefresh = false) => {
     try {
@@ -271,9 +291,11 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
 
     try {
       setIsSaving(true);
+      const teacherObj = teachers.find((t) => String(t.id) === selectedTeacherId);
       await AcademicService.updateClass(classItem.id, {
         className: className.trim(),
         teacherId: selectedTeacherId ? Number(selectedTeacherId) : null,
+        teacherName: teacherObj ? teacherObj.fullName : (selectedTeacherId ? classItem.teacherName : null),
         room: room.trim() || null,
         scheduleDays,
         timeSlot: timeSlot.trim(),
@@ -296,7 +318,16 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
 
   const handleCancelEdit = () => {
     setClassName(classItem.className);
-    setSelectedTeacherId(classItem.teacherId ? String(classItem.teacherId) : '');
+    const matched = teachers.find(
+      (t) => t.fullName.toLowerCase() === classItem.teacherName?.toLowerCase()
+    );
+    setSelectedTeacherId(
+      matched
+        ? String(matched.id)
+        : classItem.teacherId
+        ? String(classItem.teacherId)
+        : ''
+    );
     setRoom(classItem.room || '');
     setScheduleDays(classItem.scheduleDays);
     setTimeSlot(classItem.timeSlot);
@@ -321,7 +352,7 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
     }
   };
 
-  const formatDate = (dateStr?: string) => {
+  const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return 'Chưa xác định';
     try {
       const [y, m, d] = dateStr.split('-');

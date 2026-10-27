@@ -13,8 +13,10 @@ export interface ClassItem {
   scheduleDays: ScheduleDays;
   timeSlot: string;
   room: string | null;
+  teacherId?: number | null;
   teacherName: string | null;
   startDate: string;
+  endDate?: string | null;
   maxCapacity: number;
   currentEnrolled: number;
   availableSeats: number;
@@ -75,8 +77,10 @@ export interface UpdateClassPayload {
   scheduleDays?: ScheduleDays;
   timeSlot?: string;
   room?: string | null;
+  teacherId?: number | null;
   teacherName?: string | null;
   startDate?: string;
+  endDate?: string | null;
   maxCapacity?: number;
   status?: ClassStatus;
 }

@@ -701,12 +701,12 @@ async function runIntegrationTestSuite(): Promise<void> {
           await pool.query('DELETE FROM courses WHERE id = $1', [createdCourseId]);
         }
         if (createdLeadId) {
-          await pool.query('DELETE FROM consultation_logs WHERE lead_id = $1', [createdLeadId]);
+          await pool.query('DELETE FROM interaction_logs WHERE lead_id = $1', [createdLeadId]);
           await pool.query('DELETE FROM leads WHERE id = $1', [createdLeadId]);
         }
         if (secondLeadId) {
           await pool.query('DELETE FROM placement_tests WHERE lead_id = $1', [secondLeadId]);
-          await pool.query('DELETE FROM consultation_logs WHERE lead_id = $1', [secondLeadId]);
+          await pool.query('DELETE FROM interaction_logs WHERE lead_id = $1', [secondLeadId]);
           await pool.query('DELETE FROM leads WHERE id = $1', [secondLeadId]);
         }
       }
