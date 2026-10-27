@@ -13,6 +13,7 @@ import { StudentsPage } from '../pages/StudentsPage';
 import { StaffPage } from '../pages/StaffPage';
 import { ReportsPage } from '../pages/ReportsPage';
 import { SettingsPage } from '../pages/SettingsPage';
+import { ActivityLogsPage } from '../pages/ActivityLogsPage';
 import { AccessDeniedPage } from '../pages/AccessDeniedPage';
 import { ProfilePage } from '../pages/ProfilePage';
 import { ROUTE_PERMISSIONS } from '../config/rbac.config';
@@ -129,7 +130,8 @@ export const AppRoutes: React.FC = () => {
           }
         />
 
-        {/* 8. Cài đặt hệ thống (ADMIN Only) */}
+        {/* 8. Cài đặt hệ thống & Nhật ký hoạt động (ADMIN Only) */}
+        <Route path="audit-logs" element={<ProtectedRoute allowedRoles={ROUTE_PERMISSIONS.auditLogs} moduleName="Nhật ký hoạt động"><ActivityLogsPage /></ProtectedRoute>} />
         <Route
           path="settings"
           element={
