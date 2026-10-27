@@ -28,6 +28,9 @@ export const ROUTE_PERMISSIONS: Record<string, UserRole[]> = {
 
   // Cấu hình trung tâm & Thiết lập hệ thống (Admin Only)
   settings: ['ADMIN'],
+
+  // Hồ sơ cá nhân người dùng (All Authenticated Staff)
+  profile: ['ADMIN', 'SALES', 'ACADEMIC', 'TEACHER'],
 };
 
 /**

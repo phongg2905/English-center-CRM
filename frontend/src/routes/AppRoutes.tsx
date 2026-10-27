@@ -14,6 +14,7 @@ import { StaffPage } from '../pages/StaffPage';
 import { ReportsPage } from '../pages/ReportsPage';
 import { SettingsPage } from '../pages/SettingsPage';
 import { AccessDeniedPage } from '../pages/AccessDeniedPage';
+import { ProfilePage } from '../pages/ProfilePage';
 import { ROUTE_PERMISSIONS } from '../config/rbac.config';
 
 export const AppRoutes: React.FC = () => {
@@ -137,6 +138,19 @@ export const AppRoutes: React.FC = () => {
               moduleName="Cài đặt hệ thống"
             >
               <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 9. Hồ sơ cá nhân người dùng (All Authenticated Staff) */}
+        <Route
+          path="profile"
+          element={
+            <ProtectedRoute
+              allowedRoles={ROUTE_PERMISSIONS.profile}
+              moduleName="Hồ sơ cá nhân"
+            >
+              <ProfilePage />
             </ProtectedRoute>
           }
         />
