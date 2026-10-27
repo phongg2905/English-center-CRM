@@ -1,156 +1,178 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
   X,
-  Users,
+  Calendar,
   Clock,
-  Phone,
-  CheckCircle2,
-  AlertCircle,
-  Download,
-  UserPlus,
-  Save,
-  Lock,
+  MapPin,
+  User,
+  Users,
   Edit2,
+  Save,
+  BookOpen,
+  AlertCircle,
+  CheckCircle2,
+  UserPlus,
+  Phone,
+  Lock,
   CreditCard,
   ArrowRightLeft,
   Printer,
+  Copy,
+  Check,
+  Flame,
   Search,
-  RefreshCw,
 } from 'lucide-react';
 import { AcademicService } from '../../services/academic.service';
 import { StaffService } from '../../services/staff.service';
-import type { TeacherItem } from '../../types/staff';
 import type {
   ClassItem,
   ClassEnrollmentItem,
-  UpdateClassPayload,
   ScheduleDays,
   ClassStatus,
   EnrollmentStatus,
 } from '../../types/academic';
+import type { TeacherOption } from '../../types/staff';
 import { Button, PaginationBar } from '../../components/ui';
 import { useAuth } from '../../hooks/useAuth';
 import { hasRequiredRole, ACTION_PERMISSIONS } from '../../config/rbac.config';
-import { CLASS_STATUS_META } from './ClassesPage';
 
 interface ClassDetailDrawerProps {
   classItem: ClassItem | null;
-  initialTab?: 'GENERAL' | 'ROSTER';
   isOpen: boolean;
   onClose: () => void;
   onUpdated: () => void;
+  canEdit?: boolean;
+  initialTab?: 'GENERAL' | 'ROSTER';
   onEnrollClick?: (classId: number) => void;
   onCollectPayment?: (enrollment: ClassEnrollmentItem) => void;
   onTransferClass?: (enrollment: ClassEnrollmentItem) => void;
   onPrintReceipt?: (enrollment: ClassEnrollmentItem) => void;
 }
 
-export const ENROLLMENT_STATUS_META: Record<
+const formatShortClassCode = (code?: string | null): string => {
+  if (!code) return '';
+  return code
+    .replace(/-(T246|T357|T7CN|246|357|T7|CN|WEEKEND|MON_WED_FRI|TUE_THU_SAT)$/i, '')
+    .trim();
+};
+
+const formatTeacherName = (name?: string | null) => {
+  if (!name) return 'Chưa phân công giảng viên';
+  return name.replace(/\s*\([^)]*\)/g, '').trim() || 'Chưa phân công giảng viên';
+};
+
+const ENROLLMENT_STATUS_META: Record<
   EnrollmentStatus,
   { label: string; bg: string; color: string; border: string }
 > = {
   ENROLLED: {
     label: 'Đang theo học',
-    bg: '#ecfdf5',
-    color: '#047857',
-    border: '#a7f3d0',
+    bg: '#dcfce7',
+    color: '#166534',
+    border: '#bbf7d0',
   },
   COMPLETED: {
     label: 'Đã hoàn thành',
-    bg: '#eef2ff',
-    color: '#4338ca',
-    border: '#c7d2fe',
+    bg: '#dbeafe',
+    color: '#1e40af',
+    border: '#bfdbfe',
   },
   TRANSFERRED: {
     label: 'Đã chuyển lớp',
     bg: '#fef3c7',
-    color: '#b45309',
+    color: '#92400e',
     border: '#fde68a',
   },
   DROPPED: {
     label: 'Bảo lưu / Thôi học',
-    bg: '#fef2f2',
-    color: '#b91c1c',
+    bg: '#fee2e2',
+    color: '#991b1b',
     border: '#fecaca',
   },
 };
 
 export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
   classItem,
-  initialTab = 'ROSTER',
   isOpen,
   onClose,
   onUpdated,
+  canEdit,
+  initialTab = 'GENERAL',
   onEnrollClick,
   onCollectPayment,
   onTransferClass,
   onPrintReceipt,
 }) => {
   const { user } = useAuth();
-  const canEditClass = hasRequiredRole(user?.role, ACTION_PERMISSIONS.CLASS_EDIT);
+  const canEditClass =
+    canEdit !== undefined ? canEdit : hasRequiredRole(user?.role, ACTION_PERMISSIONS.CLASS_EDIT);
   const canViewTuition = hasRequiredRole(user?.role, ACTION_PERMISSIONS.VIEW_TUITION);
-  const hasRosterActions = !!(onCollectPayment || onTransferClass || onPrintReceipt);
+  const hasRosterActions = Boolean(onCollectPayment || onTransferClass || onPrintReceipt);
 
   const [activeTab, setActiveTab] = useState<'GENERAL' | 'ROSTER'>(initialTab);
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [copiedCode, setCopiedCode] = useState<boolean>(false);
+
+  // Roster State
   const [enrollments, setEnrollments] = useState<ClassEnrollmentItem[]>([]);
+  const [isLoadingRoster, setIsLoadingRoster] = useState<boolean>(false);
+  const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
   const [rosterSearch, setRosterSearch] = useState<string>('');
   const [rosterStatusFilter, setRosterStatusFilter] = useState<string>('ALL');
   const [rosterPage, setRosterPage] = useState<number>(1);
   const [rosterPageSize, setRosterPageSize] = useState<number>(5);
-  const [isLoadingRoster, setIsLoadingRoster] = useState<boolean>(false);
-  const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
+
+  // Edit Form State
+  const [className, setClassName] = useState<string>('');
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
+  const [teachers, setTeachers] = useState<TeacherOption[]>([]);
+  const [room, setRoom] = useState<string>('');
+  const [scheduleDays, setScheduleDays] = useState<ScheduleDays>('MON_WED_FRI');
+  const [timeSlot, setTimeSlot] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>('');
+  const [maxCapacity, setMaxCapacity] = useState<number>(15);
+  const [status, setStatus] = useState<ClassStatus>('OPEN');
+
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
-  const [saveErrorMsg, setSaveErrorMsg] = useState<string | null>(null);
-
-  // Editable Form States
-  const [teachers, setTeachers] = useState<TeacherItem[]>([]);
-  const [customTeacherInput, setCustomTeacherInput] = useState<boolean>(false);
-  const [editClassName, setEditClassName] = useState<string>('');
-  const [editTeacherName, setEditTeacherName] = useState<string>('');
-  const [editScheduleDays, setEditScheduleDays] = useState<ScheduleDays>('MON_WED_FRI');
-  const [editTimeSlot, setEditTimeSlot] = useState<string>('');
-  const [editRoom, setEditRoom] = useState<string>('');
-  const [editStartDate, setEditStartDate] = useState<string>('');
-  const [editMaxCapacity, setEditMaxCapacity] = useState<number>(15);
-  const [editStatus, setEditStatus] = useState<ClassStatus>('OPEN');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      setActiveTab(initialTab);
-      if (canEditClass) {
-        StaffService.getTeachers()
-          .then((list) => setTeachers(list || []))
-          .catch(() => setTeachers([]));
-      }
+    if (classItem) {
+      setClassName(classItem.className);
+      setSelectedTeacherId(classItem.teacherId ? String(classItem.teacherId) : '');
+      setRoom(classItem.room || '');
+      setScheduleDays(classItem.scheduleDays);
+      setTimeSlot(classItem.timeSlot);
+      setStartDate(classItem.startDate);
+      setMaxCapacity(classItem.maxCapacity);
+      setStatus(classItem.status);
+      setIsEditing(false);
+      setErrorMsg(null);
+      setSuccessMsg(null);
+      setCopiedCode(false);
+      setRosterSearch('');
+      setRosterStatusFilter('ALL');
+      setRosterPage(1);
     }
-  }, [initialTab, isOpen, classItem?.id, canEditClass]);
-
-  // Sync state whenever classItem changes
-  useEffect(() => {
-    if (!classItem) return;
-
-    setEditClassName(classItem.className || '');
-    setEditTeacherName(classItem.teacherName || '');
-    setEditScheduleDays(classItem.scheduleDays || 'MON_WED_FRI');
-    setEditTimeSlot(classItem.timeSlot || '');
-    setEditRoom(classItem.room || '');
-    setEditStartDate(classItem.startDate ? classItem.startDate.split('T')[0] : '');
-    setEditMaxCapacity(classItem.maxCapacity || 15);
-    setEditStatus(classItem.status || 'OPEN');
-    setSaveSuccessMsg(null);
-    setSaveErrorMsg(null);
-    setIsEditing(false);
-    setRosterSearch('');
-    setRosterStatusFilter('ALL');
-    setRosterPage(1);
-
-    loadRoster(classItem.id, false);
   }, [classItem]);
 
-  const loadRoster = async (classId: number, forceRefresh = false) => {
+  useEffect(() => {
+    if (isOpen && classItem) {
+      setActiveTab(initialTab);
+    }
+  }, [isOpen, classItem?.id, initialTab]);
+
+  useEffect(() => {
+    if (isOpen && canEditClass) {
+      StaffService.getTeachers()
+        .then((list) => setTeachers(list || []))
+        .catch(() => {});
+    }
+  }, [isOpen, canEditClass]);
+
+  const loadRoster = useCallback(async (classId: number, forceRefresh = false) => {
     try {
       const cached = AcademicService.peekClassEnrollments(classId);
       if (cached && !forceRefresh) {
@@ -159,40 +181,20 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
       } else {
         setIsLoadingRoster(true);
       }
-      const data = await AcademicService.getClassEnrollments(classId, { forceRefresh });
-      setEnrollments(data);
+      const list = await AcademicService.getClassEnrollments(classId, { forceRefresh });
+      setEnrollments(list);
     } catch (err) {
-      console.error('Lỗi khi tải danh sách học viên trong lớp:', err);
+      console.error('Lỗi tải danh sách học viên trong lớp:', err);
     } finally {
       setIsLoadingRoster(false);
     }
-  };
+  }, []);
 
-  const handleStatusChange = async (
-    enrollment: ClassEnrollmentItem,
-    nextStatus: EnrollmentStatus
-  ) => {
-    if (nextStatus === enrollment.status) return;
-    try {
-      setUpdatingStatusId(enrollment.id);
-      setSaveErrorMsg(null);
-      await AcademicService.updateEnrollmentStatus(enrollment.id, nextStatus);
-      if (classItem) {
-        await loadRoster(classItem.id, true);
-      }
-      onUpdated();
-      setSaveSuccessMsg(
-        `Đã cập nhật trạng thái học viên "${enrollment.fullName}" sang "${ENROLLMENT_STATUS_META[nextStatus].label}"`
-      );
-      setTimeout(() => setSaveSuccessMsg(null), 3000);
-    } catch (err: any) {
-      setSaveErrorMsg(
-        err?.response?.data?.message || err.message || 'Không thể cập nhật trạng thái học viên'
-      );
-    } finally {
-      setUpdatingStatusId(null);
+  useEffect(() => {
+    if (isOpen && classItem) {
+      loadRoster(classItem.id);
     }
-  };
+  }, [isOpen, classItem, loadRoster]);
 
   const filteredRoster = useMemo(() => {
     return enrollments.filter((en) => {
@@ -201,9 +203,9 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
       }
       if (rosterSearch.trim()) {
         const q = rosterSearch.toLowerCase().trim();
-        const matchName = en.fullName.toLowerCase().includes(q);
+        const matchName = (en.fullName || '').toLowerCase().includes(q);
         const matchCode = (en.studentCode || '').toLowerCase().includes(q);
-        const matchPhone = (en.phoneNumber || '').includes(q);
+        const matchPhone = (en.phoneNumber || '').toLowerCase().includes(q);
         const matchEmail = (en.email || '').toLowerCase().includes(q);
         if (!matchName && !matchCode && !matchPhone && !matchEmail) return false;
       }
@@ -216,137 +218,183 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
     return filteredRoster.slice(start, start + rosterPageSize);
   }, [filteredRoster, rosterPage, rosterPageSize]);
 
-  const getScheduleLabel = (days?: ScheduleDays) => {
-    switch (days) {
-      case 'MON_WED_FRI':
-        return 'Thứ 2 - Thứ 4 - Thứ 6';
-      case 'TUE_THU_SAT':
-        return 'Thứ 3 - Thứ 5 - Thứ 7';
-      case 'WEEKEND':
-        return 'Cuối tuần (T7 & CN)';
-      default:
-        return days || 'Chưa sắp xếp';
-    }
-  };
-
-  const formatDate = (dateStr?: string | null) => {
-    if (!dateStr || dateStr === 'Chưa cập nhật' || dateStr === 'null' || dateStr === 'undefined')
-      return 'Chưa cập nhật';
-    try {
-      const cleaned = dateStr.replace(/\s+GM.*$/, '');
-      const d = new Date(cleaned);
-      if (!isNaN(d.getTime())) return d.toLocaleDateString('vi-VN');
-      return dateStr;
-    } catch {
-      return dateStr;
-    }
-  };
+  useEffect(() => {
+    setRosterPage(1);
+  }, [rosterSearch, rosterStatusFilter]);
 
   if (!isOpen || !classItem) return null;
 
-  const activeEnrolledCount = enrollments.filter((e) => e.status === 'ENROLLED').length;
-  const displayedEnrolledCount =
-    enrollments.length > 0 ? activeEnrolledCount || enrollments.length : classItem.currentEnrolled;
+  const isEnded = classItem.status === 'COMPLETED' || classItem.status === 'CANCELLED';
+  const isCancelled =
+    classItem.status === 'CANCELLED' ||
+    (classItem.status === 'COMPLETED' && classItem.currentEnrolled === 0);
+  const isClassFull =
+    !isEnded &&
+    (classItem.isFull ||
+      classItem.status === 'FULL' ||
+      classItem.currentEnrolled >= classItem.maxCapacity);
 
-  const currentFillPercent = Math.min(
-    100,
-    Math.round((classItem.currentEnrolled / Math.max(1, classItem.maxCapacity)) * 100)
-  );
+  const occupancyPercent =
+    classItem.maxCapacity > 0
+      ? Math.min(100, Math.round((classItem.currentEnrolled / classItem.maxCapacity) * 100))
+      : 0;
+  const isNearFull = !isEnded && !isClassFull && occupancyPercent >= 80;
+  const canEnrollThisClass = !isEnded && !isClassFull;
 
-  const statusMeta =
-    CLASS_STATUS_META[
-      (classItem.isFull || classItem.currentEnrolled >= classItem.maxCapacity) &&
-      classItem.status !== 'COMPLETED'
-        ? 'FULL'
-        : classItem.status
-    ] || CLASS_STATUS_META.OPEN;
+  const shortClassCode = formatShortClassCode(classItem.classCode);
 
-  const handleExportRosterCSV = () => {
-    if (enrollments.length === 0) {
-      alert('Lớp học chưa có học viên nào để xuất dữ liệu.');
-      return;
-    }
-    const headers = [
-      'Mã Học Viên',
-      'Họ và Tên',
-      'Số Điện Thoại',
-      'Email',
-      'Ngày Ghi Danh',
-      'Trạng Thái Đào Tạo',
-      ...(canViewTuition ? ['Trạng Thái Học Phí', 'Đã Nộp (VNĐ)', 'Còn Nợ (VNĐ)'] : []),
-    ];
-    const rows = enrollments.map((e) => [
-      e.studentCode,
-      `"${e.fullName}"`,
-      e.phoneNumber,
-      `"${e.email || ''}"`,
-      e.enrollmentDate,
-      ENROLLMENT_STATUS_META[e.status]?.label || e.status,
-      ...(canViewTuition ? [e.paymentStatus, e.paidAmount, e.balanceDue] : []),
-    ]);
-
-    const csvContent =
-      'data:text/csv;charset=utf-8,\uFEFF' +
-      [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Danh_sach_HV_${classItem.classCode}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleCancelEdit = () => {
-    if (!classItem) return;
-    setEditClassName(classItem.className || '');
-    setEditTeacherName(classItem.teacherName || '');
-    setEditScheduleDays(classItem.scheduleDays || 'MON_WED_FRI');
-    setEditTimeSlot(classItem.timeSlot || '');
-    setEditRoom(classItem.room || '');
-    setEditStartDate(classItem.startDate ? classItem.startDate.split('T')[0] : '');
-    setEditMaxCapacity(classItem.maxCapacity || 15);
-    setEditStatus(classItem.status || 'OPEN');
-    setSaveErrorMsg(null);
-    setIsEditing(false);
+  const handleCopyCode = () => {
+    if (!shortClassCode) return;
+    navigator.clipboard?.writeText(shortClassCode).catch(() => {});
+    setCopiedCode(true);
+    window.setTimeout(() => setCopiedCode(false), 1500);
   };
 
   const handleSaveGeneralInfo = async () => {
-    setSaveErrorMsg(null);
-    setSaveSuccessMsg(null);
+    setErrorMsg(null);
+    setSuccessMsg(null);
 
-    if (editMaxCapacity < classItem.currentEnrolled) {
-      setSaveErrorMsg(
-        `Không thể giảm sĩ số tối đa xuống ${editMaxCapacity} vì lớp hiện đang có ${classItem.currentEnrolled} học viên.`
+    if (!className.trim()) {
+      setErrorMsg('Tên lớp học không được để trống.');
+      return;
+    }
+    if (!timeSlot.trim()) {
+      setErrorMsg('Khung giờ học không được để trống.');
+      return;
+    }
+    if (Number(maxCapacity) < classItem.currentEnrolled) {
+      setErrorMsg(
+        `Sĩ số tối đa (${maxCapacity}) không được nhỏ hơn số học viên đang theo học (${classItem.currentEnrolled}).`
       );
       return;
     }
 
     try {
       setIsSaving(true);
-      const payload: UpdateClassPayload = {
-        className: editClassName.trim(),
-        teacherName: editTeacherName.trim() || null,
-        scheduleDays: editScheduleDays,
-        timeSlot: editTimeSlot.trim(),
-        room: editRoom.trim() || null,
-        startDate: editStartDate,
-        maxCapacity: Number(editMaxCapacity),
-        status: editStatus,
-      };
+      await AcademicService.updateClass(classItem.id, {
+        className: className.trim(),
+        teacherId: selectedTeacherId ? Number(selectedTeacherId) : null,
+        room: room.trim() || null,
+        scheduleDays,
+        timeSlot: timeSlot.trim(),
+        startDate,
+        maxCapacity: Number(maxCapacity),
+        status,
+      });
 
-      await AcademicService.updateClass(classItem.id, payload);
-      setSaveSuccessMsg('Đã cập nhật thông tin lớp học thành công!');
+      setSuccessMsg('Đã lưu cập nhật thông tin lớp học thành công!');
       setIsEditing(false);
       onUpdated();
-      setTimeout(() => setSaveSuccessMsg(null), 3000);
     } catch (err: any) {
-      setSaveErrorMsg(
-        err?.response?.data?.message || err.message || 'Lỗi khi cập nhật lớp học'
-      );
+      const msg =
+        err?.response?.data?.message || err.message || 'Không thể cập nhật thông tin lớp học.';
+      setErrorMsg(msg);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleCancelEdit = () => {
+    setClassName(classItem.className);
+    setSelectedTeacherId(classItem.teacherId ? String(classItem.teacherId) : '');
+    setRoom(classItem.room || '');
+    setScheduleDays(classItem.scheduleDays);
+    setTimeSlot(classItem.timeSlot);
+    setStartDate(classItem.startDate);
+    setMaxCapacity(classItem.maxCapacity);
+    setStatus(classItem.status);
+    setErrorMsg(null);
+    setIsEditing(false);
+  };
+
+  const handleStatusChange = async (en: ClassEnrollmentItem, newStatus: EnrollmentStatus) => {
+    if (newStatus === en.status) return;
+    try {
+      setUpdatingStatusId(en.id);
+      await AcademicService.updateEnrollmentStatus(en.id, newStatus);
+      await loadRoster(classItem.id, true);
+      onUpdated();
+    } catch (err: any) {
+      alert(err?.response?.data?.message || err.message || 'Không thể cập nhật trạng thái học viên.');
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return 'Chưa xác định';
+    try {
+      const [y, m, d] = dateStr.split('-');
+      if (!y || !m || !d) return dateStr;
+      return `${d}/${m}/${y}`;
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const getScheduleText = (days: ScheduleDays) => {
+    switch (days) {
+      case 'MON_WED_FRI':
+        return 'Thứ 2 - Thứ 4 - Thứ 6';
+      case 'TUE_THU_SAT':
+        return 'Thứ 3 - Thứ 5 - Thứ 7';
+      case 'WEEKEND':
+        return 'Thứ 7 - Chủ Nhật';
+      default:
+        return days;
+    }
+  };
+
+  const renderHeaderStatusBadge = () => {
+    if (isCancelled) {
+      return (
+        <span className="class-status-badge completed">
+          <span>Đã hủy</span>
+        </span>
+      );
+    }
+    if (classItem.status === 'COMPLETED') {
+      return (
+        <span className="class-status-badge completed">
+          <span>Đã kết thúc</span>
+        </span>
+      );
+    }
+    if (isClassFull) {
+      return (
+        <span className="class-status-badge full">
+          <Lock size={11} />
+          <span>Đã đầy</span>
+        </span>
+      );
+    }
+    if (isNearFull) {
+      return (
+        <span className="class-status-badge near-full">
+          <Flame size={11} />
+          <span>Sắp đầy</span>
+        </span>
+      );
+    }
+    if (classItem.status === 'IN_PROGRESS') {
+      return (
+        <span className="class-status-badge in-progress">
+          <span>Đang học</span>
+        </span>
+      );
+    }
+    return (
+      <span
+        className="class-status-badge"
+        style={{
+          background: '#dcfce7',
+          color: '#15803d',
+          border: '1px solid #bbf7d0',
+        }}
+      >
+        <span>Đang mở tuyển sinh</span>
+      </span>
+    );
   };
 
   return createPortal(
@@ -355,80 +403,46 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
         {/* Drawer Header */}
         <div className="classes-drawer-header">
           <div className="drawer-header-top-row">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  padding: '3px 8px',
-                  borderRadius: '6px',
-                  background: '#eff6ff',
-                  color: '#2563eb',
-                  border: '1px solid #dbeafe',
-                }}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              {renderHeaderStatusBadge()}
+
+              <button
+                type="button"
+                className="class-row-code text-xs text-gray-500"
+                onClick={handleCopyCode}
+                title={copiedCode ? 'Đã sao chép mã lớp!' : 'Nhấn để sao chép mã lớp'}
               >
-                {classItem.classCode}
-              </span>
-              {(classItem.isFull || classItem.currentEnrolled >= classItem.maxCapacity) &&
-              classItem.status !== 'COMPLETED' ? (
-                <span className="class-status-badge full">
-                  <Lock size={12} /> ĐÃ ĐẦY LỚP
-                </span>
-              ) : (
-                <span
-                  className="class-status-badge"
-                  style={{
-                    background: statusMeta.bg,
-                    color: statusMeta.color,
-                    border: `1px solid ${statusMeta.border}`,
-                  }}
-                >
-                  ● {statusMeta.label}
-                </span>
-              )}
+                <span># {shortClassCode}</span>
+                {copiedCode ? (
+                  <Check size={12} className="copy-code-icon copied" />
+                ) : (
+                  <Copy size={12} className="copy-code-icon" />
+                )}
+              </button>
             </div>
 
             <div className="drawer-header-actions">
-              {onEnrollClick && classItem.status !== 'COMPLETED' && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  iconLeft={<UserPlus size={13} />}
-                  onClick={() => onEnrollClick(classItem.id)}
-                  disabled={classItem.isFull || classItem.currentEnrolled >= classItem.maxCapacity}
-                  style={{
-                    background: '#2563eb',
-                    fontWeight: 600,
-                    borderRadius: '8px',
-                    height: '32px',
-                    fontSize: '12.5px',
-                  }}
-                >
-                  Ghi Danh HV
-                </Button>
-              )}
               <button
                 type="button"
                 className="drawer-close-btn"
                 onClick={onClose}
-                aria-label="Đóng"
+                title="Đóng chi tiết"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
           </div>
 
           <div className="drawer-header-title-box">
-            <h3 className="drawer-title">{classItem.className}</h3>
+            <h2 className="drawer-title">{classItem.className}</h2>
             <p className="drawer-subtitle">
+              <BookOpen size={13} />
               <span>{classItem.courseName}</span>
-              <span className="drawer-dot">·</span>
-              <span>GV: {classItem.teacherName || 'Chưa phân công'}</span>
               {canViewTuition && (
                 <>
-                  <span className="drawer-dot">·</span>
+                  <span className="drawer-dot">•</span>
                   <span className="drawer-tuition">
-                    {Number(classItem.standardTuition).toLocaleString('vi-VN')} đ
+                    {Number(classItem.standardTuition || 0).toLocaleString('vi-VN')} đ
                   </span>
                 </>
               )}
@@ -436,526 +450,331 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
           </div>
         </div>
 
-        {/* Drawer Navigation Tabs */}
+        {/* Navigation Pill Tabs */}
         <div className="classes-drawer-tabs-nav">
-          <button
-            type="button"
-            className={`drawer-tab-btn ${activeTab === 'ROSTER' ? 'active' : ''}`}
-            onClick={() => setActiveTab('ROSTER')}
-          >
-            <Users size={15} />
-            <span>Danh sách học viên</span>
-            <span className="drawer-tab-count-badge">
-              {enrollments.length || displayedEnrolledCount}
-            </span>
-          </button>
           <button
             type="button"
             className={`drawer-tab-btn ${activeTab === 'GENERAL' ? 'active' : ''}`}
             onClick={() => setActiveTab('GENERAL')}
           >
-            <Clock size={15} />
-            <span>Thông tin lớp & Lịch học</span>
+            <BookOpen size={14} />
+            <span>Thông Tin Chung</span>
+          </button>
+
+          <button
+            type="button"
+            className={`drawer-tab-btn ${activeTab === 'ROSTER' ? 'active' : ''}`}
+            onClick={() => setActiveTab('ROSTER')}
+          >
+            <Users size={14} />
+            <span>Học Viên Trong Lớp</span>
+            <span className="drawer-tab-count-badge">{enrollments.length}</span>
           </button>
         </div>
 
-        {/* Alert banners */}
-        {saveSuccessMsg && (
-          <div
-            style={{
-              margin: '12px 24px 0 24px',
-              padding: '10px 14px',
-              borderRadius: '10px',
-              background: '#ecfdf5',
-              border: '1px solid #a7f3d0',
-              color: '#065f46',
-              fontSize: '13px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}
-          >
-            <CheckCircle2 size={16} />
-            <span>{saveSuccessMsg}</span>
-          </div>
-        )}
-
-        {saveErrorMsg && (
-          <div
-            style={{
-              margin: '12px 24px 0 24px',
-              padding: '10px 14px',
-              borderRadius: '10px',
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
-              color: '#dc2626',
-              fontSize: '13px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}
-          >
-            <AlertCircle size={16} />
-            <span>{saveErrorMsg}</span>
-          </div>
-        )}
-
-        {/* Drawer Scroll Body */}
+        {/* Drawer Body */}
         <div className="drawer-scroll-body">
-          {/* TAB 1: TỔNG QUAN */}
-          {activeTab === 'GENERAL' && (
+          {errorMsg && (
+            <div
+              style={{
+                padding: '12px 14px',
+                borderRadius: '10px',
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                color: '#dc2626',
+                fontSize: '13px',
+                fontWeight: 500,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <AlertCircle size={16} />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {successMsg && (
+            <div
+              style={{
+                padding: '12px 14px',
+                borderRadius: '10px',
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                color: '#15803d',
+                fontSize: '13px',
+                fontWeight: 500,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <CheckCircle2 size={16} />
+              <span>{successMsg}</span>
+            </div>
+          )}
+
+          {activeTab === 'GENERAL' ? (
             <>
-              {/* Sĩ số Card */}
+              {/* Capacity Card (Clean header without redundant capacity badge) */}
               <div className="drawer-section-card">
                 <div className="drawer-section-header">
                   <h4 className="drawer-section-title">
-                    <Users size={16} style={{ color: '#2563eb' }} />
+                    <Users size={15} style={{ color: '#2563eb' }} />
                     <span>Sĩ Số Lớp Học</span>
                   </h4>
-                  <span
-                    style={{
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      color:
-                        classItem.availableSeats === 0
-                          ? '#dc2626'
-                          : classItem.availableSeats <= 2
-                          ? '#d97706'
-                          : '#059669',
-                    }}
-                  >
-                    {classItem.availableSeats === 0
-                      ? '🔒 Đã đầy lớp'
-                      : `Còn ${classItem.availableSeats} chỗ trống`}
-                  </span>
                 </div>
 
-                <div className="class-capacity-progress-box">
-                  <div className="capacity-text-row">
-                    <span className="capacity-fraction-text">
-                      Đang theo học: <strong>{classItem.currentEnrolled}</strong> /{' '}
-                      {classItem.maxCapacity} học viên (Tổng hồ sơ: {enrollments.length})
+                <div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      fontSize: '13px',
+                      marginBottom: '6px',
+                      color: '#475569',
+                    }}
+                  >
+                    <span>
+                      Đã ghi danh:{' '}
+                      <strong style={{ color: '#0f172a' }}>{classItem.currentEnrolled}</strong> /{' '}
+                      {classItem.maxCapacity} học viên
                     </span>
-                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>
-                      {currentFillPercent}%
-                    </span>
-                  </div>
-                  <div className="capacity-track">
-                    <div
-                      className="capacity-fill"
+                    <strong
                       style={{
-                        width: `${currentFillPercent}%`,
-                        backgroundColor:
-                          currentFillPercent >= 100
-                            ? '#ef4444'
-                            : currentFillPercent >= 75
-                            ? '#f59e0b'
-                            : '#10b981',
+                        color: isEnded
+                          ? '#64748b'
+                          : isClassFull
+                          ? '#dc2626'
+                          : isNearFull
+                          ? '#d97706'
+                          : '#16a34a',
+                      }}
+                    >
+                      {occupancyPercent}%
+                    </strong>
+                  </div>
+
+                  <div className="capacity-track" style={{ height: '8px' }}>
+                    <div
+                      className={`capacity-fill ${
+                        isEnded
+                          ? ''
+                          : isClassFull
+                          ? 'tone-danger bg-red-500'
+                          : isNearFull
+                          ? 'tone-warning bg-orange-500'
+                          : 'tone-success bg-green-500'
+                      }`}
+                      style={{
+                        width: `${occupancyPercent}%`,
+                        ...(isEnded ? { backgroundColor: '#94a3b8' } : {}),
                       }}
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Thông tin chi tiết Card */}
-              {!isEditing ? (
-                <div className="drawer-section-card">
-                  <div className="drawer-section-header">
-                    <h4 className="drawer-section-title">
-                      <Clock size={16} style={{ color: '#2563eb' }} />
-                      <span>Thông Tin Chi Tiết</span>
-                    </h4>
-                    {canEditClass && (
-                      <Button
-                        variant="glass"
-                        size="sm"
-                        iconLeft={<Edit2 size={13} />}
-                        onClick={() => setIsEditing(true)}
-                      >
-                        Chỉnh Sửa
-                      </Button>
-                    )}
-                  </div>
+              {/* General Info View or Edit Form */}
+              <div className="drawer-section-card">
+                <div className="drawer-section-header">
+                  <h4 className="drawer-section-title">
+                    <Calendar size={15} style={{ color: '#2563eb' }} />
+                    <span>{isEditing ? 'Chỉnh Sửa Thông Tin Lớp Học' : 'Thông Tin Vận Hành'}</span>
+                  </h4>
+                </div>
 
+                {!isEditing ? (
                   <div className="drawer-prop-grid">
                     <div className="drawer-prop-item">
-                      <span className="drawer-prop-label">Giảng Viên</span>
+                      <span className="drawer-prop-label">Giảng Viên Phụ Trách</span>
                       <span className="drawer-prop-value">
-                        {classItem.teacherName || 'Chưa phân công'}
+                        <User size={14} style={{ color: '#64748b' }} />
+                        <span>{formatTeacherName(classItem.teacherName)}</span>
                       </span>
                     </div>
 
                     <div className="drawer-prop-item">
-                      <span className="drawer-prop-label">Lịch Học</span>
+                      <span className="drawer-prop-label">Phòng Học</span>
                       <span className="drawer-prop-value">
-                        {getScheduleLabel(classItem.scheduleDays)}
+                        <MapPin size={14} style={{ color: '#64748b' }} />
+                        <span>{classItem.room || 'Chưa xếp phòng'}</span>
                       </span>
                     </div>
 
                     <div className="drawer-prop-item">
-                      <span className="drawer-prop-label">Ca Học</span>
-                      <span className="drawer-prop-value">
-                        {classItem.timeSlot || 'Chưa xếp ca'}
+                      <span className="drawer-prop-label">Ngày Học Trong Tuần</span>
+                      <span className="drawer-prop-value highlight">
+                        <Calendar size={14} />
+                        <span>{getScheduleText(classItem.scheduleDays)}</span>
                       </span>
                     </div>
 
                     <div className="drawer-prop-item">
-                      <span className="drawer-prop-label">Phòng Học / Cơ Sở</span>
+                      <span className="drawer-prop-label">Ca Học / Khung Giờ</span>
                       <span className="drawer-prop-value">
-                        {classItem.room || 'Chưa xếp phòng'}
+                        <Clock size={14} style={{ color: '#64748b' }} />
+                        <span>{classItem.timeSlot}</span>
                       </span>
                     </div>
 
                     <div className="drawer-prop-item">
-                      <span className="drawer-prop-label">Khai Giảng</span>
+                      <span className="drawer-prop-label">Ngày Khai Giảng</span>
                       <span className="drawer-prop-value">{formatDate(classItem.startDate)}</span>
                     </div>
 
                     <div className="drawer-prop-item">
-                      <span className="drawer-prop-label">Khóa Học</span>
-                      <span className="drawer-prop-value highlight">{classItem.courseName}</span>
+                      <span className="drawer-prop-label">Ngày Kết Thúc Dự Kiến</span>
+                      <span className="drawer-prop-value">{formatDate(classItem.endDate)}</span>
                     </div>
-
-                    {canViewTuition && (
-                      <div className="drawer-prop-item">
-                        <span className="drawer-prop-label">Học Phí Niêm Yết</span>
-                        <span className="drawer-prop-value price">
-                          {Number(classItem.standardTuition).toLocaleString('vi-VN')} VNĐ
-                        </span>
-                      </div>
-                    )}
-
-                    {classItem.targetOutput && (
-                      <div className="drawer-prop-item full-width">
-                        <span className="drawer-prop-label">Chuẩn Đầu Ra Cam Kết</span>
-                        <span className="drawer-prop-value" style={{ color: '#2563eb' }}>
-                          🎯 {classItem.targetOutput}
-                        </span>
-                      </div>
-                    )}
                   </div>
-                </div>
-              ) : (
-                /* Chế độ Chỉnh sửa (Edit Mode) */
-                <div className="drawer-section-card">
-                  <div className="drawer-section-header">
-                    <h4 className="drawer-section-title">
-                      <Edit2 size={16} style={{ color: '#2563eb' }} />
-                      <span>Chỉnh Sửa Lớp Học</span>
-                    </h4>
-                  </div>
-
+                ) : (
                   <div className="drawer-edit-grid">
                     <div className="drawer-field-group full-width">
-                      <label className="drawer-label">Tên Hiển Thị Lớp Học *</label>
+                      <label className="drawer-label">Tên lớp học *</label>
                       <input
                         type="text"
-                        value={editClassName}
-                        onChange={(e) => setEditClassName(e.target.value)}
                         className="drawer-input-control"
+                        value={className}
+                        onChange={(e) => setClassName(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="drawer-field-group">
+                      <label className="drawer-label">Giảng viên phụ trách</label>
+                      <select
+                        className="drawer-input-control"
+                        value={selectedTeacherId}
+                        onChange={(e) => setSelectedTeacherId(e.target.value)}
+                      >
+                        <option value="">-- Chưa phân công GV --</option>
+                        {teachers.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.fullName} {t.phoneNumber ? `(${t.phoneNumber})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="drawer-field-group">
+                      <label className="drawer-label">Phòng học</label>
+                      <input
+                        type="text"
+                        className="drawer-input-control"
+                        value={room}
+                        onChange={(e) => setRoom(e.target.value)}
+                        placeholder="VD: P.201 hoặc Online Zoom"
+                      />
+                    </div>
+
+                    <div className="drawer-field-group">
+                      <label className="drawer-label">Lịch học trong tuần</label>
+                      <select
+                        className="drawer-input-control"
+                        value={scheduleDays}
+                        onChange={(e) => setScheduleDays(e.target.value as ScheduleDays)}
+                      >
+                        <option value="MON_WED_FRI">Thứ 2 - Thứ 4 - Thứ 6</option>
+                        <option value="TUE_THU_SAT">Thứ 3 - Thứ 5 - Thứ 7</option>
+                        <option value="WEEKEND">Cuối tuần (T7 - CN)</option>
+                      </select>
+                    </div>
+
+                    <div className="drawer-field-group">
+                      <label className="drawer-label">Khung giờ học *</label>
+                      <input
+                        type="text"
+                        className="drawer-input-control"
+                        value={timeSlot}
+                        onChange={(e) => setTimeSlot(e.target.value)}
+                        placeholder="VD: 18:00 - 19:30"
+                      />
+                    </div>
+
+                    <div className="drawer-field-group">
+                      <label className="drawer-label">Ngày khai giảng</label>
+                      <input
+                        type="date"
+                        className="drawer-input-control"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="drawer-field-group">
+                      <label className="drawer-label">
+                        Sĩ số tối đa (Tối thiểu {classItem.currentEnrolled})
+                      </label>
+                      <input
+                        type="number"
+                        min={Math.max(1, classItem.currentEnrolled)}
+                        max={200}
+                        className="drawer-input-control"
+                        value={maxCapacity}
+                        onChange={(e) => setMaxCapacity(Number(e.target.value))}
                       />
                     </div>
 
                     <div className="drawer-field-group full-width">
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <label className="drawer-label" style={{ marginBottom: 0 }}>
-                          Giảng Viên Đứng Lớp Phụ Trách
-                        </label>
-                        {teachers.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setCustomTeacherInput((prev) => !prev)}
-                            style={{
-                              border: 'none',
-                              background: 'transparent',
-                              color: '#2563eb',
-                              fontSize: '11.5px',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                            }}
-                          >
-                            {customTeacherInput ? 'Chọn từ danh sách GV' : '+ Nhập tên GV khác'}
-                          </button>
-                        )}
-                      </div>
-                      {teachers.length > 0 && !customTeacherInput ? (
-                        <select
-                          value={editTeacherName}
-                          onChange={(e) => setEditTeacherName(e.target.value)}
-                          className="drawer-input-control"
-                          style={{ fontWeight: 600 }}
-                        >
-                          {editTeacherName &&
-                            !teachers.some((t) => t.fullName === editTeacherName) && (
-                              <option value={editTeacherName}>{editTeacherName}</option>
-                            )}
-                          {teachers.map((t) => (
-                            <option key={t.id} value={t.fullName}>
-                              {t.fullName} {t.specialization ? `(${t.specialization})` : ''}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          type="text"
-                          value={editTeacherName}
-                          onChange={(e) => setEditTeacherName(e.target.value)}
-                          className="drawer-input-control"
-                          placeholder="VD: ThS. Nguyễn Thị Thu Hà (Ms. Emily)"
-                        />
-                      )}
-                    </div>
-
-                    <div className="drawer-field-group">
-                      <label className="drawer-label">Lịch Học Trong Tuần</label>
+                      <label className="drawer-label">Trạng thái vận hành lớp</label>
                       <select
-                        value={editScheduleDays}
-                        onChange={(e) => setEditScheduleDays(e.target.value as ScheduleDays)}
                         className="drawer-input-control"
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value as ClassStatus)}
                       >
-                        <option value="MON_WED_FRI">📅 Thứ 2 - Thứ 4 - Thứ 6</option>
-                        <option value="TUE_THU_SAT">📅 Thứ 3 - Thứ 5 - Thứ 7</option>
-                        <option value="WEEKEND">📅 Cuối tuần (T7 & CN)</option>
+                        <option value="OPEN">Đang mở tuyển sinh (OPEN)</option>
+                        <option value="IN_PROGRESS">Đang học (IN_PROGRESS)</option>
+                        <option value="FULL">Đã đầy lớp (FULL)</option>
+                        <option value="COMPLETED">Đã kết thúc (COMPLETED)</option>
                       </select>
                     </div>
-
-                    <div className="drawer-field-group">
-                      <label className="drawer-label">Ca Học (Time Slot)</label>
-                      <input
-                        type="text"
-                        value={editTimeSlot}
-                        onChange={(e) => setEditTimeSlot(e.target.value)}
-                        className="drawer-input-control"
-                        placeholder="VD: 18:00-19:30"
-                      />
-                    </div>
-
-                    <div className="drawer-field-group">
-                      <label className="drawer-label">Phòng Học / Cơ Sở</label>
-                      <input
-                        type="text"
-                        value={editRoom}
-                        onChange={(e) => setEditRoom(e.target.value)}
-                        className="drawer-input-control"
-                        placeholder="VD: Room 101 - Tầng 1"
-                      />
-                    </div>
-
-                    <div className="drawer-field-group">
-                      <label className="drawer-label">Ngày Khai Giảng</label>
-                      <input
-                        type="date"
-                        value={editStartDate}
-                        onChange={(e) => setEditStartDate(e.target.value)}
-                        className="drawer-input-control"
-                      />
-                    </div>
-
-                    <div className="drawer-field-group">
-                      <label className="drawer-label">Sĩ Số Tối Đa</label>
-                      <input
-                        type="number"
-                        min={classItem.currentEnrolled || 1}
-                        max={50}
-                        value={editMaxCapacity}
-                        onChange={(e) => setEditMaxCapacity(Number(e.target.value))}
-                        className="drawer-input-control"
-                      />
-                      <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-                        Tối thiểu: {classItem.currentEnrolled} (số học viên hiện tại)
-                      </span>
-                    </div>
-
-                    <div className="drawer-field-group">
-                      <label className="drawer-label">Trạng Thái Lớp Học</label>
-                      <select
-                        value={editStatus}
-                        onChange={(e) => setEditStatus(e.target.value as ClassStatus)}
-                        className="drawer-input-control"
-                      >
-                        <option value="PLANNING">🟡 Dự kiến mở lớp (PLANNING)</option>
-                        <option value="OPEN">🟢 Đang mở tuyển sinh (OPEN)</option>
-                        <option value="IN_PROGRESS">🔵 Đang học (IN_PROGRESS)</option>
-                        <option value="FULL">🔴 Khóa sổ sĩ số - Đã đầy (FULL)</option>
-                        <option value="COMPLETED">🟣 Đã kết thúc (COMPLETED)</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Preview danh sách học viên ngay trong tab Tổng quan */}
-              <div className="drawer-section-card">
-                <div className="drawer-section-header">
-                  <h4 className="drawer-section-title">
-                    <Users size={16} style={{ color: '#2563eb' }} />
-                    <span>Học Viên Trong Lớp ({enrollments.length})</span>
-                  </h4>
-                  <Button
-                    variant="glass"
-                    size="sm"
-                    onClick={() => setActiveTab('ROSTER')}
-                  >
-                    Xem toàn bộ danh sách →
-                  </Button>
-                </div>
-
-                {enrollments.length === 0 ? (
-                  <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
-                    Lớp học hiện chưa có học viên ghi danh.
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {enrollments.slice(0, 5).map((en) => {
-                      const stMeta = ENROLLMENT_STATUS_META[en.status] || ENROLLMENT_STATUS_META.ENROLLED;
-                      return (
-                        <div
-                          key={en.id}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            padding: '8px 12px',
-                            borderRadius: '10px',
-                            background: '#f8fafc',
-                            border: '1px solid #e2e8f0',
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span
-                              style={{
-                                fontSize: '11px',
-                                fontWeight: 700,
-                                background: '#ede9fe',
-                                color: '#4f46e5',
-                                padding: '2px 7px',
-                                borderRadius: '5px',
-                              }}
-                            >
-                              {en.studentCode}
-                            </span>
-                            <div>
-                              <div style={{ fontWeight: 600, fontSize: '13px', color: '#0f172a' }}>
-                                {en.fullName}
-                              </div>
-                              <div style={{ fontSize: '11.5px', color: '#64748b' }}>
-                                {en.phoneNumber} {en.email ? `· ${en.email}` : ''}
-                              </div>
-                            </div>
-                          </div>
-                          <span
-                            style={{
-                              fontSize: '11px',
-                              fontWeight: 600,
-                              padding: '2px 8px',
-                              borderRadius: '999px',
-                              background: stMeta.bg,
-                              color: stMeta.color,
-                              border: `1px solid ${stMeta.border}`,
-                            }}
-                          >
-                            {stMeta.label}
-                          </span>
-                        </div>
-                      );
-                    })}
-                    {enrollments.length > 5 && (
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('ROSTER')}
-                        style={{
-                          padding: '8px',
-                          borderRadius: '8px',
-                          border: '1px dashed #bfdbfe',
-                          background: '#eff6ff',
-                          color: '#1d4ed8',
-                          fontSize: '12.5px',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        + Xem thêm {enrollments.length - 5} học viên khác trong lớp
-                      </button>
-                    )}
                   </div>
                 )}
               </div>
             </>
-          )}
-
-          {/* TAB 2: DANH SÁCH HỌC VIÊN (ROSTER) */}
-          {activeTab === 'ROSTER' && (
-            <div className="drawer-section-card">
-              <div className="drawer-section-header" style={{ flexWrap: 'wrap', gap: '10px' }}>
+          ) : (
+            /* TAB 2: STUDENT ROSTER */
+            <div className="drawer-section-card" style={{ padding: '18px' }}>
+              <div className="drawer-section-header" style={{ marginBottom: '6px' }}>
                 <h4 className="drawer-section-title">
-                  <Users size={16} style={{ color: '#2563eb' }} />
-                  <span>
-                    Danh Sách Học Viên Lớp {classItem.classCode} ({filteredRoster.length}/
-                    {enrollments.length})
-                  </span>
+                  <Users size={15} style={{ color: '#2563eb' }} />
+                  <span>Danh Sách Học Viên ({enrollments.length})</span>
                 </h4>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <button
-                    type="button"
-                    className="compact-icon-btn"
-                    onClick={() => loadRoster(classItem.id, true)}
-                    disabled={isLoadingRoster}
-                    title="Làm mới danh sách học viên"
-                  >
-                    <RefreshCw size={14} className={isLoadingRoster ? 'animate-spin' : ''} />
-                  </button>
-                  <Button
-                    variant="glass"
-                    size="sm"
-                    onClick={handleExportRosterCSV}
-                    disabled={enrollments.length === 0}
-                    iconLeft={<Download size={13} />}
-                  >
-                    Xuất CSV
-                  </Button>
-                </div>
               </div>
 
-              {/* Thanh tìm kiếm & lọc nhanh trong lớp */}
               {enrollments.length > 0 && (
                 <div
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '10px',
-                    marginBottom: '12px',
+                    gap: '8px',
                     flexWrap: 'wrap',
+                    marginBottom: '6px',
                   }}
                 >
-                  <div
-                    style={{
-                      flex: 1,
-                      minWidth: '200px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      border: '1px solid #e2e8f0',
-                      background: '#f8fafc',
-                    }}
-                  >
-                    <Search size={14} style={{ color: '#64748b' }} />
+                  <div style={{ position: 'relative', flex: 1, minWidth: '170px' }}>
+                    <Search
+                      size={13}
+                      style={{
+                        position: 'absolute',
+                        left: '10px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: '#94a3b8',
+                      }}
+                    />
                     <input
                       type="text"
+                      placeholder="Tìm học viên theo tên, mã HV, SĐT..."
                       value={rosterSearch}
-                      onChange={(e) => {
-                        setRosterSearch(e.target.value);
-                        setRosterPage(1);
-                      }}
-                      placeholder="Tìm tên, mã STU, SĐT học viên trong lớp..."
+                      onChange={(e) => setRosterSearch(e.target.value)}
                       style={{
-                        border: 'none',
-                        background: 'transparent',
-                        outline: 'none',
-                        fontSize: '12.5px',
                         width: '100%',
-                        color: '#0f172a',
+                        padding: '6px 26px 6px 28px',
+                        borderRadius: '8px',
+                        border: '1px solid #cbd5e1',
+                        fontSize: '12px',
+                        outline: 'none',
                       }}
                     />
                     {rosterSearch && (
@@ -963,35 +782,36 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                         type="button"
                         onClick={() => setRosterSearch('')}
                         style={{
+                          position: 'absolute',
+                          right: '6px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
                           border: 'none',
-                          background: 'transparent',
-                          cursor: 'pointer',
                           color: '#94a3b8',
-                          padding: 0,
+                          cursor: 'pointer',
                         }}
                       >
-                        <X size={13} />
+                        <X size={12} />
                       </button>
                     )}
                   </div>
 
                   <select
                     value={rosterStatusFilter}
-                    onChange={(e) => {
-                      setRosterStatusFilter(e.target.value);
-                      setRosterPage(1);
-                    }}
+                    onChange={(e) => setRosterStatusFilter(e.target.value)}
                     style={{
                       padding: '6px 10px',
                       borderRadius: '8px',
-                      border: '1px solid #e2e8f0',
-                      background: '#ffffff',
-                      fontSize: '12.5px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '12px',
                       fontWeight: 600,
                       color: '#334155',
+                      background: '#ffffff',
+                      outline: 'none',
                     }}
                   >
-                    <option value="ALL">Tất cả trạng thái ({enrollments.length})</option>
+                    <option value="ALL">Mọi trạng thái ({enrollments.length})</option>
                     <option value="ENROLLED">
                       Đang theo học ({enrollments.filter((e) => e.status === 'ENROLLED').length})
                     </option>
@@ -1009,7 +829,7 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
               )}
 
               {isLoadingRoster ? (
-                <div style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>
+                <div style={{ padding: '32px 0', textAlign: 'center', color: '#64748b' }}>
                   Đang tải danh sách học viên...
                 </div>
               ) : enrollments.length === 0 ? (
@@ -1019,70 +839,54 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                     textAlign: 'center',
                     background: '#f8fafc',
                     borderRadius: '12px',
+                    border: '1px dashed #cbd5e1',
                   }}
                 >
-                  <Users size={32} style={{ color: '#94a3b8', margin: '0 auto 8px auto' }} />
-                  <p style={{ fontWeight: 600, color: '#334155', margin: '0 0 4px 0' }}>
-                    Chưa có học viên nào trong lớp
+                  <Users size={28} style={{ color: '#94a3b8', margin: '0 auto 8px auto' }} />
+                  <p style={{ margin: 0, fontSize: '13.5px', fontWeight: 600, color: '#475569' }}>
+                    Lớp học này chưa có học viên ghi danh
                   </p>
-                  <p style={{ fontSize: '12.5px', color: '#64748b', margin: '0 0 14px 0' }}>
-                    {onEnrollClick
-                      ? 'Lớp hiện đang mở tuyển sinh. Bạn có thể ghi danh học viên mới ngay.'
-                      : 'Lớp hiện chưa có học viên ghi danh.'}
+                  <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#94a3b8' }}>
+                    Sử dụng nút "Ghi Danh Học Viên" ở thanh dưới cùng để thêm học viên vào lớp.
                   </p>
-                  {onEnrollClick && (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      iconLeft={<UserPlus size={14} />}
-                      onClick={() => onEnrollClick(classItem.id)}
-                      style={{ background: '#2563eb' }}
-                    >
-                      Ghi Danh Học Viên
-                    </Button>
-                  )}
                 </div>
               ) : filteredRoster.length === 0 ? (
-                <div style={{ padding: '28px', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>
-                  Không tìm thấy học viên nào khớp với bộ lọc hiện tại.
+                <div
+                  style={{
+                    padding: '28px 16px',
+                    textAlign: 'center',
+                    background: '#f8fafc',
+                    borderRadius: '12px',
+                    border: '1px dashed #cbd5e1',
+                  }}
+                >
+                  <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#475569' }}>
+                    Không tìm thấy học viên phù hợp với bộ lọc.
+                  </p>
                 </div>
               ) : (
-                <div style={{ overflowX: 'auto' }}>
+                <div className="roster-table-container">
                   <table className="roster-table">
                     <thead>
                       <tr>
-                        <th>Mã HV</th>
-                        <th>Họ và Tên</th>
+                        <th>Học Viên</th>
                         <th>Liên Hệ</th>
                         <th>Trạng Thái Học</th>
-                        {canViewTuition && <th style={{ textAlign: 'center' }}>Học Phí & Công Nợ</th>}
+                        {canViewTuition && <th style={{ textAlign: 'center' }}>Học Phí</th>}
                         {hasRosterActions && <th style={{ textAlign: 'right' }}>Thao Tác</th>}
                       </tr>
                     </thead>
                     <tbody>
-                      {paginatedRoster.map((en) => {
+                      {paginatedRoster.map((en, idx) => {
                         const stMeta =
                           ENROLLMENT_STATUS_META[en.status] || ENROLLMENT_STATUS_META.ENROLLED;
                         return (
                           <tr key={en.id}>
                             <td>
-                              <span
-                                style={{
-                                  fontSize: '11px',
-                                  fontWeight: 700,
-                                  background: '#ede9fe',
-                                  color: '#4f46e5',
-                                  padding: '2px 6px',
-                                  borderRadius: '4px',
-                                }}
-                              >
-                                {en.studentCode}
-                              </span>
-                            </td>
-                            <td>
                               <div style={{ fontWeight: 600, color: '#0f172a' }}>{en.fullName}</div>
-                              <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                                Nhập học: {formatDate(en.enrollmentDate)}
+                              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                                {en.studentCode ? `${en.studentCode} • ` : ''}
+                                {formatDate(en.enrollmentDate)}
                               </div>
                             </td>
                             <td>
@@ -1097,7 +901,7 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                               )}
                             </td>
 
-                            {/* Trạng thái đào tạo (Cho phép Admin/Academic đổi trực tiếp) */}
+                            {/* Trạng thái đào tạo */}
                             <td>
                               {canEditClass ? (
                                 <select
@@ -1142,7 +946,7 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                               )}
                             </td>
 
-                            {/* Học Phí */}
+                            {/* Học Phí - Single-Line Notion Pill with Hover Popover */}
                             {canViewTuition && (
                               <td style={{ textAlign: 'center' }}>
                                 <div className="notion-finance-wrapper">
@@ -1166,7 +970,12 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                                     )}
                                   </div>
 
-                                  <div className="notion-finance-popover">
+                                  {/* Hover Popover Breakdown (opens downward on first row to prevent clipping) */}
+                                  <div
+                                    className={`notion-finance-popover ${
+                                      idx === 0 ? 'popover-bottom' : ''
+                                    }`}
+                                  >
                                     <div className="notion-popover-title">
                                       Chi Tiết Học Phí & Công Nợ
                                     </div>
@@ -1221,7 +1030,7 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
                               </td>
                             )}
 
-                            {/* Thao Tác */}
+                            {/* Thao Tác - 28px Icon Buttons with Tooltip */}
                             {hasRosterActions && (
                               <td style={{ textAlign: 'right' }}>
                                 <div className="table-actions-group">
@@ -1290,66 +1099,63 @@ export const ClassDetailDrawer: React.FC<ClassDetailDrawerProps> = ({
           )}
         </div>
 
-        {/* Drawer Sticky Footer */}
-        <div className="classes-drawer-footer" style={{ gap: '10px' }}>
-          {activeTab === 'GENERAL' ? (
-            isEditing ? (
-              <>
-                <Button variant="glass" onClick={handleCancelEdit} disabled={isSaving}>
-                  Hủy
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleSaveGeneralInfo}
-                  disabled={isSaving}
-                  iconLeft={<Save size={15} />}
-                  style={{
-                    background: '#2563eb',
-                    fontWeight: 600,
-                  }}
-                >
-                  {isSaving ? 'Đang lưu...' : 'Lưu Thay Đổi'}
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button variant="glass" onClick={onClose}>
-                  Đóng
-                </Button>
-                {canEditClass && (
+        {/* Drawer Sticky Footer (Single authoritative action bar) */}
+        <div
+          className="classes-drawer-footer"
+          style={{ gap: '10px', justifyContent: 'space-between' }}
+        >
+          {activeTab === 'GENERAL' && isEditing ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: 'auto' }}>
+              <Button variant="glass" onClick={handleCancelEdit} disabled={isSaving}>
+                Hủy
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleSaveGeneralInfo}
+                disabled={isSaving}
+                iconLeft={<Save size={15} />}
+                style={{
+                  background: '#2563eb',
+                  fontWeight: 600,
+                }}
+              >
+                {isSaving ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div>
+                {activeTab === 'GENERAL' && canEditClass && (
                   <Button
-                    variant="primary"
+                    variant="glass"
                     onClick={() => setIsEditing(true)}
                     iconLeft={<Edit2 size={14} />}
-                    style={{
-                      background: '#2563eb',
-                      fontWeight: 600,
-                    }}
                   >
                     Chỉnh Sửa Lớp
                   </Button>
                 )}
-              </>
-            )
-          ) : (
-            <>
-              <Button variant="glass" onClick={onClose}>
-                Đóng
-              </Button>
-              {onEnrollClick && classItem.status !== 'COMPLETED' && (
-                <Button
-                  variant="primary"
-                  onClick={() => onEnrollClick(classItem.id)}
-                  disabled={classItem.isFull || classItem.currentEnrolled >= classItem.maxCapacity}
-                  iconLeft={<UserPlus size={14} />}
-                  style={{
-                    background: '#2563eb',
-                    fontWeight: 600,
-                  }}
-                >
-                  Ghi Danh Học Viên Mới
-                </Button>
-              )}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {onEnrollClick && (
+                  <Button
+                    variant="primary"
+                    onClick={() => onEnrollClick(classItem.id)}
+                    disabled={!canEnrollThisClass}
+                    iconLeft={<UserPlus size={14} />}
+                    style={{
+                      background: canEnrollThisClass ? '#2563eb' : '#94a3b8',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {isEnded
+                      ? 'Lớp Đã Đóng'
+                      : isClassFull
+                      ? 'Đã Đầy Lớp'
+                      : 'Ghi Danh Học Viên'}
+                  </Button>
+                )}
+              </div>
             </>
           )}
         </div>

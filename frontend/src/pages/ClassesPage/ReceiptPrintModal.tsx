@@ -29,10 +29,8 @@ export const ReceiptPrintModal: React.FC<ReceiptPrintModalProps> = ({
     receiptDate.getMonth() + 1
   } năm ${receiptDate.getFullYear()}`;
 
-  // Helper number to words (basic Vietnamese representation)
   const formatAmountWords = (num: number): string => {
     if (num <= 0) return 'Không đồng';
-    // Friendly approximation
     return `${num.toLocaleString('vi-VN')} Việt Nam Đồng`;
   };
 
@@ -57,7 +55,7 @@ export const ReceiptPrintModal: React.FC<ReceiptPrintModalProps> = ({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontWeight: 700, fontSize: '14px', color: '#1e1b4b' }}>
-              Phiếu thu ({receipt.receiptCode})
+              Phiếu thu học phí
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -126,9 +124,6 @@ export const ReceiptPrintModal: React.FC<ReceiptPrintModalProps> = ({
               >
                 Mẫu số: 01-TT/HP
               </div>
-              <div style={{ fontSize: '14px', fontWeight: 800, color: '#4f46e5', marginTop: '4px' }}>
-                {receipt.receiptCode}
-              </div>
             </div>
           </div>
 
@@ -158,11 +153,6 @@ export const ReceiptPrintModal: React.FC<ReceiptPrintModalProps> = ({
             </div>
 
             <div style={{ display: 'flex' }}>
-              <span style={{ width: '160px', color: '#475569' }}>Mã số học viên:</span>
-              <span style={{ fontWeight: 800, color: '#4f46e5' }}>{enrollment.studentCode}</span>
-            </div>
-
-            <div style={{ display: 'flex' }}>
               <span style={{ width: '160px', color: '#475569' }}>Số điện thoại:</span>
               <span style={{ fontWeight: 600 }}>{enrollment.phoneNumber}</span>
               {enrollment.email && (
@@ -175,7 +165,7 @@ export const ReceiptPrintModal: React.FC<ReceiptPrintModalProps> = ({
             <div style={{ display: 'flex' }}>
               <span style={{ width: '160px', color: '#475569' }}>Khóa học / Lớp học:</span>
               <span style={{ fontWeight: 600 }}>
-                {enrollment.courseName} — Lớp: <strong>{enrollment.className} ({enrollment.classCode})</strong>
+                {enrollment.courseName} — Lớp: <strong>{enrollment.className}</strong>
               </span>
             </div>
 
@@ -197,9 +187,7 @@ export const ReceiptPrintModal: React.FC<ReceiptPrintModalProps> = ({
               <span style={{ width: '160px', color: '#475569' }}>Hình thức thanh toán:</span>
               <span style={{ fontWeight: 600 }}>
                 {receipt.paymentMethod === 'BANK_TRANSFER'
-                  ? `Chuyển khoản ngân hàng ${
-                      receipt.transactionReference ? `(Mã giao dịch: ${receipt.transactionReference})` : ''
-                    }`
+                  ? 'Chuyển khoản ngân hàng'
                   : 'Tiền mặt tại quầy'}
               </span>
             </div>
