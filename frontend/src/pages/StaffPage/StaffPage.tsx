@@ -10,6 +10,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { StaffService } from '../../services/staff.service';
 import type {
   StaffMember,
+  StaffRole,
   TeacherItem,
   StaffPagination,
   StaffRoleSummary,
@@ -50,10 +51,12 @@ export const StaffPage: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
 
   // Modal / Drawer States
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
+  const [drawerDefaultRole, setDrawerDefaultRole] = useState<StaffRole>('SALES');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Reset Password Modal State
@@ -75,14 +78,14 @@ export const StaffPage: React.FC = () => {
     setTimeout(() => setActionNotice(null), 4000);
   };
 
-  // Fetch staffs
+  // Fetch staffs & teachers
   const loadStaffs = useCallback(async (silent = false) => {
     try {
       if (!silent) setIsLoading(true);
 
       const params: any = {
         page: currentPage,
-        limit: 10,
+        limit: pageSize,
       };
 
       if (searchQuery.trim()) params.search = searchQuery.trim();
@@ -97,7 +100,7 @@ export const StaffPage: React.FC = () => {
 
       if (staffsRes) {
         setStaffs(staffsRes.staffs || []);
-        setPagination(staffsRes.pagination || { page: 1, limit: 10, total: 0, totalPages: 1 });
+        setPagination(staffsRes.pagination || { page: 1, limit: pageSize, total: 0, totalPages: 1 });
         if (staffsRes.summary) {
           setRoleSummary(staffsRes.summary);
         }
@@ -110,7 +113,7 @@ export const StaffPage: React.FC = () => {
     } finally {
       if (!silent) setIsLoading(false);
     }
-  }, [currentPage, searchQuery, roleFilter, statusFilter]);
+  }, [currentPage, pageSize, searchQuery, roleFilter, statusFilter]);
 
   useEffect(() => {
     loadStaffs();
@@ -121,14 +124,80 @@ export const StaffPage: React.FC = () => {
   const teacherCount = roleSummary?.teacherCount ?? teachers.length;
 
   // Handlers for Drawer
-  const handleOpenCreateDrawer = () => {
+  const handleOpenCreateDrawer = (defaultRole: StaffRole = 'SALES') => {
     setEditingStaff(null);
+    setDrawerDefaultRole(defaultRole);
     setIsDrawerOpen(true);
   };
 
   const handleOpenEditDrawer = (staff: StaffMember) => {
     setEditingStaff(staff);
+    setDrawerDefaultRole(staff.roleCode || 'SALES');
     setIsDrawerOpen(true);
+  };
+
+  const handleEditTeacherFromRoster = (teacher: TeacherItem) => {
+    const asStaff: StaffMember = {
+      id: teacher.id,
+      username: teacher.username,
+      fullName: teacher.fullName,
+      email: teacher.email,
+      phoneNumber: teacher.phoneNumber,
+      roleId: 4,
+      roleCode: 'TEACHER',
+      roleName: 'Giảng viên',
+      avatarUrl: teacher.avatarUrl,
+      isActive: teacher.isActive,
+      specialization: teacher.specialization,
+      isNative: teacher.isNative,
+      bio: teacher.bio,
+      assignedClassesCount: teacher.assignedClassesCount,
+      assignedClasses: teacher.assignedClasses,
+      createdAt: '',
+      updatedAt: '',
+    };
+    handleOpenEditDrawer(asStaff);
+  };
+
+  const handleViewTeacherDetail = (teacher: TeacherItem) => {
+    const asStaff: StaffMember = {
+      id: teacher.id,
+      username: teacher.username,
+      fullName: teacher.fullName,
+      email: teacher.email,
+      phoneNumber: teacher.phoneNumber,
+      roleId: 4,
+      roleCode: 'TEACHER',
+      roleName: 'Giảng viên',
+      avatarUrl: teacher.avatarUrl,
+      isActive: teacher.isActive,
+      specialization: teacher.specialization,
+      isNative: teacher.isNative,
+      bio: teacher.bio,
+      assignedClassesCount: teacher.assignedClassesCount,
+      assignedClasses: teacher.assignedClasses,
+      createdAt: '',
+      updatedAt: '',
+    };
+    handleOpenDetailModal(asStaff);
+  };
+
+  const handleDeleteTeacherFromRoster = (teacher: TeacherItem) => {
+    const asStaff: StaffMember = {
+      id: teacher.id,
+      username: teacher.username,
+      fullName: teacher.fullName,
+      email: teacher.email,
+      phoneNumber: teacher.phoneNumber,
+      roleId: 4,
+      roleCode: 'TEACHER',
+      roleName: 'Giảng viên',
+      isActive: teacher.isActive,
+      assignedClassesCount: teacher.assignedClassesCount,
+      createdAt: '',
+      updatedAt: '',
+    };
+    handleDeleteStaff(asStaff);
   };
 
   const handleDrawerSubmit = async (
@@ -139,12 +208,13 @@ export const StaffPage: React.FC = () => {
       setIsSubmitting(true);
       if (isEdit && editingStaff) {
         await StaffService.updateStaff(editingStaff.id, data as UpdateStaffPayload);
-        showNotice(`Cập nhật thông tin nhân viên ${(data as UpdateStaffPayload).fullName || editingStaff.fullName} thành công!`);
+        showNotice(`Cập nhật thông tin ${(data as UpdateStaffPayload).fullName || editingStaff.fullName} thành công!`);
       } else {
         await StaffService.createStaff(data as CreateStaffPayload);
-        showNotice('Tạo mới tài khoản nhân sự thành công!');
+        showNotice('Tạo mới tài khoản thành công!');
       }
       setIsDrawerOpen(false);
+      StaffService.invalidateCache();
       await loadStaffs(true);
     } catch (err: any) {
       console.error('Lỗi lưu nhân sự:', err);
@@ -291,7 +361,7 @@ export const StaffPage: React.FC = () => {
             <button
               type="button"
               className="staff-btn staff-btn-refresh"
-              onClick={() => loadStaffs()}
+              onClick={() => { StaffService.invalidateCache(); loadStaffs(); }}
               title="Làm mới dữ liệu"
             >
               <RefreshCw size={15} className={isLoading ? 'spin-icon' : ''} />
@@ -300,8 +370,23 @@ export const StaffPage: React.FC = () => {
 
             <button
               type="button"
+              className="staff-btn"
+              onClick={() => handleOpenCreateDrawer('TEACHER')}
+              style={{
+                background: '#ecfdf5',
+                color: '#047857',
+                border: '1px solid #a7f3d0',
+                fontWeight: 700,
+              }}
+            >
+              <School size={15} />
+              + Thêm Giảng Viên
+            </button>
+
+            <button
+              type="button"
               className="staff-btn staff-btn-primary"
-              onClick={handleOpenCreateDrawer}
+              onClick={() => handleOpenCreateDrawer(activeTab === 'teachers' ? 'TEACHER' : 'SALES')}
             >
               <Plus size={16} />
               Thêm Nhân Sự Mới
@@ -379,6 +464,10 @@ export const StaffPage: React.FC = () => {
             staffs={staffs}
             pagination={pagination}
             onPageChange={(p) => setCurrentPage(p)}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
             onViewDetail={handleOpenDetailModal}
             onEdit={handleOpenEditDrawer}
             onResetPassword={handleOpenResetModal}
@@ -388,7 +477,19 @@ export const StaffPage: React.FC = () => {
           />
         )
       ) : (
-        <TeacherRosterGrid teachers={teachers} isLoading={isLoading} />
+        <TeacherRosterGrid
+          teachers={teachers}
+          isLoading={isLoading}
+          onAddTeacher={() => handleOpenCreateDrawer('TEACHER')}
+          onEditTeacher={handleEditTeacherFromRoster}
+          onViewDetail={handleViewTeacherDetail}
+          onDeleteTeacher={handleDeleteTeacherFromRoster}
+          onClassesChanged={() => {
+            StaffService.invalidateCache();
+            loadStaffs(true);
+            showNotice('Đã cập nhật phân công lớp đứng dạy cho giảng viên!');
+          }}
+        />
       )}
 
       {/* Create / Edit Staff Drawer */}
@@ -397,6 +498,7 @@ export const StaffPage: React.FC = () => {
         onClose={() => setIsDrawerOpen(false)}
         onSubmit={handleDrawerSubmit}
         editingStaff={editingStaff}
+        defaultRole={drawerDefaultRole}
         isSubmitting={isSubmitting}
         currentUserId={currentUserId}
       />

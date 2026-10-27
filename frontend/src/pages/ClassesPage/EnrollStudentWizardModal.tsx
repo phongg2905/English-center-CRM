@@ -30,24 +30,34 @@ interface EnrollStudentWizardModalProps {
   onClose: () => void;
   onSuccess: (newEnrollment?: ClassEnrollmentItem) => void;
   initialClassId?: number;
+  initialLeadId?: number;
   onPrintReceipt?: (receipt: PaymentReceipt, enrollment: ClassEnrollmentItem) => void;
 }
 
 type WizardStep = 1 | 2 | 3 | 4;
+
+const STAGE_LABEL_MAP: Record<string, string> = {
+  NEW: 'Lead mới',
+  CONTACTING: 'Đang tư vấn',
+  TEST_SCHEDULED: 'Đã hẹn test',
+  ENROLLED: 'Đã nhập học',
+  LOST: 'Ngưng theo dõi',
+};
 
 export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
   initialClassId,
+  initialLeadId,
   onPrintReceipt,
 }) => {
   // Stepper state
   const [currentStep, setCurrentStep] = useState<WizardStep>(1);
 
-  // Meta data
-  const [courses, setCourses] = useState<CourseItem[]>([]);
-  const [classes, setClasses] = useState<ClassItem[]>([]);
+  // Meta data (seed from cache immediately if available)
+  const [courses, setCourses] = useState<CourseItem[]>(() => AcademicService.peekCourses() || []);
+  const [classes, setClasses] = useState<ClassItem[]>(() => AcademicService.peekClasses() || []);
   const [leads, setLeads] = useState<LeadWithDetails[]>([]);
 
   // Search & Filter
@@ -62,6 +72,8 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
   const [manualFullName, setManualFullName] = useState<string>('');
   const [manualPhone, setManualPhone] = useState<string>('');
   const [manualEmail, setManualEmail] = useState<string>('');
+  const [manualDob, setManualDob] = useState<string>('');
+  const [manualAddress, setManualAddress] = useState<string>('');
 
   // Selected Class
   const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null);
@@ -94,6 +106,8 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
     setManualFullName('');
     setManualPhone('');
     setManualEmail('');
+    setManualDob('');
+    setManualAddress('');
     setSelectedClass(null);
     setDiscountAmount(0);
     setEnrollmentNotes('');
@@ -104,21 +118,53 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
 
     const loadMeta = async () => {
       try {
-        setIsLoadingMeta(true);
+        const hasCached = Boolean(AcademicService.peekCourses() && AcademicService.peekClasses());
+        if (!hasCached) setIsLoadingMeta(true);
+
         const [cList, clsList, leadsData] = await Promise.all([
           AcademicService.getCourses(),
           AcademicService.getClasses(),
-          LeadService.getLeads({ limit: 50 }).catch(() => ({ leads: [] })),
+          LeadService.getLeads({ limit: 80 }).catch(() => ({ leads: [] })),
         ]);
         setCourses(cList);
         setClasses(clsList);
-        setLeads(leadsData.leads || []);
+
+        // Prioritize non-enrolled leads at top
+        const rawLeads: LeadWithDetails[] = leadsData.leads || [];
+        const priorityRank: Record<string, number> = {
+          TEST_SCHEDULED: 1,
+          CONTACTING: 2,
+          NEW: 3,
+          ENROLLED: 4,
+          LOST: 5,
+        };
+        const sortedLeads = [...rawLeads].sort(
+          (a, b) => (priorityRank[a.pipelineStage] || 9) - (priorityRank[b.pipelineStage] || 9)
+        );
+        setLeads(sortedLeads);
+
+        if (initialLeadId) {
+          const matchedLead = sortedLeads.find((l) => l.id === initialLeadId);
+          if (matchedLead) {
+            setCandidateMode('LEAD');
+            setSelectedLead(matchedLead);
+          } else {
+            LeadService.getLeadById(initialLeadId)
+              .then((lead) => {
+                if (lead) {
+                  setLeads((prev) => [lead, ...prev.filter((p) => p.id !== lead.id)]);
+                  setCandidateMode('LEAD');
+                  setSelectedLead(lead);
+                }
+              })
+              .catch(() => {});
+          }
+        }
 
         if (initialClassId) {
           const match = clsList.find((c) => c.id === initialClassId);
           if (match && !match.isFull && match.currentEnrolled < match.maxCapacity) {
             setSelectedClass(match);
-            // Default payment amount to standard tuition
             setPaymentAmount(match.standardTuition);
           }
         }
@@ -131,7 +177,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
     };
 
     loadMeta();
-  }, [isOpen, initialClassId]);
+  }, [isOpen, initialClassId, initialLeadId]);
 
   // Recalculate default payment amount when class or discount changes
   useEffect(() => {
@@ -173,6 +219,11 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
     } else {
       if (!manualFullName.trim() || !manualPhone.trim()) {
         setErrorMsg('Họ tên và Số điện thoại học viên là bắt buộc');
+        return;
+      }
+      const cleanPhone = manualPhone.trim().replace(/\s+/g, '');
+      if (!/^0\d{9}$/.test(cleanPhone)) {
+        setErrorMsg('Số điện thoại học viên phải gồm đúng 10 chữ số (bắt đầu bằng số 0)');
         return;
       }
     }
@@ -229,8 +280,10 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
       } else {
         payload.candidateInfo = {
           fullName: manualFullName.trim(),
-          phoneNumber: manualPhone.trim(),
+          phoneNumber: manualPhone.trim().replace(/\s+/g, ''),
           email: manualEmail.trim() || undefined,
+          dateOfBirth: manualDob || undefined,
+          address: manualAddress.trim() || undefined,
         };
       }
 
@@ -279,7 +332,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
               <Users size={20} />
             </div>
             <div>
-              <h3 className="classes-modal-title">Xếp Lớp Học Viên</h3>
+              <h3 className="classes-modal-title">Xếp Lớp & Ghi Danh Học Viên</h3>
             </div>
           </div>
           {currentStep !== 4 && (
@@ -390,7 +443,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                   color: currentStep === 3 ? '#1e1b4b' : '#64748b',
                 }}
               >
-                Học phí
+                Học phí & Biên lai
               </span>
             </div>
           </div>
@@ -451,7 +504,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  Chọn từ Lead
+                  Chọn từ danh sách Lead ({leads.length})
                 </button>
                 <button
                   type="button"
@@ -470,7 +523,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  Thêm học viên mới
+                  + Thêm học viên mới trực tiếp
                 </button>
               </div>
 
@@ -519,7 +572,6 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                       </div>
                     ) : (
                       filteredLeads.map((lead) => {
-
                         const isSelected = selectedLead?.id === lead.id;
                         return (
                           <div
@@ -542,9 +594,26 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                                   fontWeight: 600,
                                   color: isSelected ? '#4f46e5' : '#0f172a',
                                   fontSize: '13.5px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
                                 }}
                               >
-                                {lead.fullName}
+                                <span>{lead.fullName}</span>
+                                {lead.interest && (
+                                  <span
+                                    style={{
+                                      fontSize: '10.5px',
+                                      fontWeight: 700,
+                                      padding: '1px 6px',
+                                      borderRadius: '4px',
+                                      background: '#eff6ff',
+                                      color: '#2563eb',
+                                    }}
+                                  >
+                                    {lead.interest}
+                                  </span>
+                                )}
                               </div>
                               <div
                                 style={{
@@ -556,8 +625,8 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                                   marginTop: '2px',
                                 }}
                               >
-                                <span>{lead.phoneNumber}</span>
-                                {lead.email && <span>{lead.email}</span>}
+                                <span>📞 {lead.phoneNumber}</span>
+                                {lead.email && <span>✉️ {lead.email}</span>}
                                 {lead.sourceChannel && (
                                   <span
                                     style={{
@@ -594,11 +663,10 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                                       : '#475569',
                                 }}
                               >
-                                {lead.pipelineStage}
+                                {STAGE_LABEL_MAP[lead.pipelineStage] || lead.pipelineStage}
                               </span>
                               {isSelected && <CheckCircle2 size={18} style={{ color: '#4f46e5' }} />}
                             </div>
-
                           </div>
                         );
                       })
@@ -611,7 +679,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                   <div className="classes-form-row">
                     <div className="classes-form-group">
                       <label className="classes-form-label">
-                        Họ và tên <span style={{ color: '#ef4444' }}>*</span>
+                        Họ và tên học viên <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <input
                         type="text"
@@ -623,7 +691,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                     </div>
                     <div className="classes-form-group">
                       <label className="classes-form-label">
-                        Số điện thoại <span style={{ color: '#ef4444' }}>*</span>
+                        Số điện thoại (10 số) <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <input
                         type="text"
@@ -635,13 +703,35 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                     </div>
                   </div>
 
+                  <div className="classes-form-row">
+                    <div className="classes-form-group">
+                      <label className="classes-form-label">Email học viên</label>
+                      <input
+                        type="email"
+                        placeholder="VD: student@gmail.com"
+                        value={manualEmail}
+                        onChange={(e) => setManualEmail(e.target.value)}
+                        className="classes-form-input"
+                      />
+                    </div>
+                    <div className="classes-form-group">
+                      <label className="classes-form-label">Ngày sinh</label>
+                      <input
+                        type="date"
+                        value={manualDob}
+                        onChange={(e) => setManualDob(e.target.value)}
+                        className="classes-form-input"
+                      />
+                    </div>
+                  </div>
+
                   <div className="classes-form-group">
-                    <label className="classes-form-label">Email</label>
+                    <label className="classes-form-label">Địa chỉ liên hệ</label>
                     <input
-                      type="email"
-                      placeholder="VD: student@gmail.com"
-                      value={manualEmail}
-                      onChange={(e) => setManualEmail(e.target.value)}
+                      type="text"
+                      placeholder="VD: 120 Nguyễn Thị Minh Khai, Quận 3, TP.HCM"
+                      value={manualAddress}
+                      onChange={(e) => setManualAddress(e.target.value)}
                       className="classes-form-input"
                     />
                   </div>
@@ -679,7 +769,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr) 90px',
+                  gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr) 105px',
                   gap: '12px',
                   padding: '0 12px 6px 12px',
                   fontSize: '11.5px',
@@ -687,8 +777,8 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                   color: '#64748b',
                 }}
               >
-                <span>Lớp học</span>
-                <span>Lịch học</span>
+                <span>Lớp học & Giảng viên</span>
+                <span>Lịch học & Phòng</span>
                 <span style={{ textAlign: 'right' }}>Chỗ trống</span>
               </div>
 
@@ -711,7 +801,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                     const isSelected = selectedClass?.id === cls.id;
                     const isFull =
                       cls.isFull || cls.currentEnrolled >= cls.maxCapacity || cls.status === 'FULL';
-                    const schedule = `${cls.scheduleDays === 'MON_WED_FRI' ? 'T2-4-6' : cls.scheduleDays === 'TUE_THU_SAT' ? 'T3-5-7' : 'Cuối tuần'}, ${cls.timeSlot}`;
+                    const schedule = `${cls.scheduleDays === 'MON_WED_FRI' ? 'T2-4-6' : cls.scheduleDays === 'TUE_THU_SAT' ? 'T3-5-7' : 'Cuối tuần'} • ${cls.timeSlot}`;
                     const available = cls.availableSeats ?? (cls.maxCapacity - cls.currentEnrolled);
 
                     return (
@@ -729,13 +819,13 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                           opacity: isFull ? 0.5 : 1,
                           transition: 'all 0.15s ease',
                           display: 'grid',
-                          gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr) 90px',
+                          gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr) 105px',
                           alignItems: 'center',
                           gap: '12px',
                           boxShadow: isSelected ? '0 1px 3px rgba(79, 70, 229, 0.12)' : 'none',
                         }}
                       >
-                        {/* Cột 1: Tên lớp (Dòng 1) & Mã lớp phụ (Dòng 2) */}
+                        {/* Cột 1: Tên lớp (Dòng 1) & Mã lớp + GV (Dòng 2) */}
                         <div style={{ minWidth: 0 }}>
                           <div
                             style={{
@@ -752,30 +842,31 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                           <div
                             style={{
                               fontSize: '11px',
-                              color: isSelected ? '#6366f1' : '#94a3b8',
-                              fontFamily: 'monospace',
-                              marginTop: '1px',
+                              color: isSelected ? '#6366f1' : '#64748b',
+                              marginTop: '2px',
                               lineHeight: '13px',
                             }}
                           >
-                            {cls.classCode}
+                            <span style={{ fontFamily: 'monospace' }}>{cls.classCode}</span>
+                            {cls.teacherName ? ` • GV: ${cls.teacherName}` : ''}
                           </div>
                         </div>
 
                         {/* Cột 2: Lịch học */}
-                        <span style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {schedule}
-                        </span>
+                        <div style={{ fontSize: '12px', color: '#475569', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <div>{schedule}</div>
+                          {cls.room && <div style={{ fontSize: '11px', color: '#94a3b8' }}>{cls.room}</div>}
+                        </div>
 
-                        {/* Cột 3: Tình trạng chỗ (không còn icon tick) */}
+                        {/* Cột 3: Tình trạng chỗ */}
                         <div style={{ textAlign: 'right' }}>
                           {isFull ? (
                             <span style={{ fontSize: '11px', fontWeight: 600, color: '#b91c1c', background: '#fee2e2', padding: '2px 7px', borderRadius: '4px', display: 'inline-block' }}>
-                              Đã đầy
+                              Đã đầy ({cls.currentEnrolled}/{cls.maxCapacity})
                             </span>
                           ) : (
                             <span style={{ fontSize: '11.5px', fontWeight: 600, color: '#059669', background: '#ecfdf5', padding: '2px 7px', borderRadius: '4px', display: 'inline-block' }}>
-                              Còn {available} chỗ
+                              Còn {available} chỗ ({cls.currentEnrolled}/{cls.maxCapacity})
                             </span>
                           )}
                         </div>
@@ -852,7 +943,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                   </div>
 
                   <div className="classes-form-group">
-                    <label className="classes-form-label">Chiết khấu (VNĐ)</label>
+                    <label className="classes-form-label">Chiết khấu / Học bổng (VNĐ)</label>
                     <input
                       type="number"
                       min={0}
@@ -863,6 +954,33 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                       className="classes-form-input"
                       placeholder="0"
                     />
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                      {[
+                        { label: '0đ', val: 0 },
+                        { label: '-5%', val: Math.round((selectedClass.standardTuition * 0.05) / 10000) * 10000 },
+                        { label: '-10%', val: Math.round((selectedClass.standardTuition * 0.1) / 10000) * 10000 },
+                        { label: '-500k', val: 500000 },
+                        { label: '-1 Triệu', val: 1000000 },
+                      ].map((chip) => (
+                        <button
+                          key={chip.label}
+                          type="button"
+                          onClick={() => setDiscountAmount(Math.min(selectedClass.standardTuition, chip.val))}
+                          style={{
+                            fontSize: '11px',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            border: discountAmount === chip.val ? '1px solid #4f46e5' : '1px solid #e2e8f0',
+                            background: discountAmount === chip.val ? '#ede9fe' : '#f8fafc',
+                            color: discountAmount === chip.val ? '#4f46e5' : '#475569',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -879,7 +997,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                   }}
                 >
                   <span style={{ fontWeight: 600, color: '#4338ca', fontSize: '13px' }}>
-                    Cần nộp:
+                    Thực thu sau ưu đãi:
                   </span>
                   <span style={{ fontWeight: 800, color: '#4f46e5', fontSize: '16px' }}>
                     {Math.max(0, selectedClass.standardTuition - discountAmount).toLocaleString('vi-VN')} đ
@@ -915,7 +1033,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                       onChange={(e) => setCollectPaymentNow(e.target.checked)}
                       style={{ width: '16px', height: '16px', accentColor: '#4f46e5' }}
                     />
-                    <span>Thu học phí ngay</span>
+                    <span>Thu học phí & Xuất biên lai ngay</span>
                   </label>
                 </div>
 
@@ -924,7 +1042,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                     <div className="classes-form-row">
                       <div className="classes-form-group">
                         <label className="classes-form-label">
-                          Số tiền nộp (VNĐ) <span style={{ color: '#ef4444' }}>*</span>
+                          Số tiền nộp đợt này (VNĐ) <span style={{ color: '#ef4444' }}>*</span>
                         </label>
                         <input
                           type="number"
@@ -935,7 +1053,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                           onChange={(e) => setPaymentAmount(Number(e.target.value))}
                           className="classes-form-input"
                         />
-                        <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
                           <button
                             type="button"
                             onClick={() =>
@@ -946,7 +1064,7 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                               background: '#ede9fe',
                               color: '#6366f1',
                               border: 'none',
-                              padding: '2px 8px',
+                              padding: '3px 8px',
                               borderRadius: '4px',
                               cursor: 'pointer',
                               fontWeight: 600,
@@ -967,13 +1085,33 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                               background: '#f1f5f9',
                               color: '#475569',
                               border: 'none',
-                              padding: '2px 8px',
+                              padding: '3px 8px',
                               borderRadius: '4px',
                               cursor: 'pointer',
                               fontWeight: 600,
                             }}
                           >
                             Đặt cọc 50%
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPaymentAmount(
+                                Math.min(2000000, Math.max(0, selectedClass.standardTuition - discountAmount))
+                              )
+                            }
+                            style={{
+                              fontSize: '11px',
+                              background: '#f1f5f9',
+                              color: '#475569',
+                              border: 'none',
+                              padding: '3px 8px',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                            }}
+                          >
+                            Cọc 2.000.000đ
                           </button>
                         </div>
                       </div>
@@ -985,18 +1123,18 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                           onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
                           className="classes-form-input"
                         >
-                          <option value="BANK_TRANSFER">Chuyển khoản</option>
-                          <option value="CASH">Tiền mặt</option>
+                          <option value="BANK_TRANSFER">Chuyển khoản ngân hàng (QR)</option>
+                          <option value="CASH">Tiền mặt tại quầy</option>
                         </select>
                       </div>
                     </div>
 
                     {paymentMethod === 'BANK_TRANSFER' && (
                       <div className="classes-form-group">
-                        <label className="classes-form-label">Mã tham chiếu</label>
+                        <label className="classes-form-label">Mã tham chiếu giao dịch</label>
                         <input
                           type="text"
-                          placeholder="Mã giao dịch ngân hàng..."
+                          placeholder="VD: FT2610889123 - Vietcombank..."
                           value={transactionRef}
                           onChange={(e) => setTransactionRef(e.target.value)}
                           className="classes-form-input"
@@ -1020,10 +1158,10 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
 
               {/* Notes */}
               <div className="classes-form-group">
-                <label className="classes-form-label">Ghi chú tư vấn</label>
+                <label className="classes-form-label">Ghi chú hồ sơ đào tạo</label>
                 <textarea
                   rows={2}
-                  placeholder="Ghi chú thêm về học viên..."
+                  placeholder="Ghi chú thêm về nguyện vọng, cam kết đầu ra của học viên..."
                   value={enrollmentNotes}
                   onChange={(e) => setEnrollmentNotes(e.target.value)}
                   className="classes-form-input"
@@ -1108,8 +1246,8 @@ export const EnrollStudentWizardModal: React.FC<EnrollStudentWizardModalProps> =
                     {createdEnrollment.paymentStatus === 'FULLY_PAID'
                       ? 'Đã nộp đủ'
                       : createdEnrollment.paymentStatus === 'PARTIAL'
-                      ? 'Còn nợ'
-                      : 'Chưa đóng'}
+                      ? 'Nộp một phần'
+                      : 'Chưa đóng phí'}
                   </span>
                 </div>
 
