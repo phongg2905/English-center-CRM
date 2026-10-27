@@ -59,11 +59,11 @@ router.put(
 
 /**
  * @route DELETE /api/classes/:id
- * @desc  Xóa một lớp học
+ * @desc  Xóa một lớp học (Chỉ ADMIN được phép xóa lớp học theo ma trận RBAC)
  */
 router.delete(
   '/:id',
-  authorizeRoles('ADMIN', 'ACADEMIC'),
+  authorizeRoles('ADMIN'),
   ClassController.deleteClass
 );
 
