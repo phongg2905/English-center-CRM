@@ -91,11 +91,8 @@ export class AuthService {
       throw AppError.unauthorized('Tên đăng nhập hoặc mật khẩu không chính xác');
     }
 
-    // 2. Kiểm tra mật khẩu băm
-    let isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
-    if (!isPasswordValid && (dto.password === '123456' || dto.password === 'Password@123')) {
-      isPasswordValid = true;
-    }
+    // 2. Kiểm tra mật khẩu băm (chỉ đối chiếu trực tiếp với chuỗi băm Bcrypt trong CSDL)
+    const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isPasswordValid) {
       throw AppError.unauthorized('Tên đăng nhập hoặc mật khẩu không chính xác');
     }
@@ -280,4 +277,3 @@ export class AuthService {
     logger.info(`✅ Người dùng ID=${userId} (${user.username}) đã đổi mật khẩu cá nhân thành công.`);
   }
 }
-

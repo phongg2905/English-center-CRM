@@ -81,18 +81,22 @@ export class StaffService {
       if (dupCheck.field === 'email') throw AppError.conflict('Địa chỉ Email này đã được đăng ký');
     }
 
-    // 3. Tìm vai trò tương ứng
+    // 3. Kiểm tra mật khẩu do người dùng/Admin đặt (không dùng mật khẩu mặc định)
+    if (!dto.password || dto.password.trim().length < 6) {
+      throw AppError.badRequest('Vui lòng nhập mật khẩu cho tài khoản (tối thiểu 6 ký tự)');
+    }
+
+    // 4. Tìm vai trò tương ứng
     const role = await StaffRepository.findRoleByCode(dto.roleCode);
     if (!role) {
       throw AppError.badRequest(`Vai trò '${dto.roleCode}' không hợp lệ hoặc chưa được định nghĩa`);
     }
 
-    // 4. Băm mật khẩu (mặc định nếu không truyền: EduFlow@2026)
-    const rawPassword = dto.password && dto.password.length >= 6 ? dto.password : 'EduFlow@2026';
+    // 5. Băm mật khẩu bằng Bcrypt
     const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(rawPassword, salt);
+    const passwordHash = await bcrypt.hash(dto.password.trim(), salt);
 
-    // 5. Lưu vào CSDL
+    // 6. Lưu vào CSDL
     const created = await StaffRepository.create({
       username: cleanUsername,
       passwordHash,
@@ -112,7 +116,6 @@ export class StaffService {
       ...created,
       roleCode: role.roleCode,
       roleName: role.roleName,
-      defaultPasswordUsed: !dto.password,
     };
   }
 
@@ -210,7 +213,7 @@ export class StaffService {
   }
 
   /**
-   * Đặt lại mật khẩu nhân viên
+   * Đặt lại mật khẩu nhân viên (bắt buộc nhập mật khẩu mới, không sinh mật khẩu mặc định)
    */
   static async resetPassword(id: number, currentUserId: number, newPassword?: string): Promise<{ message: string; temporaryPassword?: string }> {
     const existing = await StaffRepository.findById(id);
@@ -218,7 +221,11 @@ export class StaffService {
       throw AppError.notFound(`Không tìm thấy nhân sự với ID ${id}`);
     }
 
-    const passwordToSet = newPassword && newPassword.length >= 6 ? newPassword : `EduFlow@${Math.floor(1000 + Math.random() * 9000)}`;
+    if (!newPassword || newPassword.trim().length < 6) {
+      throw AppError.badRequest('Vui lòng nhập mật khẩu mới (tối thiểu 6 ký tự)');
+    }
+
+    const passwordToSet = newPassword.trim();
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(passwordToSet, salt);
 

@@ -17,12 +17,12 @@ INSERT INTO roles (id, role_code, role_name, description) VALUES
 
 -- ==============================================================================
 -- 2. BẢNG users (Nhân sự nòng cốt: 1 = Tam Minh, 2 = Long Phạm, 3 = phong phạm)
--- Mật khẩu mặc định: 'Password@123' (Mã băm Bcrypt)
+-- Mật khẩu tài khoản mẫu: '123456' (Mã băm Bcrypt)
 -- ==============================================================================
 INSERT INTO users (id, username, password_hash, full_name, email, phone_number, role_id, avatar_url, is_active) VALUES
-(1, 'tamminh', '$2a$12$e8k6R4QzY7e1K2I3l7Zf4.7x3q5.K9Q6aLzM4B8N2p3e1v5b7y9u', 'Tam Minh', 'tamminh@crm.edu.vn', '0912345678', 1, 'https://images.unsplash.com/photo-1534528741775-53994a69daeb', TRUE),
-(2, 'longpham', '$2a$12$e8k6R4QzY7e1K2I3l7Zf4.7x3q5.K9Q6aLzM4B8N2p3e1v5b7y9u', 'Long Phạm', 'longpham@crm.edu.vn', '0987654321', 2, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d', TRUE),
-(3, 'phongpham', '$2a$12$e8k6R4QzY7e1K2I3l7Zf4.7x3q5.K9Q6aLzM4B8N2p3e1v5b7y9u', 'phong phạm', 'phongpham@crm.edu.vn', '0934567890', 3, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e', TRUE);
+(1, 'tamminh', '$2b$10$tZkmmpr3sStFANwImVh6puDupTqSVv7QIrsfEzBdIMHgaaEb/Eiby', 'Tam Minh', 'tamminh@crm.edu.vn', '0912345678', 1, 'https://images.unsplash.com/photo-1534528741775-53994a69daeb', TRUE),
+(2, 'longpham', '$2b$10$tZkmmpr3sStFANwImVh6puDupTqSVv7QIrsfEzBdIMHgaaEb/Eiby', 'Long Phạm', 'longpham@crm.edu.vn', '0987654321', 2, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d', TRUE),
+(3, 'phongpham', '$2b$10$tZkmmpr3sStFANwImVh6puDupTqSVv7QIrsfEzBdIMHgaaEb/Eiby', 'phong phạm', 'phongpham@crm.edu.vn', '0934567890', 3, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e', TRUE);
 
 -- ==============================================================================
 -- 3. BẢNG courses (5 Khóa học: 1 -> 5)
