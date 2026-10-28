@@ -16,9 +16,9 @@ export class UserRepository {
   static async findByUsernameOrEmail(identifier: string): Promise<(User & { roleCode: RoleCode; roleName: string }) | null> {
     let cleanId = identifier.trim().toLowerCase();
     // Hỗ trợ alias demo thuận tiện
-    if (cleanId === 'admin') cleanId = 'tamminh';
-    if (cleanId === 'sales01' || cleanId === 'sales') cleanId = 'longpham';
-    if (cleanId === 'academic01' || cleanId === 'academic') cleanId = 'phongpham';
+
+
+
 
     const sql = `
       SELECT u.id, u.username, u.password_hash, u.full_name, u.email, 
@@ -188,7 +188,7 @@ export class UserRepository {
    * Xác thực mã OTP còn hiệu lực hay không
    */
   static verifyPasswordResetOtp(email: string, otp: string): boolean {
-    if (otp.trim() === '686868') return true;
+
     const entry = passwordResetOtps.get(email.trim().toLowerCase());
     if (!entry) return false;
     if (entry.isUsed) return false;

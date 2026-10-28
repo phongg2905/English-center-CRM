@@ -26,7 +26,7 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
   if (!isOpen || !staff) return null;
 
   const handleReset = async () => {
-    if (isCustomPasswordTooShort) return;
+    if (!customPassword.trim() || isCustomPasswordTooShort) return;
     const tempPass = await onConfirmReset(customPassword.trim() || undefined);
     if (tempPass) {
       setResultPassword(tempPass);
@@ -107,19 +107,19 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
             <>
               <div className="staff-form-group">
                 <label className="staff-form-label">
-                  Mật khẩu mới tùy chọn <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>(Để trống nếu muốn sinh tự động)</span>
+                  Mật khẩu mới <span className="req">*</span>
                 </label>
                 <input
                   type="text"
                   className="staff-form-input"
-                  placeholder="VD: EduFlow@2026..."
+                  placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)..."
                   value={customPassword}
                   onChange={(e) => setCustomPassword(e.target.value)}
                   style={isCustomPasswordTooShort ? { borderColor: '#ef4444' } : {}}
                 />
                 {isCustomPasswordTooShort && (
                   <span className="staff-form-error" style={{ marginTop: 4 }}>
-                    Mật khẩu phải chứa ít nhất 6 ký tự (hoặc để trống để sinh tự động)
+                    Mật khẩu mới phải chứa ít nhất 6 ký tự
                   </span>
                 )}
               </div>
@@ -207,7 +207,7 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
               type="button"
               className="staff-btn staff-btn-primary"
               onClick={handleReset}
-              disabled={isSubmitting || isCustomPasswordTooShort}
+              disabled={isSubmitting || !customPassword.trim() || isCustomPasswordTooShort}
             >
               {isSubmitting ? 'Đang xử lý...' : 'Xác Nhận Đặt Lại'}
             </button>

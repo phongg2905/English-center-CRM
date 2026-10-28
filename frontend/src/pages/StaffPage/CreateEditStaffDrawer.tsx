@@ -148,8 +148,8 @@ export const CreateEditStaffDrawer: React.FC<CreateEditStaffDrawerProps> = ({
     if (cleanPhone && !/^[0-9]{9,15}$/.test(cleanPhone)) {
       errs.phoneNumber = 'Số điện thoại gồm 9 - 15 chữ số';
     }
-    if (!editingStaff && password && password.length < 6) {
-      errs.password = 'Mật khẩu phải chứa ít nhất 6 ký tự';
+    if (!editingStaff && (!password.trim() || password.trim().length < 6)) {
+      errs.password = 'Vui lòng nhập mật khẩu (tối thiểu 6 ký tự)';
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -316,12 +316,12 @@ export const CreateEditStaffDrawer: React.FC<CreateEditStaffDrawerProps> = ({
               {!editingStaff && (
                 <div className="staff-form-group">
                   <label className="staff-form-label">
-                    Mật Khẩu <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>(Mặc định: EduFlow@2026)</span>
+                    Mật Khẩu <span className="req">*</span>
                   </label>
                   <input
                     type="password"
                     className="staff-form-input"
-                    placeholder="Để trống = EduFlow@2026"
+                    placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)..."
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />

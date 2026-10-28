@@ -14,7 +14,7 @@ async function testPasswordRecovery(): Promise<void> {
     logger.info('⚠️ PostgreSQL chưa kết nối, đang sử dụng In-Memory Mock Store');
   }
 
-  const testEmail = 'tamminh@eduflow.vn';
+  const testEmail = 'tamminh@crm.edu.vn';
   const originalPassword = '123456';
   const resetPassword = 'NewSecretPassword@2026';
   const changedPassword = 'AnotherSecretPass@999';
