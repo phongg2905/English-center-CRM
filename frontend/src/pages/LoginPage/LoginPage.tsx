@@ -56,7 +56,13 @@ export const LoginPage: React.FC = () => {
       const from = (location.state as any)?.from?.pathname || '/';
       navigate(from, { replace: true });
     } catch (err: any) {
-      const message = err.response?.data?.error || err.response?.data?.message || 'Đăng nhập không thành công. Vui lòng kiểm tra lại tài khoản.';
+      const rawError = err?.response?.data?.error || err?.response?.data?.message;
+      const message =
+        typeof rawError === 'string' && rawError.trim()
+          ? rawError
+          : typeof err?.message === 'string' && !err.message.startsWith('Request failed')
+            ? err.message
+            : 'Đăng nhập không thành công. Vui lòng kiểm tra lại tài khoản hoặc kết nối máy chủ.';
       setErrorMsg(message);
     } finally {
       setIsSubmitting(false);
