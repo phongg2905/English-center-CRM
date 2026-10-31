@@ -1,4 +1,4 @@
-import express, { Application, Request, Response } from 'express';
+import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/environment.js';
@@ -10,8 +10,21 @@ import apiRoutes from './routes/index.js';
 export function createApp(): Application {
   const app = express();
 
-  // 1. Bảo mật HTTP Headers với Helmet
-  app.use(helmet());
+  // 1. Bảo mật HTTP Headers với Helmet (Cho phép tài nguyên CDN của Swagger UI tại /api/docs)
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com'],
+          styleSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com', 'https://fonts.googleapis.com'],
+          fontSrc: ["'self'", 'https:', 'data:'],
+          imgSrc: ["'self'", 'data:', 'https://unpkg.com'],
+          connectSrc: ["'self'", 'https:', 'http:'],
+        },
+      },
+    })
+  );
 
   // 2. Cấu hình CORS an toàn (Hỗ trợ linh hoạt localhost và Vercel deployment)
   app.use(
