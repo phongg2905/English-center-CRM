@@ -9,7 +9,7 @@
       "outputDirectory": "dist",
       "rewrites": [
         {
-          "source": "/(.*)",
+          "source": "/((?!api/|assets/).*)",
           "destination": "/index.html"
         }
       ]
@@ -17,7 +17,8 @@
     "backend": {
       "root": "backend",
       "framework": "express",
-      "installCommand": "npm install --include=dev",
+      "installCommand": "npm install --include=dev && npm --prefix .. install",
+      "buildCommand": "npm run build",
       "entrypoint": "src/app.ts"
     }
   },

@@ -13,6 +13,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const isValidUser = (u: unknown): u is User => {
+  return Boolean(
+    u &&
+      typeof u === 'object' &&
+      'id' in u &&
+      'username' in u &&
+      'role' in u &&
+      typeof (u as User).username === 'string'
+  );
+};
+
 const isJwtExpired = (token: string | null): boolean => {
   if (!token) return true;
   try {
@@ -58,8 +69,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (storedToken && storedUser) {
         try {
-          setUser(JSON.parse(storedUser));
+          const parsedUser = JSON.parse(storedUser);
+          if (!isValidUser(parsedUser)) {
+            throw new Error('Invalid stored user');
+          }
+          setUser(parsedUser);
           const freshUser = await AuthService.getMe();
+          if (!isValidUser(freshUser)) {
+            throw new Error('Invalid user profile response');
+          }
           setUser(freshUser);
           localStorage.setItem('user', JSON.stringify(freshUser));
         } catch {
@@ -69,6 +87,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.removeItem('user');
           setUser(null);
         }
+      } else {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
       }
       setIsLoading(false);
     };
@@ -107,8 +129,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Access token expired, attempt seamless refresh via getMe()
           try {
             const freshUser = await AuthService.getMe();
-            setUser(freshUser);
-            localStorage.setItem('user', JSON.stringify(freshUser));
+            if (isValidUser(freshUser)) {
+              setUser(freshUser);
+              localStorage.setItem('user', JSON.stringify(freshUser));
+            }
           } catch {
             // Handled in interceptor
           }
@@ -135,6 +159,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const result = await AuthService.login(username, password);
+      if (!result || !result.tokens?.accessToken || !isValidUser(result.user)) {
+        throw new Error('Không nhận được phản hồi xác thực hợp lệ từ máy chủ.');
+      }
       localStorage.setItem('access_token', result.tokens.accessToken);
       localStorage.setItem('refresh_token', result.tokens.refreshToken);
       localStorage.setItem('user', JSON.stringify(result.user));
@@ -161,7 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: Boolean(user),
+        isAuthenticated: isValidUser(user),
         isLoading,
         login,
         logout,
