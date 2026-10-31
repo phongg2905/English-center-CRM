@@ -13,14 +13,15 @@ export function createApp(): Application {
   // 1. Bảo mật HTTP Headers với Helmet
   app.use(helmet());
 
-  // 2. Cấu hình CORS an toàn (Hỗ trợ linh hoạt các port localhost trong dev)
+  // 2. Cấu hình CORS an toàn (Hỗ trợ linh hoạt localhost và Vercel deployment)
   app.use(
     cors({
       origin: (origin, callback) => {
         const isLocalhost =
           Boolean(origin && (/^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)));
+        const isVercel = Boolean(origin && /\.vercel\.app$/.test(origin));
 
-        if (!origin || isLocalhost || env.corsOrigins.includes(origin) || env.corsOrigins.includes('*')) {
+        if (!origin || isLocalhost || isVercel || env.corsOrigins.includes(origin) || env.corsOrigins.includes('*')) {
           callback(null, true);
         } else {
           callback(new Error(`Origin '${origin}' bị từ chối bởi chính sách CORS`));
@@ -40,26 +41,18 @@ export function createApp(): Application {
   app.use(requestLogger);
   app.use(auditActivityMiddleware);
 
-  // 5. Đường dẫn chào mừng gốc
-  app.get('/', (req: Request, res: Response) => {
-    res.json({
-      message: 'English Center CRM Backend API Server đang chạy!',
-      version: '1.0.0',
-      apiDocs: '/api',
-      healthCheck: '/api/health',
-    });
-  });
-
-  // 6. Gắn các tuyến API vào tiền tố /api
+  // 5. Gắn các tuyến API vào cả tiền tố /api (Local & Full Path) và / (Vercel Services subpath mount)
   app.use('/api', apiRoutes);
+  app.use('/', apiRoutes);
 
-  // 7. Xử lý 404 Not Found khi không khớp route nào
+  // 6. Xử lý 404 Not Found khi không khớp route nào
   app.use(notFoundHandler);
 
-  // 8. Middleware xử lý lỗi tập trung toàn hệ thống
+  // 7. Middleware xử lý lỗi tập trung toàn hệ thống
   app.use(errorHandler);
 
   return app;
 }
 
 export const app = createApp();
+export default app;
