@@ -2,11 +2,7 @@
   "name": "english-center-crm",
   "version": "1.0.0",
   "private": true,
-  "description": "EduFlow CRM - Fullstack Monorepo (Vite Frontend + Express Backend)",
-  "workspaces": [
-    "backend",
-    "frontend"
-  ],
+  "description": "EduFlow CRM - Fullstack Application (Vite Frontend + Express Backend)",
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
