@@ -1,5 +1,5 @@
+import express from 'express';
 import { app } from './app.js';
 
-export { app };
+export { express, app };
 export default app;
-
