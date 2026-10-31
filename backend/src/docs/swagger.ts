@@ -1,5 +1,4 @@
-import swaggerUi from 'swagger-ui-express';
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 
 export const swaggerSpec = {
   openapi: '3.0.0',
@@ -15,6 +14,10 @@ Tài liệu hóa chi tiết phân hệ Authentication & RBAC (Task [BE-02]) và 
     },
   },
   servers: [
+    {
+      url: '/',
+      description: 'Máy chủ Hiện tại (Production Vercel / Local Origin)',
+    },
     {
       url: 'http://localhost:5000',
       description: 'Máy chủ Môi trường Phát triển (Local Dev Server)',
@@ -922,6 +925,47 @@ Tài liệu hóa chi tiết phân hệ Authentication & RBAC (Task [BE-02]) và 
 };
 
 const router = Router();
-router.use('/', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { customSiteTitle: 'English Center CRM API Docs' }));
+
+const swaggerHtml = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>English Center CRM API Docs</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui.css" />
+  <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5.18.2/favicon-32x32.png" sizes="32x32" />
+  <style>
+    html { box-sizing: border-box; overflow-y: scroll; }
+    *, *:before, *:after { box-sizing: inherit; }
+    body { margin: 0; background: #fafafa; }
+    .swagger-ui .topbar .download-url-wrapper { display: none; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui-bundle.js" crossorigin></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui-standalone-preset.js" crossorigin></script>
+  <script>
+    window.onload = function () {
+      window.ui = SwaggerUIBundle({
+        spec: ${JSON.stringify(swaggerSpec)},
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        persistAuthorization: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        layout: 'StandaloneLayout'
+      });
+    };
+  </script>
+</body>
+</html>`;
+
+router.get('/', (_req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.status(200).send(swaggerHtml);
+});
 
 export default router;
