@@ -4,6 +4,7 @@
     "frontend": {
       "root": "frontend",
       "framework": "vite",
+      "installCommand": "npm install",
       "buildCommand": "npm run build",
       "outputDirectory": "dist",
       "rewrites": [
@@ -16,6 +17,7 @@
     "backend": {
       "root": "backend",
       "framework": "express",
+      "installCommand": "npm install",
       "entrypoint": "src/app.ts"
     }
   },
