@@ -96,6 +96,26 @@ export class ClassRepository {
     return mapRowToClassWithCourse(result.rows[0]);
   }
 
+  /**
+   * Đọc và khóa dòng lớp học (Row-Level Exclusive Lock - SELECT ... FOR UPDATE)
+   * Phục vụ giao dịch ACID khi xếp lớp / chuyển lớp để chống Overbooking đồng thời (BR-04 & NFR-REL-02)
+   */
+  static async findByIdForUpdate(id: number): Promise<ClassWithCourse | null> {
+    const sql = `
+      SELECT c.id, c.course_id, c.class_code, c.class_name, c.schedule_days,
+             c.time_slot, c.room, c.teacher_name, c.start_date, c.max_capacity,
+             c.current_enrolled, c.status, c.created_at, c.updated_at,
+             co.course_code, co.course_name, co.standard_tuition, co.target_output
+      FROM classes c
+      JOIN courses co ON c.course_id = co.id
+      WHERE c.id = $1
+      FOR UPDATE OF c
+    `;
+    const result = await query(sql, [id]);
+    if (result.rows.length === 0) return null;
+    return mapRowToClassWithCourse(result.rows[0]);
+  }
+
   static async findByCode(code: string): Promise<ClassWithCourse | null> {
     const sql = `
       SELECT c.id, c.course_id, c.class_code, c.class_name, c.schedule_days,

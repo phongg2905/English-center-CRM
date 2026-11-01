@@ -135,6 +135,33 @@ function formatLeadTime(dateInput: string | Date | undefined): string {
   return `${d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })} ${timeStr}`;
 }
 
+/**
+ * NFR-SEC-03: Che 3 chữ số cuối của SĐT Lead khi nhân viên SALES xem hồ sơ không thuộc quyền phụ trách
+ */
+export function isLeadPhoneMaskedForUser(
+  lead: Pick<LeadWithDetails, 'assignedSalesId' | 'phoneNumber'>,
+  currentUserId?: number,
+  currentUserRole?: string
+): boolean {
+  if (lead.phoneNumber?.includes('*')) return true;
+  if (!currentUserRole || currentUserRole.toUpperCase() !== 'SALES') return false;
+  return lead.assignedSalesId !== currentUserId;
+}
+
+export function formatLeadPhoneForUser(
+  lead: Pick<LeadWithDetails, 'assignedSalesId' | 'phoneNumber'>,
+  currentUserId?: number,
+  currentUserRole?: string
+): string {
+  const raw = lead.phoneNumber || '';
+  if (!raw) return '';
+  if (raw.includes('*')) return raw;
+  if (isLeadPhoneMaskedForUser(lead, currentUserId, currentUserRole)) {
+    return raw.length > 3 ? raw.slice(0, -3) + '***' : '***';
+  }
+  return raw;
+}
+
 export const LeadsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -302,7 +329,7 @@ export const LeadsPage: React.FC = () => {
   const handleSelectLead = async (lead: LeadWithDetails) => {
     setSelectedLead(lead);
     setEditFullName(lead.fullName || '');
-    setEditPhone(lead.phoneNumber || '');
+    setEditPhone(formatLeadPhoneForUser(lead, user?.id, user?.role));
     setEditEmail(lead.email || '');
     setEditInterest(lead.interest);
     setEditSourceChannel(lead.sourceChannel);
@@ -531,7 +558,7 @@ export const LeadsPage: React.FC = () => {
     const rows = allLeads.map((l) => [
       l.id,
       `"${l.fullName}"`,
-      `"${l.phoneNumber}"`,
+      `"${formatLeadPhoneForUser(l, user?.id, user?.role)}"`,
       `"${l.email || ''}"`,
       l.interest,
       l.sourceChannel,
@@ -1165,7 +1192,7 @@ export const LeadsPage: React.FC = () => {
                         <div className="lead-contact-info">
                           <div className="lead-contact-item">
                             <Phone size={13} style={{ color: '#2563eb', flexShrink: 0 }} />
-                            <span style={{ fontWeight: 500 }}>{lead.phoneNumber}</span>
+                            <span style={{ fontWeight: 500 }} title={isLeadPhoneMaskedForUser(lead, user?.id, user?.role) ? "Đã che 3 số cuối SĐT (NFR-SEC-03)" : undefined}>{formatLeadPhoneForUser(lead, user?.id, user?.role)}</span>
                           </div>
                           <div className="lead-contact-item">
                             <Mail size={13} style={{ color: '#94a3b8', flexShrink: 0 }} />
@@ -1322,7 +1349,7 @@ export const LeadsPage: React.FC = () => {
                           <div style={{ fontSize: '11.5px', color: '#64748b' }}>Mã: #{lead.id}</div>
                         </td>
                         <td style={{ padding: '12px 16px' }}>
-                          <div style={{ fontWeight: 600, color: '#2563eb' }}>{lead.phoneNumber}</div>
+                          <div style={{ fontWeight: 600, color: '#2563eb' }} title={isLeadPhoneMaskedForUser(lead, user?.id, user?.role) ? "Đã che 3 số cuối SĐT (NFR-SEC-03)" : undefined}>{formatLeadPhoneForUser(lead, user?.id, user?.role)}</div>
                           <div style={{ fontSize: '11.5px', color: '#64748b' }}>{lead.email || '—'}</div>
                         </td>
                         <td style={{ padding: '12px 16px' }}>
@@ -1726,7 +1753,7 @@ export const LeadsPage: React.FC = () => {
                             </div>
                             <input
                               type="tel"
-                              disabled={!canEditLead}
+                              disabled={!canEditLead || isLeadPhoneMaskedForUser(selectedLead, user?.id, user?.role)}
                               value={editPhone}
                               onChange={(e) => setEditPhone(e.target.value)}
                               className="drawer-input"

@@ -27,6 +27,39 @@ const VALID_POTENTIAL_LEVELS: PotentialLevel[] = ['HOT', 'WARM', 'COLD'];
 
 export class LeadService {
   /**
+   * Che 3 chữ số cuối của Số điện thoại theo cam kết bảo mật dữ liệu NFR-SEC-03
+   * Ví dụ: "0912345678" -> "0912345***"
+   */
+  static maskPhoneNumber(phone: string): string {
+    if (!phone) return '';
+    const trimmed = phone.trim();
+    if (trimmed.length <= 3) return '***';
+    return `${trimmed.slice(0, -3)}***`;
+  }
+
+  /**
+   * Áp dụng quy tắc NFR-SEC-03: Nhân viên SALES khi xem hồ sơ Lead không thuộc quyền phụ trách
+   * của mình (assignedSalesId !== currentUserId) sẽ bị che 3 số cuối SĐT.
+   * ADMIN, ACADEMIC và chính SALES phụ trách hồ sơ đó vẫn xem được đầy đủ 10 số.
+   */
+  static maskLeadForUser(
+    lead: LeadWithDetails,
+    currentUserId?: number,
+    currentUserRole?: string
+  ): LeadWithDetails {
+    if (!currentUserRole || currentUserRole.toUpperCase() !== 'SALES') {
+      return lead;
+    }
+    if (currentUserId && lead.assignedSalesId === currentUserId) {
+      return lead;
+    }
+    return {
+      ...lead,
+      phoneNumber: this.maskPhoneNumber(lead.phoneNumber),
+    };
+  }
+
+  /**
    * Kiểm tra định dạng số điện thoại Việt Nam (10 chữ số bắt đầu bằng 0)
    */
   private static validatePhone(phone: string): void {
@@ -136,77 +169,116 @@ export class LeadService {
   }
 
   /**
-   * Lấy danh sách Lead phân trang và lọc
+   * Lấy danh sách Lead phân trang và lọc (Kèm che 3 số cuối SĐT theo NFR-SEC-03)
    */
-  static async getLeads(filter: LeadFilterQuery = {}) {
-    return await LeadRepository.findAll(filter);
+  static async getLeads(
+    filter: LeadFilterQuery = {},
+    currentUserId?: number,
+    currentUserRole?: string
+  ) {
+    const res = await LeadRepository.findAll(filter);
+    return {
+      ...res,
+      leads: res.leads.map((l) => this.maskLeadForUser(l, currentUserId, currentUserRole)),
+    };
   }
 
   /**
-   * Lấy dữ liệu Kanban Pipeline
+   * Lấy dữ liệu Kanban Pipeline (Kèm che 3 số cuối SĐT theo NFR-SEC-03)
    */
-  static async getKanban(assignedSalesId?: number): Promise<KanbanBoardResponse> {
-    return await LeadRepository.findKanban(assignedSalesId);
+  static async getKanban(
+    assignedSalesId?: number,
+    currentUserId?: number,
+    currentUserRole?: string
+  ): Promise<KanbanBoardResponse> {
+    const board = await LeadRepository.findKanban(assignedSalesId);
+    const maskList = (list: LeadWithDetails[]) =>
+      list.map((l) => this.maskLeadForUser(l, currentUserId, currentUserRole));
+
+    return {
+      NEW: maskList(board.NEW),
+      CONTACTING: maskList(board.CONTACTING),
+      TEST_SCHEDULED: maskList(board.TEST_SCHEDULED),
+      ENROLLED: maskList(board.ENROLLED),
+      LOST: maskList(board.LOST),
+      counts: board.counts,
+    };
   }
 
   /**
-   * Lấy chi tiết Lead theo ID
+   * Lấy chi tiết Lead theo ID (Kèm che 3 số cuối SĐT theo NFR-SEC-03)
    */
-  static async getLeadById(id: number): Promise<LeadWithDetails> {
+  static async getLeadById(
+    id: number,
+    currentUserId?: number,
+    currentUserRole?: string
+  ): Promise<LeadWithDetails> {
     const lead = await LeadRepository.findById(id);
     if (!lead) {
       throw AppError.notFound(`Không tìm thấy hồ sơ khách hàng tiềm năng với ID = ${id}`);
     }
-    return lead;
+    return this.maskLeadForUser(lead, currentUserId, currentUserRole);
   }
 
   /**
    * Cập nhật thông tin chi tiết Lead
    */
-  static async updateLead(id: number, dto: UpdateLeadDto): Promise<LeadWithDetails> {
+  static async updateLead(
+    id: number,
+    dto: UpdateLeadDto,
+    currentUserId?: number,
+    currentUserRole?: string
+  ): Promise<LeadWithDetails> {
     const existing = await LeadRepository.findById(id);
     if (!existing) {
       throw AppError.notFound(`Không tìm thấy hồ sơ khách hàng tiềm năng với ID = ${id}`);
     }
 
-    if (dto.phoneNumber) {
-      this.validatePhone(dto.phoneNumber);
-      const duplicatePhone = await LeadRepository.findByPhone(dto.phoneNumber, id);
+    const sanitizedDto: UpdateLeadDto = { ...dto };
+
+    // Nếu số điện thoại gửi lên đang ở dạng bị che (***) do NFR-SEC-03, giữ nguyên SĐT gốc trong CSDL
+    if (sanitizedDto.phoneNumber && sanitizedDto.phoneNumber.includes('*')) {
+      delete sanitizedDto.phoneNumber;
+    }
+
+    if (sanitizedDto.phoneNumber) {
+      this.validatePhone(sanitizedDto.phoneNumber);
+      const duplicatePhone = await LeadRepository.findByPhone(sanitizedDto.phoneNumber, id);
       if (duplicatePhone) {
         throw AppError.conflict(
-          `Số điện thoại [${dto.phoneNumber}] đã được sử dụng bởi Lead khác (${duplicatePhone.fullName})`
+          `Số điện thoại [${sanitizedDto.phoneNumber}] đã được sử dụng bởi Lead khác (${duplicatePhone.fullName})`
         );
       }
     }
 
-    if (dto.email) {
-      this.validateEmail(dto.email);
-      const duplicateEmail = await LeadRepository.findByEmail(dto.email, id);
+    if (sanitizedDto.email) {
+      this.validateEmail(sanitizedDto.email);
+      const duplicateEmail = await LeadRepository.findByEmail(sanitizedDto.email, id);
       if (duplicateEmail) {
         throw AppError.conflict(
-          `Email [${dto.email}] đã được sử dụng bởi Lead khác (${duplicateEmail.fullName})`
+          `Email [${sanitizedDto.email}] đã được sử dụng bởi Lead khác (${duplicateEmail.fullName})`
         );
       }
     }
 
-    if (dto.interest && !VALID_INTERESTS.includes(dto.interest)) {
-      throw AppError.badRequest(`Nhu cầu học [${dto.interest}] không hợp lệ`);
+    if (sanitizedDto.interest && !VALID_INTERESTS.includes(sanitizedDto.interest)) {
+      throw AppError.badRequest(`Nhu cầu học [${sanitizedDto.interest}] không hợp lệ`);
     }
 
-    if (dto.sourceChannel && !VALID_SOURCES.includes(dto.sourceChannel)) {
-      throw AppError.badRequest(`Kênh tiếp cận [${dto.sourceChannel}] không hợp lệ`);
+    if (sanitizedDto.sourceChannel && !VALID_SOURCES.includes(sanitizedDto.sourceChannel)) {
+      throw AppError.badRequest(`Kênh tiếp cận [${sanitizedDto.sourceChannel}] không hợp lệ`);
     }
 
     // Quy tắc BR-02: Nếu chuyển sang LOST thì bắt buộc có lý do
-    if (dto.pipelineStage === 'LOST' && (!dto.lostReason || !dto.lostReason.trim())) {
+    if (sanitizedDto.pipelineStage === 'LOST' && (!sanitizedDto.lostReason || !sanitizedDto.lostReason.trim())) {
       throw AppError.badRequest('Vui lòng cung cấp lý do thất bại (lostReason) khi chuyển sang trạng thái LOST');
     }
 
-    const updated = await LeadRepository.update(id, dto);
+    const updated = await LeadRepository.update(id, sanitizedDto);
     if (!updated) {
       throw AppError.internal('Cập nhật hồ sơ Lead thất bại');
     }
-    return updated;
+    return this.maskLeadForUser(updated, currentUserId, currentUserRole);
   }
 
   /**
