@@ -1,9 +1,12 @@
 import pg, { PoolClient, QueryResult, QueryResultRow } from 'pg';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { env } from '../config/environment.js';
 import { logger } from '../utils/logger.js';
 
 const { Pool } = pg;
 // Supabase Cloud PostgreSQL Connection Pool
+
+const txStorage = new AsyncLocalStorage<PoolClient>();
 
 const poolConfig: pg.PoolConfig = env.db.connectionString
   ? {
@@ -70,17 +73,18 @@ export async function warmPool(targetConnections = 2): Promise<void> {
 }
 
 /**
- * Thực thi câu lệnh SQL đơn với Connection Pool
+ * Thực thi câu lệnh SQL đơn với Connection Pool (hoặc client của Transaction hiện hành nếu có)
  */
 export async function query<R extends QueryResultRow = any, I extends any[] = any[]>(
   text: string,
   params?: I
 ): Promise<QueryResult<R>> {
+  const activeTxClient = txStorage.getStore();
   let client: PoolClient | null = null;
   try {
-    client = await pool.connect();
+    const executor = activeTxClient ?? (client = await pool.connect());
     const queryStart = Date.now();
-    const res = await client.query<R>(text, params);
+    const res = await executor.query<R>(text, params);
     dbConnectionState = true;
     const duration = Date.now() - queryStart;
     if (duration > 500) {
@@ -88,7 +92,9 @@ export async function query<R extends QueryResultRow = any, I extends any[] = an
     }
     return res;
   } catch (error: any) {
-    dbConnectionState = false;
+    if (error?.code && String(error.code).startsWith('08')) {
+      dbConnectionState = false;
+    }
     throw error;
   } finally {
     if (client) {
@@ -107,15 +113,21 @@ export async function getClient(): Promise<PoolClient> {
 }
 
 /**
- * Thực thi logic nghiệp vụ bọc trong Database Transaction ACID (chống Overbooking)
+ * Thực thi logic nghiệp vụ bọc trong Database Transaction ACID (chống Overbooking - NFR-REL-02)
+ * Tự động gắn client vào AsyncLocalStorage để mọi lệnh query() bên trong đều chạy trên cùng 1 Transaction.
  */
 export async function withTransaction<T>(
   callback: (client: PoolClient) => Promise<T>
 ): Promise<T> {
+  const existingTxClient = txStorage.getStore();
+  if (existingTxClient) {
+    return callback(existingTxClient);
+  }
+
   const client = await getClient();
   try {
     await client.query('BEGIN');
-    const result = await callback(client);
+    const result = await txStorage.run(client, () => callback(client));
     await client.query('COMMIT');
     return result;
   } catch (error) {

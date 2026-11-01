@@ -7,7 +7,7 @@ import { LeadPipelineStage, LeadInterest, LeadSourceChannel } from '../types/lea
 export class LeadController {
   /**
    * @route GET /api/leads
-   * @desc  Lấy danh sách Lead phân trang, tìm kiếm và lọc
+   * @desc  Lấy danh sách Lead phân trang, tìm kiếm và lọc (kèm NFR-SEC-03)
    */
   static async getLeads(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -23,17 +23,21 @@ export class LeadController {
         sortOrder,
       } = req.query;
 
-      const result = await LeadService.getLeads({
-        pipelineStage: pipelineStage as LeadPipelineStage | undefined,
-        interest: interest as LeadInterest | undefined,
-        sourceChannel: sourceChannel as LeadSourceChannel | undefined,
-        assignedSalesId: assignedSalesId ? Number(assignedSalesId) : undefined,
-        search: search as string | undefined,
-        page: page ? Number(page) : 1,
-        limit: limit ? Number(limit) : 20,
-        sortBy: sortBy as 'created_at' | 'updated_at' | 'full_name' | undefined,
-        sortOrder: sortOrder as 'ASC' | 'DESC' | undefined,
-      });
+      const result = await LeadService.getLeads(
+        {
+          pipelineStage: pipelineStage as LeadPipelineStage | undefined,
+          interest: interest as LeadInterest | undefined,
+          sourceChannel: sourceChannel as LeadSourceChannel | undefined,
+          assignedSalesId: assignedSalesId ? Number(assignedSalesId) : undefined,
+          search: search as string | undefined,
+          page: page ? Number(page) : 1,
+          limit: limit ? Number(limit) : 20,
+          sortBy: sortBy as 'created_at' | 'updated_at' | 'full_name' | undefined,
+          sortOrder: sortOrder as 'ASC' | 'DESC' | undefined,
+        },
+        req.user?.userId,
+        req.user?.role
+      );
 
       ApiResponse.success(res, result.leads, 'Lấy danh sách Lead thành công', 200, {
         total: result.total,
@@ -48,13 +52,15 @@ export class LeadController {
 
   /**
    * @route GET /api/leads/kanban
-   * @desc  Lấy dữ liệu bảng Kanban phân luồng theo 5 cột trạng thái
+   * @desc  Lấy dữ liệu bảng Kanban phân luồng theo 5 cột trạng thái (kèm NFR-SEC-03)
    */
   static async getKanban(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { assignedSalesId } = req.query;
       const kanban = await LeadService.getKanban(
-        assignedSalesId ? Number(assignedSalesId) : undefined
+        assignedSalesId ? Number(assignedSalesId) : undefined,
+        req.user?.userId,
+        req.user?.role
       );
       ApiResponse.success(res, kanban, 'Lấy dữ liệu bảng Kanban Lead thành công');
     } catch (error) {
@@ -77,7 +83,7 @@ export class LeadController {
 
   /**
    * @route GET /api/leads/:id
-   * @desc  Lấy thông tin chi tiết một Lead theo ID
+   * @desc  Lấy thông tin chi tiết một Lead theo ID (kèm NFR-SEC-03)
    */
   static async getLeadById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -85,7 +91,7 @@ export class LeadController {
       if (isNaN(id)) {
         throw AppError.badRequest('ID khách hàng tiềm năng không hợp lệ');
       }
-      const lead = await LeadService.getLeadById(id);
+      const lead = await LeadService.getLeadById(id, req.user?.userId, req.user?.role);
       ApiResponse.success(res, lead, 'Lấy chi tiết Lead thành công');
     } catch (error) {
       next(error);
@@ -117,7 +123,12 @@ export class LeadController {
       if (isNaN(id)) {
         throw AppError.badRequest('ID khách hàng tiềm năng không hợp lệ');
       }
-      const updated = await LeadService.updateLead(id, req.body);
+      const updated = await LeadService.updateLead(
+        id,
+        req.body,
+        req.user?.userId,
+        req.user?.role
+      );
       ApiResponse.success(res, updated, 'Cập nhật thông tin Lead thành công');
     } catch (error) {
       next(error);

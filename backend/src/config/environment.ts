@@ -43,12 +43,50 @@ export interface EnvironmentConfig {
   };
 }
 
+const nodeEnv = process.env.NODE_ENV || 'development';
 const connectionString = process.env.DATABASE_URL || undefined;
 const isCloudDb = Boolean(connectionString && !connectionString.includes('localhost') && !connectionString.includes('127.0.0.1'));
 const enableSsl = process.env.DB_SSL === 'true' || isCloudDb;
 
+/**
+ * Xác thực biến môi trường bảo mật JWT (Bắt buộc khai báo tường minh trên môi trường Production)
+ */
+export function resolveJwtSecrets(
+  currentEnv?: string,
+  jwtSecretEnv?: string,
+  jwtRefreshSecretEnv?: string
+): { secret: string; refreshSecret: string } {
+  const effectiveEnv = currentEnv !== undefined ? currentEnv : nodeEnv;
+  const effectiveSecret = arguments.length >= 2 ? jwtSecretEnv : process.env.JWT_SECRET;
+  const effectiveRefresh = arguments.length >= 3 ? jwtRefreshSecretEnv : process.env.JWT_REFRESH_SECRET;
+
+  if (effectiveEnv === 'production') {
+    if (!effectiveSecret || effectiveSecret.trim().length < 16) {
+      throw new Error(
+        '[SECURITY ERROR] Biến môi trường JWT_SECRET bắt buộc phải được cấu hình tường minh (tối thiểu 16 ký tự) trong môi trường production.'
+      );
+    }
+    if (!effectiveRefresh || effectiveRefresh.trim().length < 16) {
+      throw new Error(
+        '[SECURITY ERROR] Biến môi trường JWT_REFRESH_SECRET bắt buộc phải được cấu hình tường minh (tối thiểu 16 ký tự) trong môi trường production.'
+      );
+    }
+    return {
+      secret: effectiveSecret.trim(),
+      refreshSecret: effectiveRefresh.trim(),
+    };
+  }
+
+  return {
+    secret: effectiveSecret || 'eduflow_crm_dev_only_jwt_secret_key_2026',
+    refreshSecret: effectiveRefresh || 'eduflow_crm_dev_only_refresh_secret_key_2026',
+  };
+}
+
+const resolvedJwt = resolveJwtSecrets();
+
 export const env: EnvironmentConfig = {
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv,
   port: parseInt(process.env.PORT || '5000', 10),
   corsOrigins: (process.env.CORS_ORIGIN || 'http://localhost:5173,http://localhost:3000')
     .split(',')
@@ -67,10 +105,9 @@ export const env: EnvironmentConfig = {
     connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT_MILLIS || '10000', 10),
   },
   jwt: {
-    secret: process.env.JWT_SECRET || 'eduflow_crm_secret_jwt_token_key_2026_nhom8_ptit',
+    secret: resolvedJwt.secret,
     expiresIn: process.env.JWT_EXPIRES_IN || '15m',
-    refreshSecret: process.env.JWT_REFRESH_SECRET || 'eduflow_crm_refresh_secret_jwt_key_2026_ptit_nhom8',
+    refreshSecret: resolvedJwt.refreshSecret,
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
 };
-

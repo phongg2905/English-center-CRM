@@ -1,3 +1,4 @@
+import { withTransaction } from '../database/pool.js';
 import { PlacementTestRepository, MAX_ROOM_CAPACITY } from '../repositories/placement-test.repository.js';
 import { LeadRepository } from '../repositories/lead.repository.js';
 import {
@@ -49,20 +50,14 @@ export class PlacementTestService {
 
   /**
    * Đặt lịch thi Placement Test cho Lead (Book Test)
-   * Chống trùng lịch & kiểm tra quá tải phòng thi (UC-02)
+   * Chống trùng lịch & kiểm tra quá tải phòng thi (UC-02 / BR-03) trong Transaction ACID
    */
   static async bookTest(
     dto: BookTestDto,
     userId: number,
     userRole: string
   ): Promise<PlacementTestWithDetails> {
-    // 1. Kiểm tra Lead có tồn tại không
-    const lead = await LeadRepository.findById(dto.leadId);
-    if (!lead) {
-      throw AppError.notFound(`Không tìm thấy hồ sơ Lead với ID = ${dto.leadId}`);
-    }
-
-    // 2. Kiểm tra ngày thi hợp lệ (định dạng YYYY-MM-DD và không thể ở quá khứ)
+    // 1. Kiểm tra ngày thi hợp lệ (định dạng YYYY-MM-DD và không thể ở quá khứ)
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dto.testDate || !dateRegex.test(dto.testDate)) {
       throw AppError.badRequest('Ngày thi không hợp lệ. Định dạng yêu cầu: YYYY-MM-DD');
@@ -78,65 +73,88 @@ export class PlacementTestService {
     }
 
     const room = dto.room && dto.room.trim() ? dto.room.trim() : 'Phòng Lab 201';
-    const testType = dto.testType || (lead.interest as any) || 'IELTS';
 
-    // 3. Kiểm tra chống trùng lịch (Anti-collision Check):
-    // Lead không được có bài thi khác đang ở trạng thái SCHEDULED trong tương lai hoặc cùng ngày
-    const existingActiveTest = await PlacementTestRepository.findActiveByLeadId(dto.leadId);
-    if (existingActiveTest) {
-      throw AppError.conflict(
-        `Lead "${lead.fullName}" hiện đã có lịch thi chưa hoàn tất vào ngày ${existingActiveTest.testDate} (Ca: ${existingActiveTest.timeSlot}). Vui lòng cập nhật hoặc hủy lịch cũ trước khi tạo lịch mới.`
-      );
-    }
-
-    // 4. Kiểm tra sức chứa phòng thi (Room Capacity Check):
-    const currentOccupancy = await PlacementTestRepository.countRoomOccupancy(
-      dto.testDate,
-      dto.timeSlot,
-      room
-    );
-
-    if (currentOccupancy >= MAX_ROOM_CAPACITY) {
-      throw AppError.badRequest(
-        `Phòng thi "${room}" trong ca "${dto.timeSlot}" ngày ${dto.testDate} đã đủ sức chứa tối đa (${currentOccupancy}/${MAX_ROOM_CAPACITY} thí sinh). Vui lòng chọn phòng thi hoặc ca thi khác.`
-      );
-    }
-
-    // 5. Tạo lịch thi mới
-    const createdTest = await PlacementTestRepository.create({
-      leadId: dto.leadId,
-      testDate: dto.testDate,
-      timeSlot: dto.timeSlot,
-      room,
-      testType,
-      notes: dto.notes,
-    });
-
-    // 6. Tự động đồng bộ trạng thái Lead sang "TEST_SCHEDULED" (Khớp với SRS FR-TEST-01 & BPMN)
-    if (lead.pipelineStage !== 'ENROLLED' && lead.pipelineStage !== 'LOST') {
-      try {
-        await LeadRepository.updateStatus(dto.leadId, 'TEST_SCHEDULED');
-      } catch (err: any) {
-        logger.warn('Cập nhật pipelineStage sang TEST_SCHEDULED cho Lead thất bại:', err.message);
+    return withTransaction(async () => {
+      // 2. Kiểm tra Lead có tồn tại không
+      const lead = await LeadRepository.findById(dto.leadId);
+      if (!lead) {
+        throw AppError.notFound(`Không tìm thấy hồ sơ Lead với ID = ${dto.leadId}`);
       }
-    }
 
-    // 7. Ghi nhận vào Nhật ký chăm sóc (Interaction Log)
-    try {
-      await LeadRepository.createInteraction(dto.leadId, userId, {
-        interactionType: 'SYSTEM_NOTE',
-        potentialLevel: 'HOT',
-        content: `Đã đặt lịch hẹn kiểm tra trình độ (${testType}) vào ngày ${dto.testDate} (${dto.timeSlot}) tại ${room}.`,
-      });
-    } catch (err: any) {
-      logger.warn('Ghi log tương tác đặt lịch thi thất bại:', err.message);
-    }
+      const testType = dto.testType || (lead.interest as any) || 'IELTS';
 
-    logger.info(
-      `✅ Đặt lịch thi thành công: Test ID=${createdTest.id} cho Lead "${lead.fullName}" ngày ${dto.testDate} (${dto.timeSlot})`
-    );
+      // 3. Kiểm tra chống trùng lịch (Anti-collision Check - BR-03):
+      const existingActiveTest = await PlacementTestRepository.findActiveByLeadId(dto.leadId);
+      if (existingActiveTest) {
+        throw AppError.conflict(
+          `Lead "${lead.fullName}" hiện đã có lịch thi chưa hoàn tất vào ngày ${existingActiveTest.testDate} (Ca: ${existingActiveTest.timeSlot}). Vui lòng cập nhật hoặc hủy lịch cũ trước khi tạo lịch mới.`
+        );
+      }
 
-    return createdTest;
+      // 4. Kiểm tra sức chứa phòng thi (Room Capacity Check - BR-03):
+      const currentOccupancy = await PlacementTestRepository.countRoomOccupancy(
+        dto.testDate,
+        dto.timeSlot,
+        room
+      );
+
+      if (currentOccupancy >= MAX_ROOM_CAPACITY) {
+        throw AppError.badRequest(
+          `Phòng thi "${room}" trong ca "${dto.timeSlot}" ngày ${dto.testDate} đã đủ sức chứa tối đa (${currentOccupancy}/${MAX_ROOM_CAPACITY} thí sinh). Vui lòng chọn phòng thi hoặc ca thi khác.`
+        );
+      }
+
+      // 5. Tạo lịch thi mới (kèm bắt ngoại lệ ràng buộc CSDL 23505 / 23514)
+      let createdTest: PlacementTestWithDetails;
+      try {
+        createdTest = await PlacementTestRepository.create({
+          leadId: dto.leadId,
+          testDate: dto.testDate,
+          timeSlot: dto.timeSlot,
+          room,
+          testType,
+          notes: dto.notes,
+        });
+      } catch (err: any) {
+        if (err?.code === '23505') {
+          throw AppError.conflict(
+            `Thí sinh "${lead.fullName}" đã có lịch thi đang hoạt động hoặc bị trùng ca thi (${dto.testDate} - ${dto.timeSlot}) theo ràng buộc CSDL (BR-03).`
+          );
+        }
+        if (err?.code === '23514') {
+          throw AppError.badRequest(
+            `Phòng thi "${room}" trong ca "${dto.timeSlot}" ngày ${dto.testDate} đã đạt sức chứa tối đa (${MAX_ROOM_CAPACITY}) theo ràng buộc CSDL (BR-03).`
+          );
+        }
+        throw err;
+      }
+
+      // 6. Tự động đồng bộ trạng thái Lead sang "TEST_SCHEDULED" (Khớp với SRS FR-TEST-01 & BPMN)
+      if (lead.pipelineStage !== 'ENROLLED' && lead.pipelineStage !== 'LOST') {
+        try {
+          await LeadRepository.updateStatus(dto.leadId, 'TEST_SCHEDULED');
+        } catch (err: any) {
+          logger.warn('Cập nhật pipelineStage sang TEST_SCHEDULED cho Lead thất bại:', err.message);
+        }
+      }
+
+      // 7. Ghi nhận vào Nhật ký chăm sóc (Interaction Log)
+      try {
+        await LeadRepository.createInteraction(dto.leadId, userId, {
+          interactionType: 'SYSTEM_NOTE',
+          potentialLevel: 'HOT',
+          content: `Đã đặt lịch hẹn kiểm tra trình độ (${testType}) vào ngày ${dto.testDate} (${dto.timeSlot}) tại ${room}.`,
+        });
+      } catch (err: any) {
+        logger.warn('Ghi log tương tác đặt lịch thi thất bại:', err.message);
+      }
+
+      logger.info(
+        `✅ Đặt lịch thi thành công: Test ID=${createdTest.id} cho Lead "${lead.fullName}" ngày ${dto.testDate} (${dto.timeSlot})`
+      );
+
+      return createdTest;
+    });
   }
 
   /**

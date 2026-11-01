@@ -18,7 +18,7 @@
     "test:analytics": "tsx src/scripts/test-analytics.ts",
     "test:staff": "tsx src/scripts/test-staff-flow.ts",
     "test:e2e": "tsx src/scripts/test-e2e-integration.ts",
-    "studio": "prisma studio"
+    "test:coverage": "tsx src/scripts/test-coverage.ts"
   },
   "keywords": [
     "crm",
@@ -31,7 +31,6 @@
   "author": "Nhóm 8 - PTIT",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^6.17.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
@@ -55,7 +54,6 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
-    "prisma": "^6.17.1",
     "tsx": "^4.19.2"
   }
 }
