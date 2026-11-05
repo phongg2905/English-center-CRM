@@ -5,10 +5,12 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "dev:all": "node ../scripts/dev-all.mjs",
     "build": "rimraf dist && tsc && esbuild src/index.ts src/app.ts src/server.ts --bundle --platform=node --target=node20 --format=cjs --outdir=dist --allow-overwrite",
     "start": "node dist/server.js",
     "db:init": "tsx src/scripts/init-db.ts",
     "db:test": "tsx src/scripts/test-db.ts",
+    "seed:demo": "tsx src/scripts/seed-rich-demo.ts",
     "seed:tests": "tsx src/scripts/seed-placement-and-classes.ts",
     "test:auth": "tsx src/scripts/test-auth.ts",
     "test:password": "tsx src/scripts/test-password-recovery.ts",

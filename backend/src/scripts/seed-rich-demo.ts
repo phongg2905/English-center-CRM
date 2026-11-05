@@ -482,30 +482,49 @@ async function seedRichDemoData() {
   }
   console.log(`✅ Đã đồng bộ ${Object.keys(leadIdsByPhone).length} hồ sơ khách hàng tiềm năng (Leads).`);
 
-  // Thêm lịch sử chăm sóc (interaction_logs)
-  const existingLogsCount = await query<{ cnt: string }>(`SELECT COUNT(*) AS cnt FROM interaction_logs`);
-  if (Number(existingLogsCount.rows[0]?.cnt || 0) < 15) {
-    const sampleConsultations = [
-      { phone: '0912300301', type: 'CALL', level: 'HIGH', summary: 'Gọi tư vấn lần 1 (8 phút): Khách hàng rất quan tâm khóa IELTS Fighter 6.5, hỏi kỹ về giáo trình Cambridge và sĩ số tối đa 15 bạn/lớp.' },
-      { phone: '0912300301', type: 'ZALO', level: 'HIGH', summary: 'Đã kết bạn Zalo và gửi brochure lộ trình IELTS 6.5 kèm lịch khai giảng tháng này.' },
-      { phone: '0912300302', type: 'CALL', level: 'HIGH', summary: 'Tư vấn gói ưu đãi đăng ký đôi giảm 1.000.000đ/học viên. Khách hẹn bàn với bạn cùng phòng tối nay.' },
-      { phone: '0912300303', type: 'CALL', level: 'MEDIUM', summary: 'Tư vấn khóa TOEIC Express 650+. Khách cần học ca 19:45-21:15 vì đi làm về muộn.' },
-      { phone: '0912300201', type: 'CALL', level: 'HIGH', summary: 'Đã chốt lịch hẹn Placement Test tại trung tâm. Đã gửi tin nhắn SMS xác nhận phòng thi.' },
-      { phone: '0912300205', type: 'MEETING', level: 'HIGH', summary: 'Tư vấn trực tiếp tại quầy sau khi có điểm thi đầu vào 5.5 Overall. Đề xuất lớp IELTS-65-K08.' },
-      { phone: '0912300101', type: 'MEETING', level: 'HIGH', summary: 'Hoàn tất thủ tục nhập học và thu học phí đợt 1 tại quầy Giáo vụ.' },
-      { phone: '0912300102', type: 'CALL', level: 'HIGH', summary: 'Gọi điện thông báo lịch khai giảng và dặn dò chuẩn bị tài liệu buổi học đầu tiên.' },
-    ];
-    for (let i = 0; i < sampleConsultations.length; i++) {
-      const c = sampleConsultations[i];
-      const leadId = leadIdsByPhone[c.phone];
-      const userId = salesIds[i % salesIds.length] || 2;
-      if (leadId) {
-        await query(
-          `INSERT INTO interaction_logs (lead_id, user_id, interaction_type, potential_level, content)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [leadId, userId, c.type, c.level, c.summary]
-        );
-      }
+  // Thêm lịch sử chăm sóc (interaction_logs) cho toàn bộ các Lead chưa có nhật ký tư vấn
+  const leadsWithoutLogsRes = await query<{
+    id: number;
+    full_name: string;
+    interest: string;
+    pipeline_stage: string;
+    assigned_sales_id: number | null;
+  }>(`
+    SELECT l.id, l.full_name, l.interest, l.pipeline_stage, l.assigned_sales_id
+    FROM leads l
+    LEFT JOIN interaction_logs i ON i.lead_id = l.id
+    GROUP BY l.id, l.full_name, l.interest, l.pipeline_stage, l.assigned_sales_id
+    HAVING COUNT(i.id) = 0
+  `);
+
+  for (let i = 0; i < leadsWithoutLogsRes.rows.length; i++) {
+    const l = leadsWithoutLogsRes.rows[i];
+    const saleUserId = l.assigned_sales_id || salesIds[i % salesIds.length] || 2;
+    const level = l.pipeline_stage === 'LOST' ? 'COLD' : l.pipeline_stage === 'NEW' ? 'WARM' : 'HOT';
+
+    await query(
+      `INSERT INTO interaction_logs (lead_id, user_id, interaction_type, potential_level, content, next_follow_up_at, created_at)
+       VALUES ($1, $2, 'PHONE_CALL', $3, $4, CURRENT_TIMESTAMP + INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '2 days')`,
+      [
+        l.id,
+        saleUserId,
+        level,
+        `Gọi điện tư vấn lộ trình khóa học ${l.interest} cho học viên ${l.full_name}. Đã giải đáp chi tiết về học phí, lịch khai giảng và chính sách cam kết đầu ra.`,
+      ]
+    );
+
+    if (l.pipeline_stage === 'TEST_SCHEDULED' || l.pipeline_stage === 'ENROLLED') {
+      await query(
+        `INSERT INTO interaction_logs (lead_id, user_id, interaction_type, potential_level, content, next_follow_up_at, created_at)
+         VALUES ($1, $2, 'DIRECT_MEETING', 'HOT', $3, NULL, CURRENT_TIMESTAMP - INTERVAL '6 hours')`,
+        [
+          l.id,
+          saleUserId,
+          l.pipeline_stage === 'ENROLLED'
+            ? `Đón tiếp trực tiếp học viên ${l.full_name} tại quầy tuyển sinh, thông báo kết quả Placement Test và hoàn tất thủ tục xếp lớp chính thức.`
+            : `Xác nhận lịch hẹn thi thử Placement Test đầu vào cho thí sinh ${l.full_name} và gửi thông tin phòng thi qua SMS/Zalo.`,
+        ]
+      );
     }
   }
 
@@ -906,8 +925,16 @@ async function seedRichDemoData() {
   console.log(`✅ Đã đồng bộ danh sách học viên, hồ sơ ghi danh và biên lai thu tiền cho toàn bộ các lớp học.`);
 
   // 8. Khởi tạo Nhật ký hoạt động (Audit Logs) mẫu cho Quản trị viên
-  const existingAuditCount = await query<{ cnt: string }>(`SELECT COUNT(*) AS cnt FROM audit_logs`);
-  if (Number(existingAuditCount.rows[0]?.cnt || 0) < 15) {
+  await query(`
+    DELETE FROM audit_logs
+    WHERE description ILIKE '%E2E%'
+       OR description ILIKE '%Kiểm Thử Ràng Buộc%'
+       OR COALESCE(target_label, '') ILIKE '%E2E%'
+  `);
+  const existingAuditCount = await query<{ cnt: string }>(
+    `SELECT COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE) AS cnt FROM audit_logs`
+  );
+  if (Number(existingAuditCount.rows[0]?.cnt || 0) < 10) {
     const auditSeeds = [
       {
         userId: adminId,
@@ -1107,11 +1134,10 @@ async function seedRichDemoData() {
     ];
 
     for (const a of auditSeeds) {
-      const createdAt = new Date(Date.now() - a.minutesAgo * 60 * 1000).toISOString();
       await query(
         `INSERT INTO audit_logs
            (user_id, username, user_full_name, user_role, action, module, target_id, target_label, description, ip_address, metadata, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $7, $8, '127.0.0.1', $9, $10)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $7, $8, '127.0.0.1', $9, CURRENT_TIMESTAMP - ($10::int * INTERVAL '1 minute'))`,
         [
           a.userId,
           a.username,
@@ -1121,8 +1147,8 @@ async function seedRichDemoData() {
           a.module,
           a.target,
           a.desc,
-          JSON.stringify({ method: a.method, path: a.path, statusCode: 200, target: a.target }),
-          createdAt,
+          JSON.stringify({ method: a.method, path: a.path, statusCode: 200, target: a.target, seeded: true }),
+          a.minutesAgo,
         ]
       );
     }

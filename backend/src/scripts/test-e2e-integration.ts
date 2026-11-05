@@ -709,6 +709,12 @@ async function runIntegrationTestSuite(): Promise<void> {
           await pool.query('DELETE FROM interaction_logs WHERE lead_id = $1', [secondLeadId]);
           await pool.query('DELETE FROM leads WHERE id = $1', [secondLeadId]);
         }
+        await pool.query(`
+          DELETE FROM audit_logs
+          WHERE description ILIKE '%E2E%'
+             OR description ILIKE '%Kiểm Thử Ràng Buộc%'
+             OR COALESCE(target_label, '') ILIKE '%E2E%'
+        `);
       }
       console.log('🧹 Đã dọn dẹp toàn bộ bản ghi kiểm thử tạm thời thành công.');
     } catch (cleanupErr: any) {

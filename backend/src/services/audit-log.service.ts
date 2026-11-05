@@ -23,6 +23,7 @@ export type AuditAction =
   | 'PAYMENT'
   | 'TRANSFER'
   | 'SCORE'
+  | 'BOOK_TEST'
   | 'STATUS_CHANGE';
 
 export interface AuditLogItem {
@@ -94,6 +95,238 @@ export class AuditLogService {
         CREATE INDEX IF NOT EXISTS idx_audit_logs_module ON audit_logs(module, action);
         CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id);
       `);
+
+      // Tự động dọn các bản ghi test E2E tạm thời và khởi tạo dữ liệu mẫu trong ngày nếu chưa có
+      await query(`
+        DELETE FROM audit_logs
+        WHERE description ILIKE '%E2E%'
+           OR description ILIKE '%Kiểm Thử Ràng Buộc%'
+           OR COALESCE(target_label, '') ILIKE '%E2E%'
+      `);
+
+      const checkRes = await query<{ total_cnt: number; today_cnt: number }>(`
+        SELECT
+          COUNT(*)::int AS total_cnt,
+          COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE)::int AS today_cnt
+        FROM audit_logs
+      `);
+      const todayCnt = Number(checkRes.rows[0]?.today_cnt || 0);
+      if (todayCnt < 5) {
+        const defaultSeeds = [
+          {
+            username: 'tamminh',
+            fullName: 'Phạm Hoàng Long (Giám đốc TT)',
+            role: 'ADMIN',
+            action: 'LOGIN',
+            module: 'AUTH',
+            target: 'tamminh',
+            desc: 'Quản trị viên Phạm Hoàng Long đăng nhập hệ thống quản trị EduFlow CRM',
+            method: 'POST',
+            path: '/api/auth/login',
+            mins: 240,
+          },
+          {
+            username: 'tamminh',
+            fullName: 'Phạm Hoàng Long (Giám đốc TT)',
+            role: 'ADMIN',
+            action: 'CREATE',
+            module: 'STAFF',
+            target: 'david_tran',
+            desc: 'Tạo mới tài khoản giảng viên Thầy Trần Minh Đức (Mr. David) - Vai trò TEACHER',
+            method: 'POST',
+            path: '/api/staff',
+            mins: 215,
+          },
+          {
+            username: 'tamminh',
+            fullName: 'Phạm Hoàng Long (Giám đốc TT)',
+            role: 'ADMIN',
+            action: 'UPDATE',
+            module: 'SETTINGS',
+            target: 'Cấu hình trung tâm',
+            desc: 'Cập nhật cấu hình quy tắc tự động phân bổ Lead (Round-Robin) và định mức sĩ số lớp học',
+            method: 'PUT',
+            path: '/api/settings',
+            mins: 195,
+          },
+          {
+            username: 'longpham',
+            fullName: 'Long Phạm (Tư vấn viên)',
+            role: 'SALES',
+            action: 'LOGIN',
+            module: 'AUTH',
+            target: 'longpham',
+            desc: 'Nhân viên tư vấn Long Phạm đăng nhập hệ thống',
+            method: 'POST',
+            path: '/api/auth/login',
+            mins: 180,
+          },
+          {
+            username: 'longpham',
+            fullName: 'Long Phạm (Tư vấn viên)',
+            role: 'SALES',
+            action: 'CREATE',
+            module: 'LEADS',
+            target: 'Trần Tiểu Vy',
+            desc: 'Tiếp nhận khách hàng tiềm năng mới: Trần Tiểu Vy (0912300401) từ kênh Facebook Ads',
+            method: 'POST',
+            path: '/api/leads',
+            mins: 165,
+          },
+          {
+            username: 'longpham',
+            fullName: 'Long Phạm (Tư vấn viên)',
+            role: 'SALES',
+            action: 'STATUS_CHANGE',
+            module: 'LEADS',
+            target: 'Nguyễn Quang Hải',
+            desc: 'Chuyển trạng thái Lead Nguyễn Quang Hải từ NEW sang CONTACTING sau cuộc gọi tư vấn',
+            method: 'PATCH',
+            path: '/api/leads/15/status',
+            mins: 145,
+          },
+          {
+            username: 'longpham',
+            fullName: 'Long Phạm (Tư vấn viên)',
+            role: 'SALES',
+            action: 'BOOK_TEST',
+            module: 'TESTS',
+            target: 'Trịnh Quốc Khánh',
+            desc: 'Đặt lịch hẹn Placement Test (IELTS) cho thí sinh Trịnh Quốc Khánh (Ca 14:00-15:30 - Room 101)',
+            method: 'POST',
+            path: '/api/placement-tests/book',
+            mins: 120,
+          },
+          {
+            username: 'phongpham',
+            fullName: 'Phong Phạm (Giáo vụ)',
+            role: 'ACADEMIC',
+            action: 'LOGIN',
+            module: 'AUTH',
+            target: 'phongpham',
+            desc: 'Nhân viên giáo vụ Phong Phạm đăng nhập hệ thống',
+            method: 'POST',
+            path: '/api/auth/login',
+            mins: 110,
+          },
+          {
+            username: 'phongpham',
+            fullName: 'Phong Phạm (Giáo vụ)',
+            role: 'ACADEMIC',
+            action: 'STATUS_CHANGE',
+            module: 'TESTS',
+            target: 'Tạ Bích Ngọc',
+            desc: 'Cập nhật điểm danh thí sinh Tạ Bích Ngọc -> Có mặt (PRESENT) tại phòng Room 101',
+            method: 'PATCH',
+            path: '/api/placement-tests/5/attendance',
+            mins: 95,
+          },
+          {
+            username: 'phongpham',
+            fullName: 'Phong Phạm (Giáo vụ)',
+            role: 'ACADEMIC',
+            action: 'SCORE',
+            module: 'TESTS',
+            target: 'Lương Thế Vinh (5.5)',
+            desc: 'Chấm điểm Placement Test cho Lương Thế Vinh (Overall 5.5) -> Hệ thống gợi ý khóa IELTS Fighter 6.5',
+            method: 'POST',
+            path: '/api/placement-tests/6/score',
+            mins: 80,
+          },
+          {
+            username: 'phongpham',
+            fullName: 'Phong Phạm (Giáo vụ)',
+            role: 'ACADEMIC',
+            action: 'CREATE',
+            module: 'COURSES',
+            target: 'IELTS-65',
+            desc: 'Cập nhật học phần & giáo trình khóa học IELTS Fighter 6.5 (Target 6.5)',
+            method: 'PUT',
+            path: '/api/courses/2',
+            mins: 70,
+          },
+          {
+            username: 'phongpham',
+            fullName: 'Phong Phạm (Giáo vụ)',
+            role: 'ACADEMIC',
+            action: 'CREATE',
+            module: 'CLASSES',
+            target: 'IELTS-65-K08',
+            desc: 'Khởi tạo lớp học mới IELTS-65-K08 (Giảng viên: ThS. Nguyễn Thị Thu Hà - Ms. Emily)',
+            method: 'POST',
+            path: '/api/classes',
+            mins: 65,
+          },
+          {
+            username: 'longpham',
+            fullName: 'Long Phạm (Tư vấn viên)',
+            role: 'SALES',
+            action: 'ENROLL',
+            module: 'STUDENTS',
+            target: 'STU-202604-0008',
+            desc: 'Xếp lớp học viên Phạm Thùy Dương (STU-202604-0008) vào lớp IELTS-65-K08',
+            method: 'POST',
+            path: '/api/enrollments',
+            mins: 50,
+          },
+          {
+            username: 'longpham',
+            fullName: 'Long Phạm (Tư vấn viên)',
+            role: 'SALES',
+            action: 'PAYMENT',
+            module: 'PAYMENTS',
+            target: 'REC-202604-0108',
+            desc: 'Thu học phí 7.700.000 đ (BANK_TRANSFER) — Biên lai REC-202604-0108 cho học viên Phạm Thùy Dương',
+            method: 'POST',
+            path: '/api/enrollments/8/payments',
+            mins: 45,
+          },
+          {
+            username: 'phongpham',
+            fullName: 'Phong Phạm (Giáo vụ)',
+            role: 'ACADEMIC',
+            action: 'TRANSFER',
+            module: 'STUDENTS',
+            target: 'STU-202511-0042',
+            desc: 'Chuyển lớp cho học viên Hà Đức Chinh (STU-202511-0042) sang lớp IELTS-65-K08',
+            method: 'POST',
+            path: '/api/enrollments/42/transfer',
+            mins: 30,
+          },
+          {
+            username: 'teacher',
+            fullName: 'ThS. Nguyễn Thị Thu Hà (Ms. Emily)',
+            role: 'TEACHER',
+            action: 'LOGIN',
+            module: 'AUTH',
+            target: 'teacher',
+            desc: 'Giảng viên ThS. Nguyễn Thị Thu Hà (Ms. Emily) đăng nhập tra cứu lịch dạy và danh sách học viên',
+            method: 'POST',
+            path: '/api/auth/login',
+            mins: 15,
+          },
+        ];
+
+        for (const s of defaultSeeds) {
+          await query(
+            `INSERT INTO audit_logs
+               (username, user_full_name, user_role, action, module, target_id, target_label, description, ip_address, metadata, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $6, $7, '127.0.0.1', $8, CURRENT_TIMESTAMP - ($9::int * INTERVAL '1 minute'))`,
+            [
+              s.username,
+              s.fullName,
+              s.role,
+              s.action,
+              s.module,
+              s.target,
+              s.desc,
+              JSON.stringify({ method: s.method, path: s.path, statusCode: 200, target: s.target, seeded: true }),
+              s.mins,
+            ]
+          );
+        }
+      }
+
       tableInitialized = true;
     } catch (err) {
       logger.warn('Không thể khởi tạo bảng audit_logs:', err);
@@ -369,7 +602,7 @@ export function auditActivityMiddleware(req: Request, res: Response, next: NextF
     } else if (path.includes('/placement-tests')) {
       module = 'TESTS';
       if (path.endsWith('/book')) {
-        action = 'CREATE';
+        action = 'BOOK_TEST';
         targetLabel = resData?.leadFullName || `Lead #${body.leadId}`;
         description = `Đặt lịch thi Placement Test (${body.testType || 'IELTS'}) cho "${targetLabel}" vào ${body.testDate} (${body.timeSlot})`;
       } else if (path.endsWith('/attendance')) {
